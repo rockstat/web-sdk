@@ -1,0 +1,26 @@
+<script type="text/javascript">
+
+  !function (win, doc, stag, shost, vn, alc, el, head) {
+    if(win[vn]) return;
+
+    alc = win[vn] = function () {
+      alc.callMethod ? alc.callMethod.apply(alc, arguments) : alc.queue.push(arguments);
+    };
+    alc.push = alc;
+    alc.loaded = !0;
+    alc.version = 1;
+    alc.queue = [];
+
+    alc.load = function (src) {
+      el = doc.createElement(stag);
+      el.async = !0;
+      el.src = src;
+      head = doc.getElementsByTagName(stag)[0];
+      head.parentNode.insertBefore(el, head);
+    };
+    alc.load('https://' + shost + '/lib.js');
+  }(window, document, 'script', 'tracker.alcolytics.dev', 'alco');
+
+</script>
+
+
