@@ -58,11 +58,12 @@ function SessionTracker(storage, options) {
 
 SessionTracker.prototype.fireSessionEvent = function () {
 
-  const event = {
-    name: EVENT_SESSION
+  const data = {
+
   };
+
   each(this.eventCallbacks, (cb) => {
-    cb(event);
+    cb(EVENT_SESSION, data);
   });
 
 };

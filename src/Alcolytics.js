@@ -29,7 +29,7 @@ function Alcolytics() {
 
   this.storage = new LocalStorageAdapter();
   this.sessionTracker = new SessionTracker(this.storage, this.options);
-  this.sessionTracker.addEventCallback(ev => this.event(ev));
+  this.sessionTracker.addEventCallback((name, data) => this.event(name, data));
 
 }
 
