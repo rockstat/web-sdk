@@ -115,19 +115,21 @@ export default function pageSource(page) {
       for (let j = 0; j < UTMS.length; j++) {
         if (key === UTMS[j]) {
 
-          source.hasMarks = true;
           source.marks[key] = cleanQueryParam(query[key])
+          source.hasMarks = true;
         }
       }
 
       if (key === OS) {
         const os = getOsMarks(query[key]);
         source.marks = objectAssign(source.marks, os);
+        source.hasMarks = true;
       }
 
       for (let j = 0; j < CLIDS.length; j++) {
         if (key === CLIDS[j]) {
           source.marks['has_' + key] = 1;
+          source.hasMarks = true;
         }
       }
     }
