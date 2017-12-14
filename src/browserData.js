@@ -33,7 +33,7 @@ function sr() {
     return {
       tot: {w: s.width, h: s.height},
       avail: {w: s.availWidth, h: s.availHeight},
-      asp: w.devicePixelRatio && w.devicePixelRatio * 1000,
+      asp: Math.round(w.devicePixelRatio && w.devicePixelRatio * 1000),
       oAngle: o.angle,
       oType: o.type
     };
