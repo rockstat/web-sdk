@@ -6,12 +6,10 @@ function createLooger(name) {
   };
 
   log.warn = function (...args) {
-    if(PRODUCTION) return;
     console && console.warn && console.warn(name+':', ...args)
   };
 
   log.error = (...args) => {
-    if(PRODUCTION) return;
     console && console.error && console.error(...args);
   };
 

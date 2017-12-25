@@ -3,6 +3,7 @@ export default function() {
   const w = window;
   const d = w.document;
   const l = w.location;
+  const proto = l.protocol;
 
   return {
     path: l.pathname,
@@ -11,6 +12,7 @@ export default function() {
     query: l.search,
     title: d.title,
     url: l.href,
-    hash: l.hash
+    hash: l.hash,
+    proto: proto.substr(0, proto.length - 1)
   };
 }

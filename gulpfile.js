@@ -34,7 +34,7 @@ gulp.task('build', gulp.series('webpack:build'), (done) => {
 });
 
 gulp.task("watch", gulp.series('build', () => {
-  return gulp.watch(["script/**/*.js"], gulp.series('build'));
+  return gulp.watch(["src/**/*.js"], gulp.series('build'));
 }));
 
 gulp.task('default', gulp.series('watch'));

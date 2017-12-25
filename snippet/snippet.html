@@ -1,26 +1,25 @@
 <script type="text/javascript">
-
-  !function (win, doc, stag, shost, vn, alc, el, head) {
-    if(win[vn]) return;
-
-    alc = win[vn] = function () {
-      alc.callMethod ? alc.callMethod.apply(alc, arguments) : alc.queue.push(arguments);
+  !function (win, doc, stag, shost, alco, el, head, args) {
+    if(win.alco) return;
+    alco = win.alco = function () {
+      args = Array.prototype.slice.call(arguments);
+      alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
     };
-    alc.push = alc;
-    alc.loaded = !0;
-    alc.version = 1;
-    alc.queue = [];
-
-    alc.load = function (src) {
-      el = doc.createElement(stag);
-      el.async = !0;
-      el.src = src;
+    alco.push = alco; alco.loaded = !0; alco.snippet = 1; alco.queue = []; alco.server = 'https://' + shost;
+    alco.load = function (src) {
+      el = doc.createElement(stag); el.async = !0; el.src = src;
       head = doc.getElementsByTagName(stag)[0];
       head.parentNode.insertBefore(el, head);
     };
-    alc.load('https://' + shost + '/lib.js');
-  }(window, document, 'script', 'tracker.alcolytics.dev', 'alco');
+    alco.load(alco.server + '/lib.js');
+  }(window, document, 'script', '{{ tracker_domain }}');
+
+  alco('configure', {
+    projectId: 1,
+    cookieDomain: 'alcolytics.test'
+  });
+
+  alco('page');
 
 </script>
-
-
+<!-- После редактирования надо обновить в ansible и в доках -->

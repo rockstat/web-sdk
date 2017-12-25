@@ -1,10 +1,10 @@
-import objectAssign from './functions/objectAssing';
-import getOsMarks from './functions/getOpenStatMarks';
-import createLogger from './functions/createLogger';
-import simpleHash from './functions/simpleHash';
-import removeWww from './functions/removeWww';
-import objectKeys from './functions/objectKeys';
-import {isArray} from './functions/type';
+import objectAssign from './objectAssing';
+import getOsMarks from './getOpenStatMarks';
+import createLogger from './createLogger';
+import simpleHash from './simpleHash';
+import removeWww from './removeWww';
+import objectKeys from './objectKeys';
+import {isArray} from './type';
 import qs from 'component-querystring';
 import url from 'component-url';
 import punycode from 'punycode';
@@ -16,7 +16,7 @@ import {
   SESSION_ORGANIC,
   SESSION_REFERRAL,
   SESSION_SOCIAL,
-} from "./Variables";
+} from "../Variables";
 
 const ENGINE_GOOGLE = 'google';
 const ENGINE_YANDEX = 'yandex';

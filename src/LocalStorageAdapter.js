@@ -1,7 +1,7 @@
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 
-const log = createLogger('LS');
+const log = createLogger('LocalStorage');
 
 function LocalStorageAdapter(options) {
   options = options || {};
