@@ -1,4 +1,4 @@
-function createLooger(name) {
+export default function createLooger(name) {
 
   const log = function (...args) {
     if(PRODUCTION) return;
@@ -14,7 +14,4 @@ function createLooger(name) {
   };
 
   return log;
-
 }
-
-export default createLooger;
