@@ -36,7 +36,7 @@ function SessionTracker(alco, options) {
   this.options = options;
   this.lastSession = null;
   this.lastCampaign = null;
-  this.initialUid = options.initialUid;
+  this.initialUid = '2';
   this.userId = undefined;
   this.userTraits = undefined;
   this.uid = null;
@@ -140,9 +140,9 @@ SessionTracker.prototype.setUserData = function (data) {
   }
 };
 
-SessionTracker.prototype.setInitialUid = function (data) {
+SessionTracker.prototype.setInitialUid = function (uid) {
 
-  this.initialUid = data.uid;
+  this.initialUid = uid;
 
 };
 

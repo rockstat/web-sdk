@@ -192,7 +192,6 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
 Alcolytics.prototype.setInitialUid = function (uid) {
 
   this.initialUid = uid;
-  // this.handle(EVENT_INITIAL_UID, {uid})
 
 };
 
