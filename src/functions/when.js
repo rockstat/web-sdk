@@ -1,4 +1,3 @@
-
 const nextTick = require('next-tick');
 
 /**

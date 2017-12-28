@@ -7,6 +7,8 @@ import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
 import {isObject} from './functions/type';
+import FormTracker from './trackers/FormTracker';
+import ActivityTracker from './trackers/ActivityTracker';
 
 import {
   EVENT_PAGEVIEW,
@@ -40,7 +42,6 @@ function Alcolytics() {
  */
 Alcolytics.prototype.initialize = function () {
 
-
   // Check HTTPS
   const page = pageDefaults();
 
@@ -60,12 +61,29 @@ Alcolytics.prototype.initialize = function () {
     log.warn('Initializing before configured');
   }
 
+  // Library data
+  this.libInfo = {
+    name: this.options.library,
+    libver: this.options.libver,
+    snippet: this.options.snippet,
+  };
+
   // Constructing deps
   this.localStorage = new LocalStorageAdapter(this.options);
   this.cookieStorage = new CookieStorageAdapter(this.options);
 
   this.sessionTracker = new SessionTracker(this, this.options);
   this.sessionTracker.addEventCallback((name, data) => this.event(name, data));
+
+  // Running trackers
+
+  const eventWrapper = ({name, data}) => this.event(name, data);
+
+  this.formTracker = new FormTracker();
+  this.formTracker.on('event', eventWrapper);
+
+  this.activityTracker = new ActivityTracker();
+  this.activityTracker.on('event', eventWrapper);
 
   // Handling queue
   this.queue.map(e => {
@@ -196,11 +214,6 @@ Alcolytics.prototype.configure = function (options) {
 
   this.configured = true;
   this.options = objectAssign(this.options, options);
-  this.libInfo = {
-    name: this.options.library,
-    libver: this.options.libver,
-    snippet: this.options.snippet,
-  };
 
 };
 

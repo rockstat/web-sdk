@@ -1,11 +1,24 @@
 // todo: check libs (localstorage, etc...)
 
+const win = window;
+const doc = document;
+const body = doc.getElementsByTagName('body')[0];
+const head = doc.getElementsByTagName('head')[0];
+
+
+
+// Feature detection
+const features = {
+  'add_ev': !!win.addEventListener,
+  'promise': !!win.Promise,
+};
+
 
 // Polyfills
 import Promise from 'promise-polyfill';
 
-if (!window.Promise) {
-  window.Promise = Promise;
+if (!win.Promise) {
+  win.Promise = Promise;
 }
 import 'whatwg-fetch';
 
@@ -13,7 +26,7 @@ import 'whatwg-fetch';
 import Alcolytics from './Alcolytics';
 
 const varname = 'alco';
-const alco = window[varname];
+const alco = win[varname];
 const alcolytics = new Alcolytics();
 alcolytics.configure({
   server: alco.server,
