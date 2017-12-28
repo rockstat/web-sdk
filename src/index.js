@@ -5,19 +5,11 @@ const win = window;
 
 // Feature detection
 const features = {
-  'addEL': 'addEventListener' in win,
+  'locst': 'localStorage' in win,
+  'addel': 'addEventListener' in win,
   'promise': 'Promise' in win,
-  'sBeacon': 'sendBeacon' in navigator
+  'sbeacon': 'sendBeacon' in navigator
 };
-
-
-// Polyfills
-// import Promise from 'promise-polyfill';
-
-// if (!win.Promise) {
-//   win.Promise = Promise;
-// }
-// import 'whatwg-fetch';
 
 // Main
 import Alcolytics from './Alcolytics';

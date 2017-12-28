@@ -26,6 +26,7 @@ function Alcolytics() {
   this.initialized = false;
   this.configured = false;
   this.queue = [];
+  this.initialUid = '1';
   this.options = {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
@@ -75,6 +76,7 @@ Alcolytics.prototype.initialize = function () {
   this.cookieStorage = new CookieStorageAdapter(this.options);
 
   this.sessionTracker = new SessionTracker(this, this.options);
+  this.sessionTracker.setInitialUid(this.initialUid);
   this.sessionTracker.addEventCallback((name, data) => this.event(name, data));
 
   // Running trackers
@@ -115,10 +117,6 @@ Alcolytics.prototype.handle = function (name, data) {
 
   if (!this.initialized) {
     return this.queue.push([name, data]);
-  }
-
-  if(name === EVENT_INITIAL_UID){
-    return this.sessionTracker.setInitialUid(data);
   }
 
   if(name === EVENT_IDENTIFY){
@@ -193,7 +191,8 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
  */
 Alcolytics.prototype.setInitialUid = function (uid) {
 
-  this.handle(EVENT_INITIAL_UID, {uid})
+  this.initialUid = uid;
+  // this.handle(EVENT_INITIAL_UID, {uid})
 
 };
 

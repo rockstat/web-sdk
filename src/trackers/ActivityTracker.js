@@ -1,4 +1,3 @@
-import addEventListener from '../functions/addEventListener';
 import objectAssing from '../functions/objectAssing';
 import runOnStop from '../functions/runOnStop';
 import objectKeys from '../functions/objectKeys';
@@ -42,7 +41,7 @@ const ActivityTracker = function (options) {
   this.maxScroll = 0;
   this.maxScreen = 0;
 
-  setTimeout(
+  this.activityTrackingDelay = setTimeout(
     () => this.initialize(),
     this.options.delay * 1000
   );
@@ -141,13 +140,32 @@ ActivityTracker.prototype.fireEvent = function () {
 
 ActivityTracker.prototype.initialize = function () {
 
+  if(!win.addEventListener) return;
+
   each(activityEvents, (event) => {
 
-    addEventListener(win, event, (e) => this.eventHandler(e));
+    win.addEventListener(event, (e) => this.eventHandler(e), true);
 
   });
 
-  setInterval(() => this.fireEvent(), this.options.interval * 1000)
+  this.activityFireInterval = setInterval(
+    () => this.fireEvent(),
+    this.options.interval * 1000
+  )
+
+};
+
+
+ActivityTracker.prototype.unload = function () {
+
+  each(activityEvents, (event) => {
+
+    win.removeEventListener(event, (e) => this.eventHandler(e));
+
+  });
+
+  clearInterval(this.activityFireInterval);
+  clearTimeout(this.activityTrackingDelay);
 
 };
 
