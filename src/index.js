@@ -1,16 +1,13 @@
 // todo: check libs (localstorage, etc...)
 
+
 const win = window;
-const doc = document;
-const body = doc.getElementsByTagName('body')[0];
-const head = doc.getElementsByTagName('head')[0];
-
-
 
 // Feature detection
 const features = {
-  'add_ev': !!win.addEventListener,
-  'promise': !!win.Promise,
+  'addEL': 'addEventListener' in win,
+  'promise': 'Promise' in win,
+  'sBeacon': 'sendBeacon' in navigator
 };
 
 

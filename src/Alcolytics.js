@@ -9,7 +9,7 @@ import clientData from './functions/clientData';
 import {isObject} from './functions/type';
 import FormTracker from './trackers/FormTracker';
 import ActivityTracker from './trackers/ActivityTracker';
-
+import Transport from './Transport';
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
@@ -68,6 +68,8 @@ Alcolytics.prototype.initialize = function () {
     snippet: this.options.snippet,
   };
 
+  this.transport = new Transport(this.options);
+
   // Constructing deps
   this.localStorage = new LocalStorageAdapter(this.options);
   this.cookieStorage = new CookieStorageAdapter(this.options);
@@ -98,16 +100,9 @@ Alcolytics.prototype.sendToServer = function (data) {
   const query = [
     'uid=' + this.sessionTracker.uid
   ];
+  const url = this.options.server + '/track?' + query.join('&');
+  this.transport.send(url, data);
 
-  window.fetch(this.options.server + '/track?' + query.join('&'), {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }).then(result => {
-    log('fetch result', result);
-  })
-    .catch(err => {
-      log.warn('fetch err', err);
-    })
 };
 
 
