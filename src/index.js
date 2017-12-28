@@ -12,12 +12,12 @@ const features = {
 
 
 // Polyfills
-import Promise from 'promise-polyfill';
+// import Promise from 'promise-polyfill';
 
-if (!win.Promise) {
-  win.Promise = Promise;
-}
-import 'whatwg-fetch';
+// if (!win.Promise) {
+//   win.Promise = Promise;
+// }
+// import 'whatwg-fetch';
 
 // Main
 import Alcolytics from './Alcolytics';
