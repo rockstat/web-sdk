@@ -41,10 +41,7 @@ const ActivityTracker = function (options) {
   this.maxScroll = 0;
   this.maxScreen = 0;
 
-  this.activityTrackingDelay = setTimeout(
-    () => this.initialize(),
-    this.options.delay * 1000
-  );
+  this.initialize();
 
   this.scrollHandler = runOnStop(
     (e) => this.doHandleScroll(e),
@@ -56,7 +53,6 @@ const ActivityTracker = function (options) {
 
 ActivityTracker.prototype.defaults = {
   namePrefix: '',
-  delay: 2,
   interval: 5
 };
 

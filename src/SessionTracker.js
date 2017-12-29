@@ -2,6 +2,7 @@ import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import objectKeys from './functions/objectKeys';
 import pageSource from './functions/pageSource';
+import isValidUid from './functions/isValidUid';
 import each from './functions/each';
 import when from './functions/when';
 
@@ -96,13 +97,8 @@ SessionTracker.prototype.addEventCallback = function (cb) {
 
 SessionTracker.prototype.getStoredUid = function () {
 
-  let uid = this.cookieStorage.get(KEY_UID) || this.localStorage.get(KEY_UID);
-
-  if (uid === 'undefined') {
-    uid = undefined;
-  }
-
-  return uid;
+  const uid = this.cookieStorage.get(KEY_UID) || this.localStorage.get(KEY_UID);
+  return isValidUid(uid) && uid;
 
 };
 
