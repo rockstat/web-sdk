@@ -41,6 +41,7 @@ const ActivityTracker = function (options) {
   this.maxScroll = 0;
   this.maxScreen = 0;
 
+  this.eventHandler = this.eventHandler.bind(this);
   this.initialize();
 
   this.scrollHandler = runOnStop(
@@ -140,7 +141,7 @@ ActivityTracker.prototype.initialize = function () {
 
   each(activityEvents, (event) => {
 
-    win.addEventListener(event, (e) => this.eventHandler(e), true);
+    doc.addEventListener(event, this.eventHandler, true);
 
   });
 
@@ -156,7 +157,7 @@ ActivityTracker.prototype.unload = function () {
 
   each(activityEvents, (event) => {
 
-    win.removeEventListener(event, (e) => this.eventHandler(e));
+    doc.removeEventListener(event, this.eventHandler);
 
   });
 

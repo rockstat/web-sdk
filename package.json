@@ -25,6 +25,7 @@
     "next-tick": "^1.0.0",
     "promise-polyfill": "^6.1.0",
     "punycode": "^2.1.0",
+    "url-parse": "^1.2.0",
     "whatwg-fetch": "^2.0.3"
   },
   "devDependencies": {

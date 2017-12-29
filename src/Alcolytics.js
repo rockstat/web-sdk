@@ -2,13 +2,14 @@ import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';
 import CookieStorageAdapter from './CookieStorageAdapter';
-import SessionTracker from './SessionTracker';
 import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
 import {isObject} from './functions/type';
 import FormTracker from './trackers/FormTracker';
+import SessionTracker from './SessionTracker';
 import ActivityTracker from './trackers/ActivityTracker';
+import ClickTracker from './trackers/ClickTracker';
 import Transport from './Transport';
 import {
   EVENT_PAGEVIEW,
@@ -88,6 +89,9 @@ Alcolytics.prototype.initialize = function () {
 
   this.activityTracker = new ActivityTracker();
   this.activityTracker.on('event', eventWrapper);
+
+  this.clickTracker = new ClickTracker();
+  this.clickTracker.on('event', eventWrapper);
 
   // Handling queue
   this.queue.map(e => {

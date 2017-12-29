@@ -1,8 +1,8 @@
 import objectAssing from '../functions/objectAssing';
 import toArray from '../functions/toArray';
 import each from '../functions/each';
-import {closest} from 'dom-utils';
 import Emitter from 'component-emitter';
+import {closest} from 'dom-utils';
 
 const win = window;
 const formTag = 'form';
@@ -10,6 +10,7 @@ const formTag = 'form';
 const FormTracker = function (options) {
 
   this.options = objectAssing({}, this.defaults, options);
+  this.eventHandler = this.eventHandler.bind(this);
   this.initialize();
 };
 
@@ -37,16 +38,16 @@ FormTracker.prototype.eventHandler = function (e) {
 
   if (field) {
 
-    const ftag = field.tagName.toLocaleLowerCase();
-    const ftype = field.getAttribute('type');
+    const etag = field.tagName.toLocaleLowerCase();
+    const etype = field.getAttribute('type');
 
     objectAssing(event.data, {
-      ftag,
-      ftype,
-      fname: field.getAttribute('name'),
-      fph: field.getAttribute('placeholder'),
-      fcl: field.className,
-      fid: field.id,
+      etag,
+      etype,
+      ename: field.getAttribute('name'),
+      eph: field.getAttribute('placeholder'),
+      ecl: field.className,
+      eid: field.id,
     });
   }
 
@@ -72,13 +73,11 @@ FormTracker.prototype.initialize = function () {
 
   each(toArray(document.getElementsByTagName('form')), (form) => {
 
-    const handlerWrapper = (e) => this.eventHandler(e);
-
-    form.addEventListener('focus', handlerWrapper, true);
-    form.addEventListener('blur', handlerWrapper, true);
-    form.addEventListener('change', handlerWrapper, true);
-    form.addEventListener('submit', handlerWrapper, true);
-    form.addEventListener('invalid', handlerWrapper, true);
+    form.addEventListener('focus', this.eventHandler, true);
+    form.addEventListener('blur', this.eventHandler, true);
+    form.addEventListener('change', this.eventHandler, true);
+    form.addEventListener('submit', this.eventHandler, true);
+    form.addEventListener('invalid', this.eventHandler, true);
 
   })
 };
