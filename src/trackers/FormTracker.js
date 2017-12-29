@@ -3,6 +3,10 @@ import toArray from '../functions/toArray';
 import each from '../functions/each';
 import Emitter from 'component-emitter';
 import {closest} from 'dom-utils';
+import {
+  EVENT_OPTION_OUTBOUND,
+  EVENT_OPTION_SCHEDULED
+} from "../Variables";
 
 const win = window;
 const formTag = 'form';
@@ -25,14 +29,18 @@ FormTracker.prototype.eventHandler = function (e) {
   const target = e.target || e.srcElement;
   const tag = target.tagName && target.tagName.toLocaleLowerCase();
   const isForm = tag === formTag;
+  const type = e.type;
 
   const form = isForm ? target : closest(target, formTag);
   const field = !isForm && target;
 
   const event = {
-    name: this.options.namePrefix + (isForm ? 'Form ' : 'Field ') + e.type,
+    name: this.options.namePrefix + (isForm ? 'Form ' : 'Field ') + type,
     data: {
-      event: e.type
+      event: type
+    },
+    options: {
+      [EVENT_OPTION_SCHEDULED]: (type === 'submit'),
     }
   };
 

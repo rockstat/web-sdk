@@ -32,7 +32,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 5,
+    libver: 6,
     projectId: 1,
     initialUid: '0',
     cookieDomain: 'auto'
@@ -44,14 +44,14 @@ function Alcolytics() {
  */
 Alcolytics.prototype.initialize = function () {
 
-  // Check HTTPS
+  // Check is HTTPS
   const page = pageDefaults();
 
   if (page.proto !== 'https') {
     return log.warn('Works only on https');
   }
 
-  // Check initialized
+  // Check is initialized
   if (this.initialized) return;
   this.initialized = true;
 
@@ -82,7 +82,7 @@ Alcolytics.prototype.initialize = function () {
 
   // Running trackers
 
-  const eventWrapper = ({name, data}) => this.event(name, data);
+  const eventWrapper = ({name, data, options}) => this.event(name, data, options);
 
   this.formTracker = new FormTracker();
   this.formTracker.on('event', eventWrapper);
@@ -99,17 +99,20 @@ Alcolytics.prototype.initialize = function () {
   });
   this.queue = [];
 
+
+  // Unload tracker
+
+  window.addEventListener('beforeunload', function(event) {
+    log('I am the 1st one.');
+  });
+  window.addEventListener('unload', function(event) {
+    log('I am the 3rd one.');
+  });
+
+
+
 };
 
-Alcolytics.prototype.sendToServer = function (data) {
-
-  const query = [
-    'uid=' + this.sessionTracker.uid
-  ];
-  const url = this.options.server + '/track?' + query.join('&');
-  this.transport.send(url, data);
-
-};
 
 
 /**
@@ -117,12 +120,15 @@ Alcolytics.prototype.sendToServer = function (data) {
  * @param name
  * @param data
  */
-Alcolytics.prototype.handle = function (name, data) {
+Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
   if (!this.initialized) {
     return this.queue.push([name, data]);
   }
 
+  log('handling', name);
+
+  // Special handlers
   if(name === EVENT_IDENTIFY){
     return this.sessionTracker.setUserData(data);
   }
@@ -151,7 +157,13 @@ Alcolytics.prototype.handle = function (name, data) {
     browser: browserData()
   };
 
-  this.sendToServer(msg);
+
+  // Sending to server
+  const query = [
+    'uid=' + this.sessionTracker.uid
+  ];
+  const url = this.options.server + '/track?' + query.join('&');
+  this.transport.send(url, msg, options);
 
 };
 
@@ -160,18 +172,18 @@ Alcolytics.prototype.handle = function (name, data) {
  * @param name
  * @param data
  */
-Alcolytics.prototype.event = function (name, data) {
+Alcolytics.prototype.event = function (name, data, options) {
 
-  this.handle(name, data);
+  this.handle(name, data, options);
 
 };
 
 /**
  * Tracking page load
  */
-Alcolytics.prototype.page = function (data) {
+Alcolytics.prototype.page = function (data, options) {
 
-  this.handle(EVENT_PAGEVIEW, data);
+  this.handle(EVENT_PAGEVIEW, data, options);
 
 };
 

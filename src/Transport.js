@@ -1,11 +1,22 @@
 import objectAssign from './functions/objectAssing';
+import createLogger from './functions/createLogger';
+import {
+  EVENT_OPTION_OUTBOUND,
+  EVENT_OPTION_SCHEDULED
+} from "./Variables";
 
+const log = createLogger('Transport');
 const win = window;
+const doc = document;
+const nav = navigator;
+
 
 const Transport = function (options) {
 
   this.options = objectAssign({}, this.defaults, options);
-  this.hasBeacon = 'sendBeacon' in navigator;
+  this.beaconSupport = false// 'sendBeacon' in nav;
+
+  this.server = this.options.server;
 
   const xhrFound = !!win.XMLHttpRequest;
   const xhrCreds = xhrFound && ('withCredentials' in new win.XMLHttpRequest());
@@ -25,41 +36,60 @@ const Transport = function (options) {
 };
 
 
-Transport.prototype.sendBeacon = function (url, data) {
-
-  console.log('sending beacon');
-
-  data = JSON.stringify(data);
-  navigator.sendBeacon(url, data);
-
+Transport.prototype.defaults = {
+  xhrTimeout: 10000
 };
 
-Transport.prototype.sendXHR = function (url, data, unloading) {
+
+Transport.prototype.sendBeacon = function (url, data) {
 
   data = JSON.stringify(data);
-  const async = !unloading;
+
+  if (this.beaconSupport) {
+
+    log('sending native beacon');
+
+    nav.sendBeacon(url, data);
+
+  } else {
+
+    log('sending xhr');
+
+    const xhr = new this.XHR();
+    xhr.withCredentials = true;
+    xhr.open('POST', url, true);
+    xhr.send(data);
+
+    // Img load test
+    const img = new Image(1,1);
+    img.src = this.server + '/track?' + (new Date()).getTime();
+    img.onload = () => {
+      log('img loaded');
+    };
+  }
+};
+
+Transport.prototype.sendBasic = function (url, data) {
+
+  data = JSON.stringify(data);
 
   const xhr = new this.XHR();
   xhr.withCredentials = true;
-  xhr.timeout = async ? this.options.timeout : this.options.syncTimeout;
-  xhr.open('POST', url, async);
+  xhr.timeout = this.options.xhrTimeout;
+  xhr.open('POST', url, true);
   xhr.send(data);
 
+  //TODO: handle error, success
+
 };
 
 
-Transport.prototype.defaults = {
-  syncTimeout: 300,
-  timeout: 10000
-};
+Transport.prototype.send = function (url, data, options = {}) {
 
-
-Transport.prototype.send = function (url, data, unloading) {
-
-  return (this.hasBeacon && unloading
+  return (options[EVENT_OPTION_SCHEDULED] || options[EVENT_OPTION_OUTBOUND]
       ? this.sendBeacon
-      : this.sendXHR
-  ).apply(this, arguments);
+      : this.sendBasic
+  ).call(this, url, data, options);
 
 };
 

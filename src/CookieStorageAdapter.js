@@ -23,8 +23,6 @@ function CookieStorageAdapter(options) {
   this.prefix = this.options.prefix;
   this.exp = new Date((new Date()).getTime() + 3*31536e+6);
 
-  log(`Domain: ${this.domain}`);
-
 }
 
 CookieStorageAdapter.prototype.initialize = function () {

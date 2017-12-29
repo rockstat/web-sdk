@@ -4,6 +4,10 @@ import objectKeys from '../functions/objectKeys';
 import each from '../functions/each';
 import {closest} from 'dom-utils';
 import Emitter from 'component-emitter';
+import {
+  EVENT_OPTION_OUTBOUND,
+  EVENT_OPTION_SCHEDULED
+} from "../Variables";
 
 const win = window;
 const doc = document;
@@ -37,12 +41,17 @@ ClickTracker.prototype.eventHandler = function (e) {
 
   if (link) {
     const loc = window.location;
+    const outbound = link.hostname !== loc.hostname || link.port !== loc.port || link.protocol !== loc.protocol;
     const event = {
       name: this.options.namePrefix + 'Link click',
       data: {
         href: link.href,
         text: link.innerText,
-        crossDomain: link.hostname !== loc.hostname || link.port !== loc.port || link.protocol !== loc.protocol
+        outbound: outbound
+      },
+      options: {
+        [EVENT_OPTION_SCHEDULED]: true,
+        [EVENT_OPTION_OUTBOUND]: outbound
       }
     };
 

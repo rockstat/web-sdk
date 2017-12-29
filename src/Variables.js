@@ -3,6 +3,10 @@ export const EVENT_IDENTIFY = 'identify';
 export const EVENT_INITIAL_UID = 'initial_uid';
 export const EVENT_SESSION = 'session';
 
+export const EVENT_OPTION_BOUNDED = 'bounded';
+export const EVENT_OPTION_SCHEDULED = 'scheduled';
+export const EVENT_OPTION_OUTBOUND = 'outbound';
+
 export const SESSION_INTERNAL = 'internal';
 export const SESSION_DIRECT = 'direct';
 export const SESSION_ORGANIC = 'organic';
