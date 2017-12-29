@@ -44,29 +44,31 @@ function SessionTracker(alco, options) {
   this.gaClientId = this.storage.get('gaClientId');
 
   // Getting Yandex Metrika ClientId
-  when(() => window.Ya && window.Ya.Metrika, ()=> {
+  when(() => window.Ya && window.Ya.Metrika, () => {
     try {
       this.ymClientId = Ya._metrika && Ya._metrika.counter && Ya._metrika.counter.getClientID();
       this.storage.set('ymClientId', this.ymClientId);
-    } catch (e) {log.error(e)}
+    } catch (e) {
+      log.error(e)
+    }
   }, 25, 2000);
 
   // Getting Google Analytics ClientId
-  when(() => !!window.ga, ()=> {
+  when(() => !!window.ga, () => {
     ga(() => {
       try {
         this.gaClientId = ga && ga.getAll && ga.getAll()[0] && ga.getAll()[0].get('clientId');
         this.storage.set('gaClientId', this.gaClientId);
-      } catch (e) {log.error(e)}
+      } catch (e) {
+        log.error(e)
+      }
     })
   }, 25, 40)
 }
 
 SessionTracker.prototype.fireSessionEvent = function () {
 
-  const data = {
-
-  };
+  const data = {};
 
   each(this.eventCallbacks, (cb) => {
     cb(EVENT_SESSION, data);
@@ -94,7 +96,13 @@ SessionTracker.prototype.addEventCallback = function (cb) {
 
 SessionTracker.prototype.getStoredUid = function () {
 
-  return this.cookieStorage.get(KEY_UID) || this.localStorage.get(KEY_UID);
+  let uid = this.cookieStorage.get(KEY_UID) || this.localStorage.get(KEY_UID);
+
+  if (uid === 'undefined') {
+    uid = undefined;
+  }
+
+  return uid;
 
 };
 
@@ -129,12 +137,12 @@ SessionTracker.prototype.userData = function () {
 
 SessionTracker.prototype.setUserData = function (data) {
 
-  if(data.userId){
+  if (data.userId) {
     this.storage.set(KEY_USER_ID, data.userId);
     this.userId = data.userId;
   }
 
-  if(data.userTraits){
+  if (data.userTraits) {
     this.storage.set(KEY_USER_TRAITS, data.userTraits);
     this.userTraits = data.userTraits;
   }

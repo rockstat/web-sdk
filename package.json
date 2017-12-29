@@ -12,7 +12,7 @@
     "url": "https://github.com/alcolytics/alcojs.git"
   },
   "author": "Dmitry Rodin <madiedinro@gmail.com>",
-  "license": "UNLICENCED",
+  "license": "MIT",
   "homepage": "https://github.com/alcolytics/alcojs.git",
   "dependencies": {
     "component-cookie": "^1.1.3",
