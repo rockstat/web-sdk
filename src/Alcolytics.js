@@ -5,17 +5,21 @@ import CookieStorageAdapter from './CookieStorageAdapter';
 import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
-import {isObject} from './functions/type';
 import FormTracker from './trackers/FormTracker';
 import SessionTracker from './SessionTracker';
 import ActivityTracker from './trackers/ActivityTracker';
 import ClickTracker from './trackers/ClickTracker';
 import Transport from './Transport';
+import {isObject} from './functions/type';
+import Emitter from 'component-emitter';
+import each from './functions/each';
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
   EVENT_SESSION,
-  EVENT_INITIAL_UID
+  EVENT_INITIAL_UID,
+  CB_READY,
+  CB_EVENT
 } from "./Variables";
 
 const log = createLogger('Alcolytics');
@@ -32,12 +36,16 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 6,
+    libver: 7,
     projectId: 1,
-    initialUid: '0',
+    initialUid: 0,
     cookieDomain: 'auto'
   };
+
+  this.callbacks = {};
 }
+
+Emitter(Alcolytics.prototype);
 
 /**
  * Handle events from queue and start accepting events
@@ -77,11 +85,10 @@ Alcolytics.prototype.initialize = function () {
   this.cookieStorage = new CookieStorageAdapter(this.options);
 
   this.sessionTracker = new SessionTracker(this, this.options);
-  this.sessionTracker.setInitialUid(this.initialUid);
+  this.sessionTracker.handleUid(this.initialUid);
   this.sessionTracker.addEventCallback((name, data) => this.event(name, data));
 
   // Running trackers
-
   const eventWrapper = ({name, data, options}) => this.event(name, data, options);
 
   this.formTracker = new FormTracker();
@@ -93,27 +100,50 @@ Alcolytics.prototype.initialize = function () {
   this.clickTracker = new ClickTracker();
   this.clickTracker.on('event', eventWrapper);
 
+  // Ready
+  this.emit(CB_READY);
+
   // Handling queue
   this.queue.map(e => {
     this.handle.apply(this, e);
   });
   this.queue = [];
 
-
   // Unload tracker
-
   window.addEventListener('beforeunload', function(event) {
-    log('I am the 1st one.');
+    log('beforeunload');
   });
+
   window.addEventListener('unload', function(event) {
-    log('I am the 3rd one.');
+    log('unload');
   });
-
-
 
 };
 
+/**
+ * Applying configuration block. Can be called multiple times
+ * @param options
+ */
+Alcolytics.prototype.configure = function (options) {
 
+  if (this.initialized) {
+    return log.warn('Configuration cant be applied because already initialized');
+  }
+
+  this.configured = true;
+  this.options = objectAssign(this.options, options);
+
+};
+
+/**
+ * Calling from server.
+ * @param uid
+ */
+Alcolytics.prototype.setInitialUid = function (uid) {
+
+  this.initialUid = uid;
+
+};
 
 /**
  * Handling event
@@ -126,7 +156,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
-  log('handling', name);
+  this.emit(CB_EVENT, name, data, options);
 
   // Special handlers
   if(name === EVENT_IDENTIFY){
@@ -202,29 +232,25 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
 };
 
 /**
- * Calling from server.
- * @param uid
+ * Add ready callback
+ * @param cb
  */
-Alcolytics.prototype.setInitialUid = function (uid) {
+Alcolytics.prototype.onReady = function (cb) {
 
-  this.initialUid = uid;
+  this.on(CB_READY, cb)
 
 };
 
-/**
- * Applying configuration block. Can be called multiple times
- * @param options
- */
-Alcolytics.prototype.configure = function (options) {
+Alcolytics.prototype.onEvent = function (cb) {
 
-  if (this.initialized) {
-    return log.warn('Configuration cant be applied because already initialized');
-  }
-
-  this.configured = true;
-  this.options = objectAssign(this.options, options);
+  this.on(CB_EVENT, cb)
 
 };
 
+Alcolytics.prototype.getUid = function () {
+
+  return this.sessionTracker.getUid();
+
+};
 
 export default Alcolytics;

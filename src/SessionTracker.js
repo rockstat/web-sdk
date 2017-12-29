@@ -36,8 +36,7 @@ function SessionTracker(alco, options) {
 
   this.options = options;
   this.lastSession = null;
-  this.lastCampaign = null;
-  this.initialUid = '2';
+  this.initialUid = null;
   this.userId = undefined;
   this.userTraits = undefined;
   this.uid = null;
@@ -109,6 +108,22 @@ SessionTracker.prototype.setStoredUid = function (uid) {
 
 };
 
+SessionTracker.prototype.handleUid = function (uid) {
+
+  this.initialUid = uid;
+  this.uid = this.getStoredUid() || this.initialUid;
+
+  // Saving uid
+  this.setStoredUid(this.uid);
+
+};
+
+SessionTracker.prototype.getUid = function () {
+
+  return this.uid;
+
+};
+
 SessionTracker.prototype.getPageNum = function () {
 
   return this.storage.get(KEY_PAGES_COUNTER, {session: true});
@@ -144,12 +159,6 @@ SessionTracker.prototype.setUserData = function (data) {
   }
 };
 
-SessionTracker.prototype.setInitialUid = function (uid) {
-
-  this.initialUid = uid;
-
-};
-
 
 SessionTracker.prototype.handleEvent = function (name, data, page) {
 
@@ -160,10 +169,6 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   const source = pageSource(page);
   const lastEventTS = this.storage.get(KEY_LAST_EVENT_TS);
   const lastSession = this.storage.get(KEY_LAST_SESSION);
-  this.uid = this.getStoredUid() || this.initialUid;
-
-  // Saving uid
-  this.setStoredUid(this.uid);
 
   // Setting last event
   const now = (new Date()).getTime();

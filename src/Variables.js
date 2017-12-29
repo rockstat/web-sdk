@@ -15,3 +15,5 @@ export const SESSION_REFERRAL = 'referral';
 export const SESSION_SOCIAL = 'social';
 export const SESSION_UNKNOWN = 'unknown';
 
+export const CB_READY = 'ready';
+export const CB_EVENT = 'event';

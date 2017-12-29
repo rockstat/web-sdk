@@ -3,9 +3,9 @@
     if(win.alco) return;
     alco = win.alco = function () {
       args = Array.prototype.slice.call(arguments);
-      alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
+      return alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
     };
-    alco.push = alco; alco.loaded = !0; alco.snippet = 1; alco.queue = []; alco.server = 'https://' + shost;
+    alco.push = alco; alco.loaded = !0; alco.snippet = 2; alco.queue = []; alco.server = 'https://' + shost;
     alco.load = function (src) {
       el = doc.createElement(stag); el.async = !0; el.src = src;
       head = doc.getElementsByTagName(stag)[0];
