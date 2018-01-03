@@ -134,7 +134,6 @@ SessionTracker.prototype.getEventNum = function () {
 };
 
 
-
 SessionTracker.prototype.sessionData = function () {
 
   return objectAssign({
@@ -177,7 +176,7 @@ SessionTracker.prototype.setUserData = function (data) {
 SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   // Skipping own events
-  if (name === EVENT_SESSION){
+  if (name === EVENT_SESSION) {
     return null;
   }
 
@@ -189,12 +188,12 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   const now = (new Date()).getTime();
   this.storage.set(KEY_LAST_EVENT_TS, now);
 
-  // Starting new Session
-  if (
-    typeof lastEventTS === 'undefined'
+  // Starting new session if needed
+  let shouldRestart = lastEventTS === undefined
     || (now - lastEventTS) > this.options.sessionTimeout * 1000
-    || this.shouldRestart(lastSession, source)
-  ) {
+    || this.shouldRestart(lastSession, source);
+
+  if (shouldRestart) {
 
     source.num = this.storage.inc(KEY_SESSION_COUNTER);
     source.start = now;
@@ -212,18 +211,20 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
     this.lastSession = source;
 
     // Applying last campaign
-    if (source.hasMarks) {
+    if (source.type === SESSION_CAMPAIGN) {
       this.storage.set(KEY_LAST_CAMPAIGN, source, {exp: 7776000});
     }
-
-    this.fireSessionEvent();
   }
 
-  // Increment page/event count
+  // Increment counters
   (name === EVENT_PAGEVIEW)
     ? this.storage.inc(KEY_PAGES_COUNTER, {session: true})
     : this.storage.inc(KEY_EVENTS_COUNTER, {session: true});
 
+  // Emitting session event
+  if (shouldRestart) {
+    this.fireSessionEvent();
+  }
 
   // Updating state
   this.lastSession = this.storage.get(KEY_LAST_SESSION);
