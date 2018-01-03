@@ -6,7 +6,7 @@ import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
 import FormTracker from './trackers/FormTracker';
-import SessionTracker from './SessionTracker';
+import SessionTracker from './trackers/SessionTracker';
 import ActivityTracker from './trackers/ActivityTracker';
 import ClickTracker from './trackers/ClickTracker';
 import Transport from './Transport';

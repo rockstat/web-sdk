@@ -1,10 +1,10 @@
-import objectAssign from './functions/objectAssing';
-import createLogger from './functions/createLogger';
-import objectKeys from './functions/objectKeys';
-import pageSource from './functions/pageSource';
-import isValidUid from './functions/isValidUid';
-import each from './functions/each';
-import when from './functions/when';
+import objectAssign from '../functions/objectAssing';
+import createLogger from '../functions/createLogger';
+import objectKeys from '../functions/objectKeys';
+import pageSource from '../functions/pageSource';
+import isValidUid from '../functions/isValidUid';
+import each from '../functions/each';
+import when from '../functions/when';
 import Emitter from 'component-emitter';
 
 import {
@@ -13,7 +13,7 @@ import {
   SESSION_ORGANIC,
   SESSION_CAMPAIGN,
   SESSION_SOCIAL
-} from "./Variables";
+} from "../Variables";
 
 const KEY_LAST_EVENT_TS = 'levent';
 const KEY_LAST_CAMPAIGN = 'lcamp';
