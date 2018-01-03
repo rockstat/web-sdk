@@ -31,12 +31,11 @@ function Alcolytics() {
   this.initialized = false;
   this.configured = false;
   this.queue = [];
-  this.initialUid = '1';
   this.options = {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 9,
+    libver: 10,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto'
@@ -65,10 +64,9 @@ Alcolytics.prototype.initialize = function () {
 
   log('Initializing');
 
-  // Check configured
+  // Check is configured
   if (!this.configured) {
-    this.configured = true;
-    log.warn('Initializing before configured');
+    log.warn('Initializing before configuration complete');
   }
 
   // Library data
@@ -80,18 +78,19 @@ Alcolytics.prototype.initialize = function () {
 
   this.transport = new Transport(this.options);
 
-  // Constructing deps
+  // Constructing storage methods
   this.localStorage = new LocalStorageAdapter(this.options);
   this.cookieStorage = new CookieStorageAdapter(this.options);
 
+  // Trackers
   this.sessionTracker = new SessionTracker(this, this.options);
-  this.sessionTracker.handleUid(this.initialUid);
+  this.sessionTracker.handleUid(this.options.initialUid);
 
   this.formTracker = new FormTracker();
   this.activityTracker = new ActivityTracker();
   this.clickTracker = new ClickTracker();
 
-  // Running trackers
+  // Receiving events from trackers
   const eventWrapper = ({name, data, options}) => this.event(name, data, options);
 
   this.sessionTracker.on('event', eventWrapper);
@@ -99,7 +98,7 @@ Alcolytics.prototype.initialize = function () {
   this.activityTracker.on('event', eventWrapper);
   this.clickTracker.on('event', eventWrapper);
 
-  // Ready
+  // Fire ready
   this.emit(CB_READY);
 
   // Handling queue
@@ -109,11 +108,12 @@ Alcolytics.prototype.initialize = function () {
   this.queue = [];
 
   // Unload tracker
-  window.addEventListener('beforeunload', function(event) {
+  window.addEventListener('beforeunload', function (event) {
     log('beforeunload');
+    // TODO: flush tracker data
   });
 
-  window.addEventListener('unload', function(event) {
+  window.addEventListener('unload', function (event) {
     log('unload');
   });
 
@@ -135,16 +135,6 @@ Alcolytics.prototype.configure = function (options) {
 };
 
 /**
- * Calling from server.
- * @param uid
- */
-Alcolytics.prototype.setInitialUid = function (uid) {
-
-  this.initialUid = uid;
-
-};
-
-/**
  * Handling event
  * @param name
  * @param data
@@ -158,7 +148,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
   this.emit(CB_EVENT, name, data, options);
 
   // Special handlers
-  if(name === EVENT_IDENTIFY){
+  if (name === EVENT_IDENTIFY) {
     return this.sessionTracker.setUserData(data);
   }
 
@@ -183,7 +173,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
   // Sending to server
   const query = [
-    'uid=' + this.sessionTracker.uid
+    'uid=' + this.sessionTracker.getUid()
   ];
   const url = this.options.server + '/track?' + query.join('&');
   this.transport.send(url, msg, options);
@@ -215,7 +205,7 @@ Alcolytics.prototype.page = function (data, options) {
  */
 Alcolytics.prototype.identify = function (userId, userTraits) {
 
-  if(isObject(userId)){
+  if (isObject(userId)) {
     userTraits = userId;
     userId = undefined;
   }
