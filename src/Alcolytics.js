@@ -36,7 +36,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 7,
+    libver: 8,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto'
@@ -86,18 +86,17 @@ Alcolytics.prototype.initialize = function () {
 
   this.sessionTracker = new SessionTracker(this, this.options);
   this.sessionTracker.handleUid(this.initialUid);
-  this.sessionTracker.addEventCallback((name, data) => this.event(name, data));
+
+  this.formTracker = new FormTracker();
+  this.activityTracker = new ActivityTracker();
+  this.clickTracker = new ClickTracker();
 
   // Running trackers
   const eventWrapper = ({name, data, options}) => this.event(name, data, options);
 
-  this.formTracker = new FormTracker();
+  this.sessionTracker.on('event', eventWrapper);
   this.formTracker.on('event', eventWrapper);
-
-  this.activityTracker = new ActivityTracker();
   this.activityTracker.on('event', eventWrapper);
-
-  this.clickTracker = new ClickTracker();
   this.clickTracker.on('event', eventWrapper);
 
   // Ready
@@ -170,23 +169,17 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
   data = objectAssign({}, data);
 
   const msg = {
-    projectId: this.options.projectId,
-    uid: this.sessionTracker.uid,
-    user: this.sessionTracker.userData(),
-    ymClientId: this.sessionTracker.ymClientId,
-    gaClientId: this.sessionTracker.gaClientId,
-    page: objectAssign({
-        number: this.sessionTracker.getPageNum()
-      }, page
-    ),
-    session: this.sessionTracker.sessionData(),
-    library: this.libInfo,
     name: name,
     data: data,
+    projectId: this.options.projectId,
+    uid: this.sessionTracker.getUid(),
+    user: this.sessionTracker.userData(),
+    page: page,
+    session: this.sessionTracker.sessionData(),
+    library: this.libInfo,
     client: clientData(),
     browser: browserData()
   };
-
 
   // Sending to server
   const query = [

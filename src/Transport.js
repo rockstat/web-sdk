@@ -61,7 +61,7 @@ Transport.prototype.sendBeacon = function (url, data) {
     xhr.send(data);
 
     // Img load test
-    const img = new Image(1,1);
+    const img = win.Image ? (new Image(1,1)) : doc.createElement('img');
     img.src = this.server + '/track?' + (new Date()).getTime();
     img.onload = () => {
       log('img loaded');

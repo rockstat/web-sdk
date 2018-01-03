@@ -5,6 +5,7 @@ import pageSource from './functions/pageSource';
 import isValidUid from './functions/isValidUid';
 import each from './functions/each';
 import when from './functions/when';
+import Emitter from 'component-emitter';
 
 import {
   EVENT_PAGEVIEW,
@@ -20,6 +21,7 @@ const KEY_LAST_SESSION = 'lsess';
 const KEY_LAST_SESSION_TS = 'lsts';
 const KEY_SESSION_COUNTER = 'csess';
 const KEY_PAGES_COUNTER = 'scpages';
+const KEY_EVENTS_COUNTER = 'scevs';
 const KEY_UID = 'uid';
 const KEY_USER_ID = 'userid';
 const KEY_USER_TRAITS = 'usertr';
@@ -66,12 +68,13 @@ function SessionTracker(alco, options) {
   }, 25, 40)
 }
 
+Emitter(SessionTracker.prototype);
+
 SessionTracker.prototype.fireSessionEvent = function () {
 
-  const data = {};
-
-  each(this.eventCallbacks, (cb) => {
-    cb(EVENT_SESSION, data);
+  this.emit('event', {
+    name: EVENT_SESSION,
+    data: {}
   });
 
 };
@@ -87,12 +90,6 @@ SessionTracker.prototype.shouldRestart = function (session, source) {
 
 };
 
-
-SessionTracker.prototype.addEventCallback = function (cb) {
-
-  this.eventCallbacks.push(cb);
-
-};
 
 SessionTracker.prototype.getStoredUid = function () {
 
@@ -130,9 +127,20 @@ SessionTracker.prototype.getPageNum = function () {
 
 };
 
+SessionTracker.prototype.getEventNum = function () {
+
+  return this.storage.get(KEY_EVENTS_COUNTER, {session: true});
+
+};
+
+
+
 SessionTracker.prototype.sessionData = function () {
 
-  return objectAssign({}, this.lastSession);
+  return objectAssign({
+    pageNum: this.getPageNum(),
+    eventNum: this.getEventNum()
+  }, this.lastSession);
 
 };
 
@@ -141,7 +149,12 @@ SessionTracker.prototype.userData = function () {
   const id = this.storage.get(KEY_USER_ID);
   const traits = this.storage.get(KEY_USER_TRAITS);
 
-  return {id, traits};
+  return {
+    id,
+    traits,
+    gaId: this.gaClientId,
+    ymId: this.ymClientId
+  };
 
 };
 
@@ -157,14 +170,16 @@ SessionTracker.prototype.setUserData = function (data) {
     this.storage.set(KEY_USER_TRAITS, data.userTraits);
     this.userTraits = data.userTraits;
   }
+
 };
 
 
 SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   // Skipping own events
-  if (name === EVENT_SESSION)
+  if (name === EVENT_SESSION){
     return null;
+  }
 
   const source = pageSource(page);
   const lastEventTS = this.storage.get(KEY_LAST_EVENT_TS);
@@ -190,6 +205,7 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
     // Updating counters
     this.storage.set(KEY_LAST_SESSION_TS, now, {session: true});
     this.storage.set(KEY_PAGES_COUNTER, 0, {session: true});
+    this.storage.set(KEY_EVENTS_COUNTER, 0, {session: true});
 
     // Saving last session
     this.storage.set(KEY_LAST_SESSION, source);
@@ -203,10 +219,11 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
     this.fireSessionEvent();
   }
 
-  // Increment page count
-  if (name === EVENT_PAGEVIEW) {
-    this.storage.inc(KEY_PAGES_COUNTER, {session: true});
-  }
+  // Increment page/event count
+  (name === EVENT_PAGEVIEW)
+    ? this.storage.inc(KEY_PAGES_COUNTER, {session: true})
+    : this.storage.inc(KEY_EVENTS_COUNTER, {session: true});
+
 
   // Updating state
   this.lastSession = this.storage.get(KEY_LAST_SESSION);

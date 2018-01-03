@@ -55,7 +55,7 @@ LocalStorageAdapter.prototype.get = function (key, options, missing) {
   if (!this.available)
     return;
 
-  // const missing = undefined;
+  //const missing = undefined;
   options = options || {};
   const query_key = this.getPrefixedKey(key, options);
 
@@ -71,23 +71,30 @@ LocalStorageAdapter.prototype.get = function (key, options, missing) {
       const sepPos = data.indexOf('|');
 
       if(sepPos < 0){
+
         log.warn('Wrong format. Missing separator');
+
         this.rm(key, options);
         return missing;
+
       }
 
       const exp = data.substr(0, sepPos);
       const value = data.substr(sepPos + 1);
 
       if (exp && nowSec > exp) {
+
         this.rm(key, options);
         return missing;
+
       }
 
       return JSON.parse(value);
 
     } else {
+
       return missing;
+
     }
 
   } catch (e) {
@@ -109,6 +116,7 @@ LocalStorageAdapter.prototype.inc = function (key, options) {
   counter += 1;
   this.set(key, counter, options);
   return counter;
+
 };
 
 LocalStorageAdapter.prototype.rm = function (key, options) {
@@ -120,6 +128,7 @@ LocalStorageAdapter.prototype.rm = function (key, options) {
   const query_key = this.getPrefixedKey(key, options);
 
   localStorage.removeItem(query_key);
+
 };
 
 LocalStorageAdapter.prototype.getAllKeys = function (options) {
@@ -141,6 +150,7 @@ LocalStorageAdapter.prototype.getAllKeys = function (options) {
   }
 
   return result;
+
 };
 
 LocalStorageAdapter.prototype.getAll = function (options) {
