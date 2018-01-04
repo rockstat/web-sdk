@@ -1,7 +1,7 @@
 // todo: check libs (localstorage, etc...)
 
-
 const win = window;
+const doc = document;
 
 // Feature detection
 const features = {
@@ -13,6 +13,7 @@ const features = {
 
 // Main
 import Alcolytics from './Alcolytics';
+import once from './functions/once';
 
 const varname = 'alco';
 const alco = win[varname];
@@ -33,11 +34,20 @@ alco.doCall = function (args) {
 alco.queue.map(alco.doCall);
 alco.queue = [];
 
-// Waiting document load
-const initialize = document.onreadystatechange = function () {
-  const rs = document.readyState;
-  if (rs === 'complete' || rs === 'loaded' || rs === 'interactive') {
-    alcolytics.initialize();
+const initialize = once(() => {
+  alcolytics.initialize();
+
+  doc.removeEventListener && doc.removeEventListener('DOMContentLoaded', initialize);
+  doc.detachEvent && doc.detachEvent("onreadystatechange", initialize);
+});
+
+const checkInteractive = () => {
+  const state = doc.readyState;
+  if (state === 'complete' || state === 'loaded' || state === 'interactive') {
+    initialize();
   }
 };
-initialize();
+
+doc.addEventListener && doc.addEventListener('DOMContentLoaded', initialize);
+doc.attachEvent && doc.attachEvent("onreadystatechange", checkInteractive);
+checkInteractive();

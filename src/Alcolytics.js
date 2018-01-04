@@ -5,10 +5,13 @@ import CookieStorageAdapter from './CookieStorageAdapter';
 import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
-import FormTracker from './trackers/FormTracker';
-import SessionTracker from './trackers/SessionTracker';
+import performanceData from './data/performance';
+
+import BrowserEventsTracker from './trackers/BrowserEventsTracker';
 import ActivityTracker from './trackers/ActivityTracker';
+import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
+import FormTracker from './trackers/FormTracker';
 import Transport from './Transport';
 import {isObject} from './functions/type';
 import Emitter from 'component-emitter';
@@ -17,9 +20,12 @@ import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
   EVENT_SESSION,
-  EVENT_INITIAL_UID,
+  EVENT_PAGE_LOADED,
   CB_READY,
-  CB_EVENT
+  CB_EVENT,
+  CB_DOM_EVENT,
+  DOM_COMPLETE,
+  DOM_BEFORE_UNLOAD
 } from "./Variables";
 
 const log = createLogger('Alcolytics');
@@ -35,13 +41,23 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 10,
+    libver: 11,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto'
   };
 
-  this.callbacks = {};
+  // Handling browser events
+  this.browserEventsTracker = new BrowserEventsTracker();
+  this.browserEventsTracker.on(CB_DOM_EVENT, (name) => {
+    switch (name) {
+      // Firing page complete loaded
+      case DOM_COMPLETE: return this.handle(EVENT_PAGE_LOADED);
+      // Firing unloading signal
+      case DOM_BEFORE_UNLOAD: return log('before unload');
+    }
+  });
+  this.browserEventsTracker.initialize();
 }
 
 Emitter(Alcolytics.prototype);
@@ -83,6 +99,7 @@ Alcolytics.prototype.initialize = function () {
   this.cookieStorage = new CookieStorageAdapter(this.options);
 
   // Trackers
+
   this.sessionTracker = new SessionTracker(this, this.options);
   this.sessionTracker.handleUid(this.options.initialUid);
 
@@ -107,16 +124,6 @@ Alcolytics.prototype.initialize = function () {
   });
   this.queue = [];
 
-  // Unload tracker
-  window.addEventListener('beforeunload', function (event) {
-    log('beforeunload');
-    // TODO: flush tracker data
-  });
-
-  window.addEventListener('unload', function (event) {
-    log('unload');
-  });
-
 };
 
 /**
@@ -138,6 +145,7 @@ Alcolytics.prototype.configure = function (options) {
  * Handling event
  * @param name
  * @param data
+ * @param options
  */
 Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
@@ -155,8 +163,8 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
   const page = pageDefaults();
   this.sessionTracker.handleEvent(name, data, page);
 
-  // Cloning data
-  data = objectAssign({}, data);
+  // Adding
+  const addPerformanceData = (name === EVENT_PAGEVIEW || name === EVENT_PAGE_LOADED);
 
   const msg = {
     name: name,
@@ -168,7 +176,8 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     session: this.sessionTracker.sessionData(),
     library: this.libInfo,
     client: clientData(),
-    browser: browserData()
+    browser: browserData(),
+    perf: addPerformanceData ? performanceData() : {}
   };
 
   // Sending to server
@@ -192,7 +201,7 @@ Alcolytics.prototype.event = function (name, data, options) {
 };
 
 /**
- * Tracking page load
+ * Track page load
  */
 Alcolytics.prototype.page = function (data, options) {
 
@@ -201,7 +210,7 @@ Alcolytics.prototype.page = function (data, options) {
 };
 
 /**
- * Tracking page load
+ * Adding user details
  */
 Alcolytics.prototype.identify = function (userId, userTraits) {
 
@@ -215,7 +224,7 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
 };
 
 /**
- * Add ready callback
+ * Add external ready callback
  * @param cb
  */
 Alcolytics.prototype.onReady = function (cb) {
@@ -224,12 +233,20 @@ Alcolytics.prototype.onReady = function (cb) {
 
 };
 
+/**
+ * Add external event callback
+ * @param cb
+ */
 Alcolytics.prototype.onEvent = function (cb) {
 
   this.on(CB_EVENT, cb)
 
 };
 
+/**
+ * Returns Alcolytics uid
+ * @return {String}
+ */
 Alcolytics.prototype.getUid = function () {
 
   return this.sessionTracker.getUid();

@@ -2,8 +2,10 @@ export default function addEventListener(element, eventType, eventHandler, useCa
   if (element.addEventListener) {
     return element.addEventListener(eventType, eventHandler, useCapture);
   }
-  if (element.attachEvent) {
+  else if (element.attachEvent) {
     return element.attachEvent('on' + eventType, eventHandler);
   }
-  element['on' + eventType] = eventHandler;
+  else {
+    element['on' + eventType] = eventHandler;
+  }
 }
