@@ -3,10 +3,20 @@ import runOnStop from '../functions/runOnStop';
 import objectKeys from '../functions/objectKeys';
 import each from '../functions/each';
 import Emitter from 'component-emitter';
+import {win, doc, html, body} from "../Browser";
+import {
+  useCaptureSupport,
+  removeHandler,
+  addHandler
+} from "../functions/domEvents";
+import {
+  DOM_BEFORE_UNLOAD,
+  EVENT,
+  EVENT_ACTIVITY,
+  EVENT_SCROLL,
+} from "../Variables";
 
-const win = window;
-const doc = document;
-
+const scrollEvent = 'scroll';
 const activityEvents = [
   'touchmove', 'touchstart', 'touchleave', 'touchenter', 'touchend', 'touchcancel',
   'click', 'mouseup', 'mousedown', 'mousemove', 'mousewheel', 'mousewheel', 'wheel',
@@ -17,14 +27,28 @@ const activityEvents = [
  * Returns document height
  * @return {number}
  */
-const getPageHeight = function () {
+const getDocumentHeight = function () {
 
-  const html = doc.documentElement;
-  const body = doc.body;
-  return Math.max(html.offsetHeight, html.scrollHeight, body.offsetHeight, body.scrollHeight);
+  return Math.max(html.offsetHeight, html.scrollHeight, body.offsetHeight, body.scrollHeight, body.clientHeight);
 
 };
 
+/**
+ * Return current top offset
+ * @return {number}
+ */
+const getTopOffset = function () {
+  return win.pageYOffset || html.scrollTop
+};
+
+
+/**
+ * Returns screen height
+ * @return {number}
+ */
+const getClientHeight = function () {
+  return win.innerHeight || html.clientHeight;
+};
 
 /**
  *
@@ -34,78 +58,63 @@ const getPageHeight = function () {
 const ActivityTracker = function (options) {
 
   this.options = objectAssing({}, this.defaults, options);
+
+  // Activity handling
   this.iteration = 0;
   this.active = 0;
   this.counter = {};
 
+  // Scroll variables
   this.maxScroll = 0;
-  this.maxScreen = 0;
+  this.scrollData = {};
 
   this.eventHandler = this.eventHandler.bind(this);
-  this.initialize();
-
-  this.scrollHandler = runOnStop(
-    (e) => this.doHandleScroll(e),
+  this.scrollHandlerWrapper = runOnStop(
+    (e) => this.fireScrollEvent(e),
     500
   );
 
+  if (useCaptureSupport) {
+
+    each(activityEvents, (event) => {
+      addHandler(doc, event, this.eventHandler, true);
+    });
+
+    this.activityFlushInterval = setInterval(
+      () => this.fireActivityEvent(),
+      this.options.flushInterval * 1000
+    )
+  }
+
 };
 
-
 ActivityTracker.prototype.defaults = {
-  namePrefix: '',
-  interval: 5
+  flushInterval: 5
 };
 
 Emitter(ActivityTracker.prototype);
 
+/**
+ *
+ * @param emitter
+ * @return {ActivityTracker}
+ */
+ActivityTracker.prototype.subscribe = function (emitter) {
 
-ActivityTracker.prototype.doHandleScroll = function (e) {
-
-  const scrollPos = win.pageYOffset;
-  const windowHeight = win.innerHeight;
-  const pageHeight = getPageHeight();
-  const currentScroll = Math.min(
-    100,
-    Math.max(
-      0,
-      100 * (scrollPos / (pageHeight - windowHeight))
-    )
-  );
-
-  this.maxScroll = currentScroll > this.maxScroll
-    ? currentScroll
-    : this.maxScroll;
-
-  const currentScreen = Math.ceil(pageHeight / windowHeight / 100 * currentScroll + 0.1);
-
-  this.maxScreen = currentScreen > this.maxScreen
-    ? currentScreen
-    : this.maxScreen;
-
-  const event = {
-    name: this.options.namePrefix + 'Scroll',
-    data: {
-      ph: pageHeight,
-      wh: windowHeight,
-      csn: currentScreen,
-      msn: this.maxScreen,
-      csl: Math.round(currentScroll),
-      msl: Math.round(this.maxScroll)
-    }
-  };
-  this.emit('event', event);
+  return this;
 
 };
 
+/**
+ * Main events handler
+ * @param event
+ */
+ActivityTracker.prototype.eventHandler = function (event) {
 
-ActivityTracker.prototype.eventHandler = function (e) {
+  const type = event.type;
 
-  const type = e.type;
-
-
-  if (type === 'scroll') {
-    this.scrollHandler();
+  if (type === scrollEvent) {
+    this.scrollHandlerWrapper();
   }
 
   this.counter[type] = (this.counter[type] || 0) + 1;
@@ -113,13 +122,59 @@ ActivityTracker.prototype.eventHandler = function (e) {
 };
 
 
-ActivityTracker.prototype.fireEvent = function () {
+ActivityTracker.prototype.fireScrollEvent = function (e) {
+
+  this.handleScroll();
+  const event = {
+    name: EVENT_SCROLL
+  };
+
+  this.emit(EVENT, event);
+
+};
+
+ActivityTracker.prototype.handleScroll = function () {
+
+  const clientHeight = getClientHeight();
+  const topOffset = getTopOffset();
+  const docHeight = getDocumentHeight();
+  const currentScroll = Math.min(
+    100,
+    Math.max(
+      0,
+      100 * Math.round(topOffset / (docHeight - clientHeight))
+    )
+  );
+
+  this.maxScroll = currentScroll > this.maxScroll
+    ? currentScroll
+    : this.maxScroll;
+
+  this.scrollData = {
+    docHeight: docHeight,
+    clientHeight: clientHeight,
+    topOffset: topOffset,
+    scroll: currentScroll,
+    maxScroll: this.maxScroll
+  };
+
+};
+
+ActivityTracker.prototype.getPositionData = function () {
+  this.handleScroll();
+  return this.scrollData;
+};
+
+/**
+ * Emitting activity event
+ */
+ActivityTracker.prototype.fireActivityEvent = function () {
 
   this.iteration++;
 
   if (objectKeys(this.counter).length > 0) {
     const event = {
-      name: this.options.namePrefix + 'Activity',
+      name: EVENT_ACTIVITY,
       data: {
         iteration: this.iteration,
         active: ++this.active
@@ -127,43 +182,23 @@ ActivityTracker.prototype.fireEvent = function () {
     };
 
     objectAssing(event.data, this.counter);
-    this.emit('event', event);
+    this.emit(EVENT, event);
 
     this.counter = {};
   }
-
-};
-
-
-ActivityTracker.prototype.initialize = function () {
-
-  if(!win.addEventListener) return;
-
-  each(activityEvents, (event) => {
-
-    doc.addEventListener(event, this.eventHandler, true);
-
-  });
-
-  this.activityFireInterval = setInterval(
-    () => this.fireEvent(),
-    this.options.interval * 1000
-  )
-
 };
 
 
 ActivityTracker.prototype.unload = function () {
 
   each(activityEvents, (event) => {
-
-    doc.removeEventListener(event, this.eventHandler);
-
+    removeHandler(doc, event, this.eventHandler);
   });
 
-  clearInterval(this.activityFireInterval);
-  clearTimeout(this.activityTrackingDelay);
+  clearInterval(this.activityFlushInterval);
+  this.fireActivityEvent();
 
 };
+
 
 export default ActivityTracker;

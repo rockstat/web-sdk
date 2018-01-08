@@ -3,16 +3,19 @@ import createLogger from '../functions/createLogger';
 import Emitter from 'component-emitter';
 import once from '../functions/once';
 import {
+  removeHandler,
+  addHandler
+} from "../functions/domEvents";
+import {win, doc} from "../Browser";
+import {
   DOM_COMPLETE,
   DOM_BEFORE_UNLOAD,
   DOM_UNLOAD,
-  DOM_INTERACTIVE,
-  CB_DOM_EVENT
+  INTERNAL_EVENT, EVENT, EVENT_PAGE_LOADED
 } from "../Variables";
+import each from "../functions/each";
 
 const log = createLogger('Aclo::BET');
-const win = window;
-const doc = document;
 
 /**
  * Трекер отслеживающий базовые события браузера, такие, как завершение загруки, выгрузка страницы и тп.
@@ -26,45 +29,40 @@ const BrowserEventsTracker = function (options) {
   // Обработчик завершения загрузки страницы
   this.loadedHandler = once(() => {
 
-    this.emit(CB_DOM_EVENT, DOM_COMPLETE);
-    win.removeEventListener && win.removeEventListener('load', this.loadedHandler);
-    doc.detachEvent && doc.detachEvent('onload', this.loadedHandler);
+    this.emit(INTERNAL_EVENT, DOM_COMPLETE);
+    this.emit(EVENT, EVENT_PAGE_LOADED);
+    removeHandler(win, 'load', this.loadedHandler);
 
   });
 
   // Обработчик beforeunload, который вызывается перед непосредственной выгрузкой страницы
   this.beforeUnloadHandler = () => {
 
-    this.emit(CB_DOM_EVENT, DOM_BEFORE_UNLOAD);
-    win.removeEventListener('beforeunload', this.beforeUnloadHandler);
+    this.emit(INTERNAL_EVENT, DOM_BEFORE_UNLOAD);
+    removeHandler(win, 'beforeunload', this.beforeUnloadHandler);
 
   };
 
   // Обработчик unload
   this.unloadHandler = () => {
 
-    this.emit(CB_DOM_EVENT, DOM_UNLOAD);
-    win.removeEventListener('unload', this.unloadHandler);
+    this.emit(INTERNAL_EVENT, DOM_UNLOAD);
+    removeHandler(win, 'unload', this.unloadHandler);
 
   };
-
 };
 
 Emitter(BrowserEventsTracker.prototype);
 
 BrowserEventsTracker.prototype.initialize = function () {
 
-  if (win.addEventListener) {
+  addHandler(win, 'load', this.loadedHandler);
+  addHandler(win, 'beforeunload', this.beforeUnloadHandler);
+  addHandler(win, 'unload', this.unloadHandler);
 
-    win.addEventListener('load', this.loadedHandler);
-    win.addEventListener('beforeunload', this.beforeUnloadHandler);
-    win.addEventListener('unload', this.unloadHandler);
-  }
+};
 
-  // Для старых IE (8-)
-  else if (doc.attachEvent) {
-    doc.attachEvent("onload", this.loadedHandler);
-  }
+BrowserEventsTracker.prototype.unload = function () {
 
 };
 

@@ -2,6 +2,7 @@ import objectAssing from '../functions/objectAssing';
 import runOnStop from '../functions/runOnStop';
 import objectKeys from '../functions/objectKeys';
 import each from '../functions/each';
+import {win, doc} from "../Browser";
 import {closest} from 'dom-utils';
 import Emitter from 'component-emitter';
 import {
@@ -9,10 +10,7 @@ import {
   EVENT_OPTION_SCHEDULED
 } from "../Variables";
 
-const win = window;
-const doc = document;
 const linkTag = 'a';
-
 
 /**
  *
@@ -40,7 +38,7 @@ ClickTracker.prototype.eventHandler = function (e) {
   const link = closest(target, linkTag, true);
 
   if (link) {
-    const loc = window.location;
+    const loc = win.location;
     const outbound = link.hostname !== loc.hostname || link.port !== loc.port || link.protocol !== loc.protocol;
     const event = {
       name: this.options.namePrefix + 'Link click',
@@ -74,5 +72,6 @@ ClickTracker.prototype.unload = function () {
   doc.removeEventListener('click', this.eventHandler, true);
 
 };
+
 
 export default ClickTracker;

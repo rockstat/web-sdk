@@ -1,15 +1,12 @@
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
+import {win, doc, nav} from "./Browser";
 import {
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_SCHEDULED
 } from "./Variables";
 
 const log = createLogger('Transport');
-const win = window;
-const doc = document;
-const nav = navigator;
-
 
 const Transport = function (options) {
 

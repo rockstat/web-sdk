@@ -1,18 +1,25 @@
+import {win, doc, html, body} from "../Browser";
+
+function getProto() {
+  const proto = win.location.protocol;
+  return proto.substr(0, proto.length - 1)
+}
+
 export default function() {
 
-  const w = window;
-  const d = w.document;
-  const l = w.location;
-  const proto = l.protocol;
-
+  const loc = win.location;
   return {
-    path: l.pathname,
-    hostname: l.hostname,
-    referrer: d.referrer,
-    query: l.search,
-    title: d.title,
-    url: l.href,
-    hash: l.hash,
-    proto: proto.substr(0, proto.length - 1)
+    path: loc.pathname,
+    hostname: loc.hostname,
+    referrer: doc.referrer,
+    query: loc.search,
+    title: doc.title,
+    url: loc.href,
+    hash: loc.hash,
+    proto: getProto()
   };
+}
+
+export function isHttps() {
+  return getProto() === 'https';
 }

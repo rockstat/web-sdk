@@ -2,25 +2,37 @@ import objectAssing from '../functions/objectAssing';
 import toArray from '../functions/toArray';
 import each from '../functions/each';
 import Emitter from 'component-emitter';
+import {win, doc} from "../Browser";
 import {closest} from 'dom-utils';
 import {
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_SCHEDULED
 } from "../Variables";
+import {
+  useCaptureSupport,
+  removeHandler,
+  addHandler
+} from "../functions/domEvents";
 
-const win = window;
+
 const formTag = 'form';
+const events = ['focus', 'blur', 'change', 'submit', 'invalid'];
 
 const FormTracker = function (options) {
 
   this.options = objectAssing({}, this.defaults, options);
   this.eventHandler = this.eventHandler.bind(this);
-  this.initialize();
+
+  if (useCaptureSupport) {
+    each(toArray(doc.getElementsByTagName('form')), (form) => {
+      each(events, (type) => {
+        addHandler(form, type, this.eventHandler, true);
+      });
+    })
+  }
 };
 
-FormTracker.prototype.defaults = {
-  namePrefix: ''
-};
+FormTracker.prototype.defaults = {};
 
 Emitter(FormTracker.prototype);
 
@@ -35,7 +47,7 @@ FormTracker.prototype.eventHandler = function (e) {
   const field = !isForm && target;
 
   const event = {
-    name: this.options.namePrefix + (isForm ? 'Form ' : 'Field ') + type,
+    name: (isForm ? 'Form ' : 'Field ') + type,
     data: {
       event: type
     },
@@ -74,20 +86,17 @@ FormTracker.prototype.eventHandler = function (e) {
 };
 
 
-FormTracker.prototype.initialize = function () {
+FormTracker.prototype.unload = function () {
 
-  // Works only IE9+ (supported useCapture)
-  if (!win.addEventListener) return;
+  if (useCaptureSupport) {
+    each(toArray(doc.getElementsByTagName('form')), (form) => {
+      each(events, (type) => {
+        removeHandler(form, type, this.eventHandler);
+      });
+    })
+  }
 
-  each(toArray(document.getElementsByTagName('form')), (form) => {
-
-    form.addEventListener('focus', this.eventHandler, true);
-    form.addEventListener('blur', this.eventHandler, true);
-    form.addEventListener('change', this.eventHandler, true);
-    form.addEventListener('submit', this.eventHandler, true);
-    form.addEventListener('invalid', this.eventHandler, true);
-
-  })
 };
+
 
 export default FormTracker;

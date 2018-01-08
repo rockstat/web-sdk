@@ -1,19 +1,17 @@
-// todo: check libs (localstorage, etc...)
-
-const win = window;
-const doc = document;
+import {addHandler, removeHandler, isDocInteractive, isDocComplete} from "./functions/domEvents";
+import {win, doc, nav} from "./Browser";
 
 // Feature detection
 const features = {
   'locst': 'localStorage' in win,
   'addel': 'addEventListener' in win,
   'promise': 'Promise' in win,
-  'sbeacon': 'sendBeacon' in navigator
+  'sbeacon': 'sendBeacon' in nav,
+  'atob': !!win.atob,
 };
 
 // Main
 import Alcolytics from './Alcolytics';
-import once from './functions/once';
 
 const varname = 'alco';
 const alco = win[varname];
@@ -34,20 +32,11 @@ alco.doCall = function (args) {
 alco.queue.map(alco.doCall);
 alco.queue = [];
 
-const initialize = once(() => {
+if (isDocInteractive() || isDocComplete()) {
   alcolytics.initialize();
-
-  doc.removeEventListener && doc.removeEventListener('DOMContentLoaded', initialize);
-  doc.detachEvent && doc.detachEvent("onreadystatechange", initialize);
-});
-
-const checkInteractive = () => {
-  const state = doc.readyState;
-  if (state === 'complete' || state === 'loaded' || state === 'interactive') {
-    initialize();
-  }
-};
-
-doc.addEventListener && doc.addEventListener('DOMContentLoaded', initialize);
-doc.attachEvent && doc.attachEvent("onreadystatechange", checkInteractive);
-checkInteractive();
+} else {
+  addHandler(doc, 'DOMContentLoaded', function () {
+    alcolytics.initialize();
+    removeHandler(doc, 'DOMContentLoaded', this);
+  });
+}

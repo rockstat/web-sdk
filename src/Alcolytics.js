@@ -6,26 +6,29 @@ import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
 import performanceData from './data/performance';
-
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
 import ActivityTracker from './trackers/ActivityTracker';
 import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
-import Transport from './Transport';
+import GoogleAnalytics from './integrations/GoogleAnalytics';
+import YandexMetrika from './integrations/YandexMetrika';
 import {isObject} from './functions/type';
+import Transport from './Transport';
 import Emitter from 'component-emitter';
 import each from './functions/each';
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
-  EVENT_SESSION,
   EVENT_PAGE_LOADED,
-  CB_READY,
-  CB_EVENT,
+  READY,
+  EVENT,
   CB_DOM_EVENT,
   DOM_COMPLETE,
-  DOM_BEFORE_UNLOAD
+  DOM_BEFORE_UNLOAD,
+  EVENTS_ADD_PERF,
+  EVENTS_ADD_SCROLL,
+  INTERNAL_EVENT,
 } from "./Variables";
 
 const log = createLogger('Alcolytics');
@@ -41,23 +44,17 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 11,
+    libver: 101,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto'
   };
 
-  // Handling browser events
-  this.browserEventsTracker = new BrowserEventsTracker();
-  this.browserEventsTracker.on(CB_DOM_EVENT, (name) => {
-    switch (name) {
-      // Firing page complete loaded
-      case DOM_COMPLETE: return this.handle(EVENT_PAGE_LOADED);
-      // Firing unloading signal
-      case DOM_BEFORE_UNLOAD: return log('before unload');
-    }
-  });
-  this.browserEventsTracker.initialize();
+  this.integrations = [];
+  this.trackers = [];
+
+  this.on(DOM_BEFORE_UNLOAD, this.unload);
+
 }
 
 Emitter(Alcolytics.prototype);
@@ -92,31 +89,58 @@ Alcolytics.prototype.initialize = function () {
     snippet: this.options.snippet,
   };
 
+  // Transport to server
   this.transport = new Transport(this.options);
 
   // Constructing storage methods
   this.localStorage = new LocalStorageAdapter(this.options);
   this.cookieStorage = new CookieStorageAdapter(this.options);
 
-  // Trackers
+  // Handling browser events
+  this.browserEventsTracker = new BrowserEventsTracker();
+  this.browserEventsTracker.initialize();
 
-  this.sessionTracker = new SessionTracker(this, this.options);
-  this.sessionTracker.handleUid(this.options.initialUid);
+  // Session tracker
+  this.sessionTracker = new SessionTracker(this, this.options)
+    .subscribe(this)
+    .handleUid(this.options.initialUid);
 
-  this.formTracker = new FormTracker();
+  // Other tracker
   this.activityTracker = new ActivityTracker();
   this.clickTracker = new ClickTracker();
+  this.formTracker = new FormTracker();
 
-  // Receiving events from trackers
-  const eventWrapper = ({name, data, options}) => this.event(name, data, options);
+  this.trackers.push(
+    this.browserEventsTracker,
+    this.sessionTracker,
+    this.activityTracker,
+    this.clickTracker,
+    this.formTracker
+  );
 
-  this.sessionTracker.on('event', eventWrapper);
-  this.formTracker.on('event', eventWrapper);
-  this.activityTracker.on('event', eventWrapper);
-  this.clickTracker.on('event', eventWrapper);
+  // Integrations
+  this.integrations.push(
+    new GoogleAnalytics(),
+    new YandexMetrika()
+  );
+
+  // Receiving events from trackers and plugins
+  const plugins = [].concat(this.trackers, this.integrations);
+
+  each(plugins, (plugin) => {
+
+    plugin.on(EVENT, ({name, data, options}) => {
+      this.handle(name, data, options)
+    });
+
+    plugin.on(INTERNAL_EVENT, (name, data) => {
+      this.emit(name, data);
+    });
+
+  });
 
   // Fire ready
-  this.emit(CB_READY);
+  this.emit(READY);
 
   // Handling queue
   this.queue.map(e => {
@@ -153,18 +177,19 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
-  this.emit(CB_EVENT, name, data, options);
+  this.emit(EVENT, name, data, options);
 
   // Special handlers
   if (name === EVENT_IDENTIFY) {
     return this.sessionTracker.setUserData(data);
   }
 
+  if (name === EVENT_IDENTIFY) {
+    return this.sessionTracker.setUserData(data);
+  }
+
   const page = pageDefaults();
   this.sessionTracker.handleEvent(name, data, page);
-
-  // Adding
-  const addPerformanceData = (name === EVENT_PAGEVIEW || name === EVENT_PAGE_LOADED);
 
   const msg = {
     name: name,
@@ -177,7 +202,8 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     library: this.libInfo,
     client: clientData(),
     browser: browserData(),
-    perf: addPerformanceData ? performanceData() : {}
+    perf: EVENTS_ADD_PERF.indexOf(name) >= 0 ? performanceData() : undefined,
+    scroll: EVENTS_ADD_SCROLL.indexOf(name) >= 0 ? this.activityTracker.getPositionData() : undefined
   };
 
   // Sending to server
@@ -189,10 +215,31 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
 };
 
+Alcolytics.prototype.unload = function () {
+
+  log('Unloading...');
+
+  each(this.trackers, (tracker) => {
+    tracker.unload();
+  });
+
+};
+
+/**
+ *
+ * @return {LocalStorageAdapter}
+ */
+Alcolytics.prototype.getStorage = function () {
+
+  return this.localStorage;
+
+};
+
 /**
  * Tracking event
  * @param name
  * @param data
+ * @param options
  */
 Alcolytics.prototype.event = function (name, data, options) {
 
@@ -229,7 +276,7 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
  */
 Alcolytics.prototype.onReady = function (cb) {
 
-  this.on(CB_READY, cb)
+  this.on(READY, cb)
 
 };
 
@@ -239,7 +286,7 @@ Alcolytics.prototype.onReady = function (cb) {
  */
 Alcolytics.prototype.onEvent = function (cb) {
 
-  this.on(CB_EVENT, cb)
+  this.on(EVENT, cb)
 
 };
 
@@ -252,5 +299,6 @@ Alcolytics.prototype.getUid = function () {
   return this.sessionTracker.getUid();
 
 };
+
 
 export default Alcolytics;

@@ -1,8 +1,9 @@
 /**
  * https://developer.mozilla.org/en-US/docs/Web/API/PerformanceTiming
  */
+import {win} from "../Browser";
 
-const perf = window.performance;
+const perf = win.performance;
 
 export default function () {
 

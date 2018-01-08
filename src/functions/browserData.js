@@ -1,26 +1,23 @@
-const w = window;
-const d = document;
+import {win, doc, body, html} from "../Browser";
 
 function if1() {
   try {
-    return w === w.top ? 0 : 1;
+    return win === win.top ? 0 : 1;
   } catch (e) {}
 }
 
 function if2() {
   try {
-    return w.parent.frames.length > 0 ? 2: 0;
+    return win.parent.frames.length > 0 ? 2: 0;
   } catch (e){}
 }
 
 function wh() {
 
   try {
-    const de = d.documentElement || {};
-    const body = d.getElementsByTagName('body')[0] || {};
     return {
-      w: w.innerWidth || de.clientWidth || body.clientWidth,
-      h: w.innerHeight|| de.clientHeight|| body.clientHeight
+      w: win.innerWidth || html.clientWidth || body.clientWidth,
+      h: win.innerHeight|| html.clientHeight|| body.clientHeight
     };
   } catch (e) {}
 }
@@ -28,12 +25,12 @@ function wh() {
 function sr() {
   try {
 
-    const s = w.screen;
+    const s = win.screen;
     const o = s.orientation || {};
     return {
       tot: {w: s.width, h: s.height},
       avail: {w: s.availWidth, h: s.availHeight},
-      asp: Math.round(w.devicePixelRatio && w.devicePixelRatio * 1000),
+      asp: Math.round(win.devicePixelRatio && win.devicePixelRatio * 1000),
       oAngle: o.angle,
       oType: o.type
     };

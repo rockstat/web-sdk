@@ -1,10 +1,7 @@
 import objectAssign from '../functions/objectAssing';
 import createLogger from '../functions/createLogger';
-import objectKeys from '../functions/objectKeys';
 import pageSource from '../functions/pageSource';
 import isValidUid from '../functions/isValidUid';
-import each from '../functions/each';
-import when from '../functions/when';
 import Emitter from 'component-emitter';
 
 import {
@@ -12,7 +9,8 @@ import {
   EVENT_SESSION,
   SESSION_ORGANIC,
   SESSION_CAMPAIGN,
-  SESSION_SOCIAL
+  SESSION_SOCIAL,
+  EVENT_USER_PARAMS
 } from "../Variables";
 
 const KEY_LAST_EVENT_TS = 'levent';
@@ -25,12 +23,12 @@ const KEY_EVENTS_COUNTER = 'scevs';
 const KEY_UID = 'uid';
 const KEY_USER_ID = 'userid';
 const KEY_USER_TRAITS = 'usertr';
+const KEY_USER_PARAMS = 'userpr';
 
 const log = createLogger('ST');
 
 function SessionTracker(alco, options) {
 
-  this.eventCallbacks = [];
   this.localStorage = alco.localStorage;
   this.cookieStorage = alco.cookieStorage;
 
@@ -42,33 +40,20 @@ function SessionTracker(alco, options) {
   this.userId = undefined;
   this.userTraits = undefined;
   this.uid = null;
-  this.ymClientId = this.storage.get('ymClientId');
-  this.gaClientId = this.storage.get('gaClientId');
+  this.userParams = this.storage.get(KEY_USER_PARAMS) || {};
 
-  // Getting Yandex Metrika ClientId
-  when(() => window.Ya && window.Ya.Metrika, () => {
-    try {
-      this.ymClientId = Ya._metrika && Ya._metrika.counter && Ya._metrika.counter.getClientID();
-      this.storage.set('ymClientId', this.ymClientId);
-    } catch (e) {
-      log.error(e)
-    }
-  }, 25, 2000);
-
-  // Getting Google Analytics ClientId
-  when(() => !!window.ga, () => {
-    ga(() => {
-      try {
-        this.gaClientId = ga && ga.getAll && ga.getAll()[0] && ga.getAll()[0].get('clientId');
-        this.storage.set('gaClientId', this.gaClientId);
-      } catch (e) {
-        log.error(e)
-      }
-    })
-  }, 25, 40)
 }
 
 Emitter(SessionTracker.prototype);
+
+
+SessionTracker.prototype.subscribe = function (emitter) {
+
+  emitter.on(EVENT_USER_PARAMS, this.setUserParams.bind(this));
+  return this;
+
+};
+
 
 SessionTracker.prototype.fireSessionEvent = function () {
 
@@ -113,6 +98,8 @@ SessionTracker.prototype.handleUid = function (uid) {
   // Saving uid
   this.setStoredUid(this.uid);
 
+  return this;
+
 };
 
 SessionTracker.prototype.getUid = function () {
@@ -143,20 +130,27 @@ SessionTracker.prototype.sessionData = function () {
 
 };
 
+
+SessionTracker.prototype.setUserParams = function (params) {
+
+  this.userParams = objectAssign(this.userParams, params);
+  this.storage.set(KEY_USER_PARAMS, this.userParams)
+
+};
+
 SessionTracker.prototype.userData = function () {
 
   const id = this.storage.get(KEY_USER_ID);
   const traits = this.storage.get(KEY_USER_TRAITS);
+  const params = this.storage.get(KEY_USER_PARAMS);
 
-  return {
-    id,
-    traits,
-    gaId: this.gaClientId,
-    ymId: this.ymClientId
-  };
+  return objectAssign(
+    {},
+    params,
+    {id, traits}
+  );
 
 };
-
 
 SessionTracker.prototype.setUserData = function (data) {
 
@@ -229,6 +223,10 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   // Updating state
   this.lastSession = this.storage.get(KEY_LAST_SESSION);
   this.lastCampaign = this.storage.get(KEY_LAST_CAMPAIGN);
+
+};
+
+SessionTracker.prototype.unload = function () {
 
 };
 

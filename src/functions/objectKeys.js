@@ -1,6 +1,4 @@
-'use strict';
-
-const objectKeys = Object.keys || (function () {
+export default Object.keys || (function () {
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   const hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString');
   const dontEnums = [
@@ -37,5 +35,3 @@ const objectKeys = Object.keys || (function () {
     return result;
   };
 }());
-
-export default objectKeys;

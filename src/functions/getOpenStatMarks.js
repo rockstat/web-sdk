@@ -1,8 +1,10 @@
+import {win} from "../Browser";
+
 export default function(value) {
   if(!value) return;
 
-  if(value.indexOf(';') === -1) {
-    value = window.atob(value);
+  if(value.indexOf(';') === -1 && win.atob) {
+    value = win.atob(value);
   }
   value = value.split(';');
   return {
