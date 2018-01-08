@@ -30,7 +30,9 @@ const BrowserEventsTracker = function (options) {
   this.loadedHandler = once(() => {
 
     this.emit(INTERNAL_EVENT, DOM_COMPLETE);
-    this.emit(EVENT, EVENT_PAGE_LOADED);
+    this.emit(EVENT, {
+      name: EVENT_PAGE_LOADED
+    });
     removeHandler(win, 'load', this.loadedHandler);
 
   });
