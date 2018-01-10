@@ -1,26 +1,20 @@
+# Alcolytics
 
+Is an open source platform for a web and product analytics. It consists of a set of components: JavaScript tracking client for web applications; server-side data collector; services for geo-coding and detecting client device type; a new server deployment system.
 
+Платформа для web и продуктовой аналитики с открытым исходным кодом. Включает в себя JavaScript трекер для сайта; сервис получения, обогащения, сохранения и стриминга данных; сервисы гео-кодинга и определения типа клиентского устройства; систему развертывания нового сервера. 
 
-Тут будет ридми, а пока вот эта хуета.
+![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-tracker/master/docs/alco-scheme.png)
 
-Что делает:
+## AlcoJS library
 
-- Трекает просмотры страницы
-- Трекает кастомные события
-- Из этого добра строит сессии
-- Собирает данные о браузере
-- Сохраняет данные в localStorage
-- Сохраняет последние рекламные метки
-- Сохраняет последнюю сессию
+JavaScript tracking library for web applications. Lets track custom user actions with arbitrary properties. It automatically tracks page views, user activity (browser events from keyboard, focus, mouse, touch), page scroll, interactions with forms and clicks by links. All data is sent to the server-side collector. Comes as a part of Alcolytics platform.
 
+JavaScript библиотека для отслеживания web приложений и передачи  результатов на сервер. События могут сопровождаться произвольным набором параметров. Автоматически отслеживаются: загрузки страниц, активность, скролл, взаимодействия с формами, клики, а также информация об браузере. Является частью платформы Alcolytics.
 
-### Загрузка кода
+## С чего начать
 
-В папочке snippet есть пример, но надо бы его сюда перенести.
-
-Указывается сервер на котором хостится стата.
-id проекта попросту придумывается. 
-Если у вас несколько сайтов, будьте так добры придумайте цифровой id, разный для каждого сайта :)
+Ознакомьтесь с вводной информацией по отслеживанию событий https://alco.readme.io/docs/web-tracking, затем с api AlcoJS https://alco.readme.io/docs/js-ap
 
 ### Особенности связанные с localStorage
 
