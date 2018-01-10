@@ -1,20 +1,29 @@
-# Alcolytics
+# About Alcolytics
 
-Is an open source platform for a web and product analytics. It consists of a set of components: JavaScript tracking client for web applications; server-side data collector; services for geo-coding and detecting client device type; a new server deployment system.
+Is an open source platform for a web and product analytics. 
+It consists of a set of components: JavaScript tracking client for web applications; 
+server-side data collector; services for geo-coding and detecting client device type; 
+a new server deployment system.
+[Read more](https://alco.readme.io/docs/web-tracking)
 
-Платформа для web и продуктовой аналитики с открытым исходным кодом. Включает в себя JavaScript трекер для сайта; сервис получения, обогащения, сохранения и стриминга данных; сервисы гео-кодинга и определения типа клиентского устройства; систему развертывания нового сервера. 
+Платформа для web и продуктовой аналитики с открытым исходным кодом.
+Включает в себя JavaScript трекер для сайта; сервис получения, обогащения,
+сохранения и стриминга данных; сервисы гео-кодинга и определения типа клиентского устройства;
+систему развертывания нового сервера.
+[Подробнее](https://alco.readme.io/docs/web-tracking) 
 
 ![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-tracker/master/docs/alco-scheme.png)
 
-## AlcoJS library
+## About AlcoJS library
 
 JavaScript tracking library for web applications. Lets track custom user actions with arbitrary properties. It automatically tracks page views, user activity (browser events from keyboard, focus, mouse, touch), page scroll, interactions with forms and clicks by links. All data is sent to the server-side collector. Comes as a part of Alcolytics platform.
 
 JavaScript библиотека для отслеживания web приложений и передачи  результатов на сервер. События могут сопровождаться произвольным набором параметров. Автоматически отслеживаются: загрузки страниц, активность, скролл, взаимодействия с формами, клики, а также информация об браузере. Является частью платформы Alcolytics.
 
-## С чего начать
+## Before you start
 
-Ознакомьтесь с вводной информацией по отслеживанию событий https://alco.readme.io/docs/web-tracking, затем с api AlcoJS https://alco.readme.io/docs/js-ap
+- [Вводная информация по отслеживанию событий](https://alco.readme.io/docs/web-tracking)
+- [AlcoJS API](https://alco.readme.io/docs/js-api) 
 
 ### Особенности связанные с localStorage
 
