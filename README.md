@@ -31,6 +31,11 @@ JavaScript библиотека для отслеживания web прилож
 что сертификаты давно бесплатные. 
 Скрипт принципиально откажется работать на http (без s) и ругнется в консоли.
 
+## Thanks for open source support
+
+- [BrowserStack](https://www.browserstack.com): great tool for manual and automated testing in browser
+- [ReadMe](https://readme.io): beautiful tool for product and api documentation
+
 
 ## License
 
