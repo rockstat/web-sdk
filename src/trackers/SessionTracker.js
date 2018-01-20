@@ -10,7 +10,8 @@ import {
   SESSION_ORGANIC,
   SESSION_CAMPAIGN,
   SESSION_SOCIAL,
-  EVENT_USER_PARAMS
+  EVENT_USER_PARAMS,
+  EVENT
 } from "../Variables";
 
 const KEY_LAST_EVENT_TS = 'levent';
@@ -57,7 +58,7 @@ SessionTracker.prototype.subscribe = function (emitter) {
 
 SessionTracker.prototype.fireSessionEvent = function () {
 
-  this.emit('event', {
+  this.emit(EVENT, {
     name: EVENT_SESSION,
     data: {}
   });

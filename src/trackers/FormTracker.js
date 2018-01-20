@@ -5,9 +5,10 @@ import Emitter from 'component-emitter';
 import {win, doc} from "../Browser";
 import {closest} from 'dom-utils';
 import {
+  EVENT,
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_SCHEDULED
-} from "../Variables";
+} from '../Variables';
 import {
   useCaptureSupport,
   removeHandler,
@@ -81,7 +82,7 @@ FormTracker.prototype.eventHandler = function (e) {
     });
   }
 
-  this.emit('event', event);
+  this.emit(EVENT, event);
 
 };
 

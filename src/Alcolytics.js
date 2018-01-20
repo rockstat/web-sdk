@@ -44,7 +44,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 102,
+    libver: 103,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto'
@@ -177,13 +177,11 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
+  log('handling', name);
+
   this.emit(EVENT, name, data, options);
 
   // Special handlers
-  if (name === EVENT_IDENTIFY) {
-    return this.sessionTracker.setUserData(data);
-  }
-
   if (name === EVENT_IDENTIFY) {
     return this.sessionTracker.setUserData(data);
   }

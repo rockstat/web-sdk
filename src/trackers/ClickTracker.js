@@ -6,9 +6,10 @@ import {win, doc} from "../Browser";
 import {closest} from 'dom-utils';
 import Emitter from 'component-emitter';
 import {
+  EVENT,
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_SCHEDULED
-} from "../Variables";
+} from '../Variables';
 
 const linkTag = 'a';
 
@@ -53,7 +54,7 @@ ClickTracker.prototype.eventHandler = function (e) {
       }
     };
 
-    this.emit('event', event);
+    this.emit(EVENT, event);
   }
 };
 
