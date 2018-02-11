@@ -28,8 +28,8 @@ import {
   DOM_BEFORE_UNLOAD,
   EVENTS_ADD_PERF,
   EVENTS_ADD_SCROLL,
-  INTERNAL_EVENT,
-} from "./Variables";
+  INTERNAL_EVENT
+} from './Variables';
 
 const log = createLogger('Alcolytics');
 
@@ -47,7 +47,11 @@ function Alcolytics() {
     libver: 103,
     projectId: 1,
     initialUid: 0,
-    cookieDomain: 'auto'
+    cookieDomain: 'auto',
+    trackActivity: true,
+    trackClicks: true,
+    trackForms: true,
+    allowHTTP: false
   };
 
   this.integrations = [];
@@ -67,12 +71,14 @@ Alcolytics.prototype.initialize = function () {
   // Check is HTTPS
   const page = pageDefaults();
 
-  if (page.proto !== 'https') {
+  if (page.proto !== 'https' && !this.options.allowHTTP) {
     return log.warn('Works only on https');
   }
 
   // Check is initialized
-  if (this.initialized) return;
+  if (this.initialized) {
+    return;
+  }
   this.initialized = true;
 
   log('Initializing');
@@ -86,7 +92,7 @@ Alcolytics.prototype.initialize = function () {
   this.libInfo = {
     name: this.options.library,
     libver: this.options.libver,
-    snippet: this.options.snippet,
+    snippet: this.options.snippet
   };
 
   // Transport to server
@@ -101,22 +107,29 @@ Alcolytics.prototype.initialize = function () {
   this.browserEventsTracker.initialize();
 
   // Session tracker
-  this.sessionTracker = new SessionTracker(this, this.options)
-    .subscribe(this)
-    .handleUid(this.options.initialUid);
+  this.sessionTracker = new SessionTracker(this, this.options).subscribe(this).handleUid(this.options.initialUid);
 
-  // Other tracker
-  this.activityTracker = new ActivityTracker();
-  this.clickTracker = new ClickTracker();
-  this.formTracker = new FormTracker();
-
+  // Main tracker
   this.trackers.push(
     this.browserEventsTracker,
     this.sessionTracker,
-    this.activityTracker,
-    this.clickTracker,
-    this.formTracker
   );
+
+  // Other tracker
+  if (this.options.trackActivity) {
+    this.activityTracker = new ActivityTracker();
+    this.trackers.push(this.activityTracker);
+  }
+
+  if (this.options.trackClicks) {
+    this.clickTracker = new ClickTracker();
+    this.trackers.push(this.clickTracker);
+  }
+
+  if (this.options.trackForms) {
+    this.formTracker = new FormTracker();
+    this.trackers.push(this.formTracker);
+  }
 
   // Integrations
   this.integrations.push(
@@ -130,7 +143,7 @@ Alcolytics.prototype.initialize = function () {
   each(plugins, (plugin) => {
 
     plugin.on(EVENT, ({name, data, options}) => {
-      this.handle(name, data, options)
+      this.handle(name, data, options);
     });
 
     plugin.on(INTERNAL_EVENT, (name, data) => {
@@ -199,10 +212,17 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     session: this.sessionTracker.sessionData(),
     library: this.libInfo,
     client: clientData(),
-    browser: browserData(),
-    perf: EVENTS_ADD_PERF.indexOf(name) >= 0 ? performanceData() : undefined,
-    scroll: EVENTS_ADD_SCROLL.indexOf(name) >= 0 ? this.activityTracker.getPositionData() : undefined
+    browser: browserData()
   };
+
+  if (EVENTS_ADD_PERF.indexOf(name) >= 0) {
+    msg.perf = performanceData();
+  }
+
+  if (this.activityTracker && EVENTS_ADD_SCROLL.indexOf(name) >= 0) {
+    msg.scroll = this.activityTracker.getPositionData();
+  }
+
 
   // Sending to server
   const query = [
@@ -264,7 +284,7 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
     userId = undefined;
   }
 
-  this.handle(EVENT_IDENTIFY, {userId, userTraits})
+  this.handle(EVENT_IDENTIFY, {userId, userTraits});
 
 };
 
@@ -274,7 +294,7 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
  */
 Alcolytics.prototype.onReady = function (cb) {
 
-  this.on(READY, cb)
+  this.on(READY, cb);
 
 };
 
@@ -284,7 +304,7 @@ Alcolytics.prototype.onReady = function (cb) {
  */
 Alcolytics.prototype.onEvent = function (cb) {
 
-  this.on(EVENT, cb)
+  this.on(EVENT, cb);
 
 };
 

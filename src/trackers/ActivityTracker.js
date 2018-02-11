@@ -165,6 +165,15 @@ ActivityTracker.prototype.getPositionData = function () {
   return this.scrollData;
 };
 
+
+ActivityTracker.prototype.getEnrichmentData = function () {
+  this.handleScroll();
+  return {
+    scroll: this.scrollData
+  };
+};
+
+
 /**
  * Emitting activity event
  */
