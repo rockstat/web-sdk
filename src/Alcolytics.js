@@ -14,6 +14,7 @@ import FormTracker from './trackers/FormTracker';
 import GoogleAnalytics from './integrations/GoogleAnalytics';
 import YandexMetrika from './integrations/YandexMetrika';
 import {isObject} from './functions/type';
+import SelfishPerson from './SelfishPerson';
 import Transport from './Transport';
 import Emitter from 'component-emitter';
 import each from './functions/each';
@@ -74,19 +75,28 @@ Alcolytics.prototype.initialize = function () {
   if (page.proto !== 'https' && !this.options.allowHTTP) {
     return log.warn('Works only on https');
   }
-
   // Check is initialized
   if (this.initialized) {
     return;
   }
-  this.initialized = true;
+
+  // Constructing storage methods (should be before any other actions)
+  this.localStorage = new LocalStorageAdapter(this.options);
+  this.cookieStorage = new CookieStorageAdapter(this.options);
+
+  // Getting and applying personal configuration
+  this.selfish = new SelfishPerson(this, this.options);
+  this.configure(this.selfish.getConfig());
 
   log('Initializing');
+
+  this.initialized = true;
 
   // Check is configured
   if (!this.configured) {
     log.warn('Initializing before configuration complete');
   }
+
 
   // Library data
   this.libInfo = {
@@ -98,9 +108,6 @@ Alcolytics.prototype.initialize = function () {
   // Transport to server
   this.transport = new Transport(this.options);
 
-  // Constructing storage methods
-  this.localStorage = new LocalStorageAdapter(this.options);
-  this.cookieStorage = new CookieStorageAdapter(this.options);
 
   // Handling browser events
   this.browserEventsTracker = new BrowserEventsTracker();
@@ -244,16 +251,6 @@ Alcolytics.prototype.unload = function () {
 };
 
 /**
- *
- * @return {LocalStorageAdapter}
- */
-Alcolytics.prototype.getStorage = function () {
-
-  return this.localStorage;
-
-};
-
-/**
  * Tracking event
  * @param name
  * @param data
@@ -317,6 +314,17 @@ Alcolytics.prototype.getUid = function () {
   return this.sessionTracker.getUid();
 
 };
+
+/**
+ * Save personal config overrides
+ * @param config
+ */
+Alcolytics.prototype.setCustomConfig = function (config) {
+
+  this.selfish.saveConfig(config);
+
+};
+
 
 
 export default Alcolytics;
