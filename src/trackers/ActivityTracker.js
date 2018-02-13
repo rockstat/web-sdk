@@ -35,10 +35,11 @@ const getDocumentHeight = function () {
 
 /**
  * Return current top offset
- * @return {number}
+ * @return {number|*}
  */
 const getTopOffset = function () {
-  return win.pageYOffset || html.scrollTop
+  const value = win.pageYOffset || html.scrollTop;
+  return value >= 0 ? Math.round(value): value;
 };
 
 
