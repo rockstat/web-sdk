@@ -5,6 +5,7 @@ import CookieStorageAdapter from './CookieStorageAdapter';
 import pageDefaults from './functions/pageDefaults';
 import browserData from './functions/browserData';
 import clientData from './functions/clientData';
+import clientFeatures from './functions/clientFeatures';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
 import ActivityTracker from './trackers/ActivityTracker';
@@ -45,7 +46,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 103,
+    libver: 104,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto',
@@ -219,6 +220,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     session: this.sessionTracker.sessionData(),
     library: this.libInfo,
     client: clientData(),
+    cf: clientFeatures,
     browser: browserData()
   };
 

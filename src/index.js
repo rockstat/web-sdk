@@ -1,15 +1,6 @@
 import {addHandler, removeHandler, isDocInteractive, isDocComplete} from "./functions/domEvents";
 import {win, doc, nav} from "./Browser";
 
-// Feature detection
-const features = {
-  'locst': 'localStorage' in win,
-  'addel': 'addEventListener' in win,
-  'promise': 'Promise' in win,
-  'sbeacon': 'sendBeacon' in nav,
-  'atob': !!win.atob,
-};
-
 // Main
 import Alcolytics from './Alcolytics';
 

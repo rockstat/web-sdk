@@ -124,6 +124,8 @@ SessionTracker.prototype.getEventNum = function () {
 
 SessionTracker.prototype.sessionData = function () {
 
+
+
   return objectAssign({
     pageNum: this.getPageNum(),
     eventNum: this.getEventNum()

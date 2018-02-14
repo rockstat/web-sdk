@@ -7,12 +7,17 @@ function LocalStorageAdapter(options) {
   options = options || {};
 
   this.options = objectAssign({
-    prefix: 'alc:',
+    prefix: 'alc:'
   }, options);
 
   this.available = this.checkAvailability();
   this.prefix = this.options.prefix;
 }
+
+LocalStorageAdapter.prototype.isAvailable = function () {
+  return this.available();
+};
+
 
 LocalStorageAdapter.prototype.getPrefixedKey = function (key, options) {
 
@@ -29,8 +34,9 @@ LocalStorageAdapter.prototype.getPrefixedKey = function (key, options) {
 
 LocalStorageAdapter.prototype.set = function (key, value, options) {
 
-  if (!this.available)
+  if (!this.available) {
     return;
+  }
 
   options = options || {};
   const query_key = this.getPrefixedKey(key, options);
@@ -45,15 +51,16 @@ LocalStorageAdapter.prototype.set = function (key, value, options) {
 
   } catch (e) {
     log(e);
-    log.warn("LockStorage didn't successfully save the '{" + key + ": " + value + "}' pair, because the localStorage is full.");
+    log.warn('LockStorage didn\'t successfully save the \'{' + key + ': ' + value + '}\' pair, because the localStorage is full.');
   }
 
 };
 
 LocalStorageAdapter.prototype.get = function (key, options, missing) {
 
-  if (!this.available)
+  if (!this.available) {
     return;
+  }
 
   //const missing = undefined;
   options = options || {};
@@ -70,7 +77,7 @@ LocalStorageAdapter.prototype.get = function (key, options, missing) {
       const nowSec = (new Date()).getTime() / 1000;
       const sepPos = data.indexOf('|');
 
-      if(sepPos < 0){
+      if (sepPos < 0) {
 
         log.warn('Wrong format. Missing separator');
 
@@ -100,7 +107,7 @@ LocalStorageAdapter.prototype.get = function (key, options, missing) {
   } catch (e) {
 
     log(e);
-    log.warn("LocalStorageAdapter could not load the item with key " + key);
+    log.warn('LocalStorageAdapter could not load the item with key ' + key);
 
   }
 
@@ -109,8 +116,9 @@ LocalStorageAdapter.prototype.get = function (key, options, missing) {
 
 LocalStorageAdapter.prototype.inc = function (key, options) {
 
-  if (!this.available)
+  if (!this.available) {
     return;
+  }
 
   let counter = this.get(key, options) || 0;
   counter += 1;
@@ -121,8 +129,9 @@ LocalStorageAdapter.prototype.inc = function (key, options) {
 
 LocalStorageAdapter.prototype.rm = function (key, options) {
 
-  if (!this.available)
+  if (!this.available) {
     return;
+  }
 
   options = options || {};
   const query_key = this.getPrefixedKey(key, options);
@@ -133,8 +142,9 @@ LocalStorageAdapter.prototype.rm = function (key, options) {
 
 LocalStorageAdapter.prototype.getAllKeys = function (options) {
 
-  if (!this.available)
+  if (!this.available) {
     return [];
+  }
 
   let keys = Object.keys(localStorage);
   const prefix = this.getPrefixedKey('', options);
@@ -155,8 +165,9 @@ LocalStorageAdapter.prototype.getAllKeys = function (options) {
 
 LocalStorageAdapter.prototype.getAll = function (options) {
 
-  if (!this.available)
+  if (!this.available) {
     return {};
+  }
 
   options = options || {};
 
@@ -170,13 +181,14 @@ LocalStorageAdapter.prototype.getAll = function (options) {
 
   }
 
-  return results
+  return results;
 };
 
 LocalStorageAdapter.prototype.rmAll = function (options) {
 
-  if (!this.available)
+  if (!this.available) {
     return;
+  }
 
   options = options || {};
   const keys = this.getAllKeys(options);
