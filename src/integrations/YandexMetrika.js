@@ -22,7 +22,7 @@ const YandexMetrika = function () {
       }
 
     } catch (e) {
-      log.error(e)
+      log.error('Error:', e)
     }
   }, 25, 40);
 

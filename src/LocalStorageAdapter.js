@@ -50,7 +50,7 @@ LocalStorageAdapter.prototype.set = function (key, value, options) {
     localStorage.setItem(query_key, exp + '|' + JSON.stringify(value));
 
   } catch (e) {
-    log(e);
+    log('Error:', e);
     log.warn('LockStorage didn\'t successfully save the \'{' + key + ': ' + value + '}\' pair, because the localStorage is full.');
   }
 
@@ -106,12 +106,9 @@ LocalStorageAdapter.prototype.get = function (key, options, missing) {
 
   } catch (e) {
 
-    log(e);
     log.warn('LocalStorageAdapter could not load the item with key ' + key);
-
+    log(e);
   }
-
-
 };
 
 LocalStorageAdapter.prototype.inc = function (key, options) {

@@ -2,19 +2,29 @@ const getTime = function () {
   return (new Date()).toISOString().substr(11);
 };
 
+
+const logger = function( type, arr ) {
+  if (( 'console' in window ) && ( type in console )) {
+    const call = Function.prototype.call;
+    call.apply( call, [ console[ type ], console ].concat( arr ));
+  }
+};
+
 export default function createLooger(name) {
 
   const log = function (...args) {
-    if(PRODUCTION) return;
-    console && console.log && console.log(`${getTime()} ${name}:`, ...args)
+    if(!PRODUCTION){
+      logger('log', args);
+    }
   };
 
   log.warn = function (...args) {
-    console && console.warn && console.warn(`${getTime()} ${name}:`, ...args)
+    logger('warn', args);
   };
 
   log.error = (...args) => {
-    console && console.error && console.error(`${getTime()} ${name}:`, ...args);
+    const prefix = `${getTime()} ${name}:`;
+    logger('error', args);
   };
 
   return log;

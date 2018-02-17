@@ -1,5 +1,8 @@
+const not_present = 'not present';
+
 function getTimeZone(d) {
-  return /\((.*)\)/.exec(d.toString())[1];
+  const extracted = /\((.*)\)/.exec(d.toString());
+  return extracted && extracted[1] || 'not present';
 }
 
 const n = navigator || {};
@@ -11,6 +14,6 @@ export default function () {
     tz: getTimeZone(d),
     tzOffset: -d.getTimezoneOffset()*1000,
     platform: n.platform,
-    product: n.product
+    product: n.product || not_present
   }
 }

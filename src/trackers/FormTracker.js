@@ -17,6 +17,7 @@ import {
 
 
 const formTag = 'form';
+const formElemetns = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?option ?button ?submit
 const events = ['focus', 'blur', 'change', 'submit', 'invalid'];
 
 const FormTracker = function (options) {

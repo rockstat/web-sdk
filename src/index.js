@@ -1,3 +1,4 @@
+import './polyfill';
 import {addHandler, removeHandler, isDocInteractive, isDocComplete} from "./functions/domEvents";
 import {win, doc, nav} from "./Browser";
 

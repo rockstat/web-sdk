@@ -20,28 +20,63 @@ JavaScript tracking library for web applications. Lets track custom user actions
 
 JavaScript библиотека для отслеживания web приложений и передачи  результатов на сервер. События могут сопровождаться произвольным набором параметров. Автоматически отслеживаются: загрузки страниц, активность, скролл, взаимодействия с формами, клики, а также информация об браузере. Является частью платформы Alcolytics.
 
-## Before you start
+## Загрузчик основного кода
 
-- [Вводная информация по отслеживанию событий](https://alco.readme.io/docs/web-tracking)
-- [AlcoJS API](https://alco.readme.io/docs/js-api) 
+После запуска платформы Alcolytics вы получите код для установки на сайт, аналогичный этому. 
+Лучше всего установить код между `<head>` и `</head>`или сразу после `<body>`. 
+Можно поставить через Google Tag Manager, тут есть свои плюсы, минуты и особенности, надо проверять.
 
-### Использование localStorage
+    <script type="text/javascript">
+      !function (win, doc, stag, shost, alco, el, head) {
+        if(win.alco) return;
+        alco = win.alco = function () {
+          var args = Array.prototype.slice.call(arguments);
+          alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
+        };
+        alco.push = alco;
+        alco.loaded = !0;
+        alco.snippet = 1;
+        alco.queue = [];
+        alco.server = 'https://' + shost;
+        alco.load = function (src) {
+          el = doc.createElement(stag);
+          el.async = !0;
+          el.src = src;
+          head = doc.getElementsByTagName(stag)[0];
+          head.parentNode.insertBefore(el, head);
+        };
+        alco.load(alco.server + '/lib.js');
+      }(window, document, 'script', 'alco.yourdomain.some');
+      
+      # Конфигурация трекера
+      alco('configure', {
+        projectId: 6,
+        cookieDomain: 'yourdomain.some'
+      });
+      
+      # По завершении загрузки, будет отправлено событие просмотра страницы
+      alco('page');
+      
+    </script>
+    
+Подробнее про установку и настройку на странице [AlcoJS API](https://alco.readme.io/docs/js-api) 
 
-AlcoJS хранит все данные в браузере и чтобы избежать их передачи на сервер при каждом запросе (как делают куки), 
-для хранения используется localStorage. Он поддерживается 97% браузеров. 
+## События
 
-Но есть особенности связанные с localStorage:
+Обязательно ознакомьтесь с дополнительным сожержимым событий: [Структура собираемых данных](https://alco.readme.io/docs/alcojs-data-format)
 
-- www.вашсайт и вашсайт это разные сайты для localStorage.
-- http://вашсайт и https://вашсайт это опять же разные сайты для localStorage
+### Из коробки
 
-Для большинства сайтов это не будет проблемой т.к. используется либо http либо https (с редиректом с http),
-аналогичная ситуация с www.
+[Автоматические события](https://alco.readme.io/docs/auto-track)
 
-Известные проблемы:
+### Семантические
 
-- Не работает в режиме инкогнито на iPhone и др
-
+    aclo('event', 'Added to Cart', {
+      id: '1231223', 
+      name:'Шторка для ванны', 
+      categoryName: 'Товары для дома',
+      listing: 'best_seller',
+    });
 
 
 ## Thanks for open source support

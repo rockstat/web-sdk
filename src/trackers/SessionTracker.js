@@ -42,11 +42,9 @@ function SessionTracker(alco, options) {
   this.userTraits = undefined;
   this.uid = null;
   this.userParams = this.storage.get(KEY_USER_PARAMS) || {};
-
 }
 
 Emitter(SessionTracker.prototype);
-
 
 SessionTracker.prototype.subscribe = function (emitter) {
 
