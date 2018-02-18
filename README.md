@@ -59,6 +59,8 @@ JavaScript библиотека для отслеживания web прилож
       
     </script>
     
+актуальная весия загрузчика находится в `snippet/snippet.html`
+    
 Подробнее про установку и настройку на странице [AlcoJS API](https://alco.readme.io/docs/js-api) 
 
 ## События
