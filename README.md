@@ -4,13 +4,13 @@ Is an open source platform for a web and product analytics.
 It consists of a set of components: JavaScript tracking client for web applications; 
 server-side data collector; services for geo-coding and detecting client device type; 
 a new server deployment system.
-[Read more](https://alco.readme.io/docs/web-tracking)
+[Read more](https://alco.readme.io/docs)
 
 Платформа для web и продуктовой аналитики с открытым исходным кодом.
 Включает в себя JavaScript трекер для сайта; сервис получения, обогащения,
 сохранения и стриминга данных; сервисы гео-кодинга и определения типа клиентского устройства;
 систему развертывания нового сервера.
-[Подробнее](https://alco.readme.io/docs/web-tracking) 
+[Подробнее](https://alco.readme.io/docs) 
 
 ![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-tracker/master/docs/alco-scheme.png)
 
@@ -81,7 +81,7 @@ JavaScript библиотека для отслеживания web прилож
     });
 
 
-## Thanks for open source support
+## Thanks
 
 - [BrowserStack](https://www.browserstack.com): great tool for manual and automated testing in browser
 - [ReadMe](https://readme.io): beautiful tool for product and api documentation
