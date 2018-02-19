@@ -30,6 +30,7 @@ import {
   DOM_BEFORE_UNLOAD,
   EVENTS_ADD_PERF,
   EVENTS_ADD_SCROLL,
+  EVENTS_NO_SCROLL,
   INTERNAL_EVENT
 } from './Variables';
 
@@ -46,7 +47,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 105,
+    libver: 106,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto',
@@ -228,7 +229,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     msg.perf = performanceData();
   }
 
-  if (this.activityTracker && EVENTS_ADD_SCROLL.indexOf(name) >= 0) {
+  if (this.activityTracker && EVENTS_NO_SCROLL.indexOf(name) < 0) {
     msg.scroll = this.activityTracker.getPositionData();
   }
 
