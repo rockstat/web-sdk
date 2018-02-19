@@ -186,6 +186,7 @@ ActivityTracker.prototype.fireActivityEvent = function () {
     const event = {
       name: EVENT_ACTIVITY,
       data: {
+        interval: this.options.flushInterval,
         iteration: this.iteration,
         active: ++this.active
       }
