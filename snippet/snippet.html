@@ -14,12 +14,13 @@
     alco.load(alco.server + '/lib.js');
   }(window, document, 'script', '{{ tracker_domain }}');
 
+  // Настройки
   alco('configure', {
-    projectId: 1,
-    cookieDomain: 'alcolytics.test'
+    projectId: 1
   });
 
+  // Отправка просмотра страницы
   alco('page');
 
 </script>
-<!-- После редактирования надо обновить в ansible и в доках -->
+<!-- После изменений обновить в ansible и документации! -->
