@@ -139,11 +139,12 @@ ActivityTracker.prototype.handleScroll = function () {
   const clientHeight = getClientHeight();
   const topOffset = getTopOffset();
   const docHeight = getDocumentHeight();
+  const hiddenHeight = docHeight - clientHeight;
   const currentScroll = Math.min(
     100,
     Math.max(
       0,
-      100 * Math.round(topOffset / (docHeight - clientHeight))
+      100 * Math.round(hiddenHeight && (topOffset / hiddenHeight) || 0)
     )
   );
 
