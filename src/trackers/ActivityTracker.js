@@ -156,7 +156,10 @@ ActivityTracker.prototype.handleScroll = function () {
     clientHeight: clientHeight,
     topOffset: topOffset,
     scroll: currentScroll,
-    maxScroll: this.maxScroll
+    maxScroll: this.maxScroll,
+    src: {
+      clientHeight, topOffset, docHeight, currentScroll
+    }
   };
 
 };
