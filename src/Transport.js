@@ -53,8 +53,8 @@ Transport.prototype.sendBeacon = function (url, data) {
     log('sending xhr');
 
     const xhr = new this.XHR();
-    xhr.withCredentials = true;
     xhr.open('POST', url, true);
+    xhr.withCredentials = true;
     xhr.send(data);
 
     // Img load test
