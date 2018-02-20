@@ -11,7 +11,7 @@ const log = createLogger('Transport');
 const Transport = function (options) {
 
   this.options = objectAssign({}, this.defaults, options);
-  this.beaconSupport = false// 'sendBeacon' in nav;
+  this.beaconSupport = false;// 'sendBeacon' in nav;
 
   this.server = this.options.server;
 
@@ -73,7 +73,6 @@ Transport.prototype.sendBasic = function (url, data) {
   const xhr = new this.XHR();
   xhr.open('POST', url, true);
   xhr.withCredentials = true;
-  xhr.timeout = this.options.xhrTimeout;
   xhr.send(data);
 
   //TODO: handle error, success
