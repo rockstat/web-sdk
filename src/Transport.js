@@ -71,9 +71,9 @@ Transport.prototype.sendBasic = function (url, data) {
   data = JSON.stringify(data);
 
   const xhr = new this.XHR();
+  xhr.open('POST', url, true);
   xhr.withCredentials = true;
   xhr.timeout = this.options.xhrTimeout;
-  xhr.open('POST', url, true);
   xhr.send(data);
 
   //TODO: handle error, success
