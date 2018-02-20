@@ -10,7 +10,7 @@ const logger = function( type, arr ) {
   }
 };
 
-export default function createLooger(name) {
+export default function createLogger(name) {
 
   const log = function (...args) {
     if(!PRODUCTION){

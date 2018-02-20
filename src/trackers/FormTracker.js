@@ -2,8 +2,9 @@ import objectAssing from '../functions/objectAssing';
 import toArray from '../functions/toArray';
 import each from '../functions/each';
 import Emitter from 'component-emitter';
-import {win, doc} from "../Browser";
+import {win, doc} from '../Browser';
 import {closest} from 'dom-utils';
+import createLogger from '../functions/createLogger';
 import {
   EVENT,
   EVENT_OPTION_OUTBOUND,
@@ -13,77 +14,72 @@ import {
   useCaptureSupport,
   removeHandler,
   addHandler
-} from "../functions/domEvents";
+} from '../functions/domEvents';
+import ClickTracker from './ClickTracker';
 
+const log = createLogger('FormTracker');
 
 const formTag = 'form';
-const formElemetns = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?option ?button ?submit
-const events = ['focus', 'blur', 'change', 'submit', 'invalid'];
+const elementsTags = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?option ?button ?submit
+
+const formEvents = ['submit'];
+const elementEvents = ['focus', 'blur', 'change', 'invalid'];
+
+function extractFormData(form) {
+  if (!form) {
+    return {};
+  }
+
+  return {
+    fmthd: form.getAttribute('method'),
+    fact: form.getAttribute('action'),
+    fname: form.getAttribute('name'),
+    fcls: form.className,
+    fid: form.id
+  }
+}
+
+function extractElementData(element) {
+  if (!element) {
+    return {};
+  }
+
+  return {
+    etag: element.tagName && element.tagName.toLocaleLowerCase(),
+    etype: element.getAttribute('type'),
+    ename: element.getAttribute('name'),
+    eph: element.getAttribute('placeholder'),
+    ecl: element.className,
+    eid: element.id
+  }
+}
+
 
 const FormTracker = function (options) {
 
-  this.options = objectAssing({}, this.defaults, options);
-  this.eventHandler = this.eventHandler.bind(this);
+  this.options = objectAssing({}, options);
+  this.formEventHandler = this.formEventHandler.bind(this);
+  this.elementEventHandler = this.elementEventHandler.bind(this);
 
-  if (useCaptureSupport) {
-    each(toArray(doc.getElementsByTagName('form')), (form) => {
-      each(events, (type) => {
-        addHandler(form, type, this.eventHandler, true);
-      });
-    })
-  }
+  this.initialize();
+
 };
-
-FormTracker.prototype.defaults = {};
 
 Emitter(FormTracker.prototype);
 
-FormTracker.prototype.eventHandler = function (e) {
+FormTracker.prototype.initialize = function () {
 
-  const target = e.target || e.srcElement;
-  const tag = target.tagName && target.tagName.toLocaleLowerCase();
-  const isForm = tag === formTag;
-  const type = e.type;
+  if (useCaptureSupport) {
 
-  const form = isForm ? target : closest(target, formTag);
-  const field = !isForm && target;
-
-  const event = {
-    name: (isForm ? 'Form ' : 'Field ') + type,
-    data: {
-      event: type
-    },
-    options: {
-      [EVENT_OPTION_SCHEDULED]: (type === 'submit'),
-    }
-  };
-
-  if (field) {
-
-    const etag = field.tagName.toLocaleLowerCase();
-    const etype = field.getAttribute('type');
-
-    objectAssing(event.data, {
-      etag,
-      etype,
-      ename: field.getAttribute('name'),
-      eph: field.getAttribute('placeholder'),
-      ecl: field.className,
-      eid: field.id,
+    each(formEvents, (event) => {
+      doc.addEventListener(event, this.formEventHandler, true);
     });
-  }
 
-  if (form) {
-    objectAssing(event.data, {
-      fmthd: form.getAttribute('method'),
-      fact: form.getAttribute('action'),
-      fname: form.getAttribute('name'),
-      fcls: form.className,
-      fid: form.id,
+    each(elementEvents, (event) => {
+      doc.addEventListener(event, this.elementEventHandler, true);
     });
-  }
 
-  this.emit(EVENT, event);
+  }
 
 };
 
@@ -91,12 +87,59 @@ FormTracker.prototype.eventHandler = function (e) {
 FormTracker.prototype.unload = function () {
 
   if (useCaptureSupport) {
-    each(toArray(doc.getElementsByTagName('form')), (form) => {
-      each(events, (type) => {
-        removeHandler(form, type, this.eventHandler);
-      });
-    })
+
+    each(formEvents, (event) => {
+      doc.removeEventListener(event, this.formEventHandler, true);
+    });
+
+    each(elementEvents, (event) => {
+      doc.removeEventListener(event, this.elementEventHandler, true);
+    });
+
   }
+};
+
+
+FormTracker.prototype.formEventHandler = function (e) {
+
+  const target = e.target || e.srcElement;
+  const type = e.type;
+
+  const form = closest(target, formTag, true);
+
+  const event = {
+    name: `Form ${type}`,
+    data: {
+      event: type,
+      ...extractFormData(form)
+    },
+    options: {
+      [EVENT_OPTION_SCHEDULED]: (type === 'submit')
+    }
+  };
+
+  this.emit(EVENT, event);
+
+};
+
+FormTracker.prototype.elementEventHandler = function (e) {
+
+  const target = e.target || e.srcElement;
+  const type = e.type;
+
+  const element = closest(target, elementsTags.join(','), true);
+
+  const form = element && closest(element, formTag);
+  const event = {
+    name: `Field ${type}`,
+    data: {
+      event: type,
+      ...extractElementData(element),
+      ...extractFormData(form)
+    }
+  };
+
+  this.emit(EVENT, event);
 
 };
 
