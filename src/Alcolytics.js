@@ -47,7 +47,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 112,
+    libver: 113,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto',
@@ -84,7 +84,10 @@ Alcolytics.prototype.initialize = function () {
 
   // Constructing storage methods (should be before any other actions)
   this.localStorage = new LocalStorageAdapter(this.options);
-  this.cookieStorage = new CookieStorageAdapter(this.options);
+  this.cookieStorage = new CookieStorageAdapter({
+    cookieDomain: this.options.cookieDomain,
+    allowHTTP: this.options.allowHTTP
+  });
 
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
@@ -116,7 +119,9 @@ Alcolytics.prototype.initialize = function () {
   this.browserEventsTracker.initialize();
 
   // Session tracker
-  this.sessionTracker = new SessionTracker(this, this.options).subscribe(this).handleUid(this.options.initialUid);
+  this.sessionTracker = new SessionTracker(this, this.options)
+    .subscribe(this)
+    .handleUid(this.options.initialUid);
 
   // Main tracker
   this.trackers.push(

@@ -15,6 +15,7 @@ function CookieStorageAdapter(options) {
 
   const pd = pageDefaults();
 
+  this.secure = this.options.allowHTTP !== true;
   this.domain = this.options.cookieDomain === 'auto'
     ? autoDomain(pd.hostname)
     : this.options.cookieDomain;
@@ -53,9 +54,11 @@ CookieStorageAdapter.prototype.set = function (key, value, options = {}) {
       ? new Date((new Date()).getTime() + options.exp * 1000)
       : this.exp);
 
-  Cookies.set(key, value, { expires: exp, domain: this.domain, secure: true });
-
-
+  Cookies.set(key, value, {
+    expires: exp,
+    domain: this.domain,
+    secure: this.secure
+  });
 };
 
 CookieStorageAdapter.prototype.get = function (key, options = {}) {

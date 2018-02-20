@@ -14,13 +14,12 @@
     alco.load(alco.server + '/lib.js');
   }(window, document, 'script', '{{ tracker_domain }}');
 
-  // Настройки
+  // Если у вас много сайтов, придумайте им номера и подставьте в projectId
   alco('configure', {
     projectId: 1
   });
 
   // Отправка просмотра страницы
   alco('page');
-
 </script>
 <!-- После изменений обновить в ansible и документации! -->
