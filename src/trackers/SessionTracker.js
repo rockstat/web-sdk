@@ -91,6 +91,8 @@ SessionTracker.prototype.setStoredUid = function (uid) {
 
 SessionTracker.prototype.handleUid = function (uid) {
 
+  log(`Handling initial ${uid}`);
+
   this.initialUid = uid;
   this.uid = this.getStoredUid() || this.initialUid;
 

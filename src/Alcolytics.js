@@ -34,6 +34,7 @@ import {
   INTERNAL_EVENT
 } from './Variables';
 
+const noop = function (){};
 const log = createLogger('Alcolytics');
 
 function Alcolytics() {
@@ -177,6 +178,13 @@ Alcolytics.prototype.initialize = function () {
 
 };
 
+
+Alcolytics.prototype.isInitialized = function () {
+
+  return this.initialized;
+
+};
+
 /**
  * Applying configuration block. Can be called multiple times
  * @param options
@@ -299,7 +307,10 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
  */
 Alcolytics.prototype.onReady = function (cb) {
 
-  this.on(READY, cb);
+  return this.isInitialized()
+    ? (cb || noop)()
+    : this.on(READY, cb);
+
 
 };
 
