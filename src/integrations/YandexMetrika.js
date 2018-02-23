@@ -15,10 +15,10 @@ const YandexMetrika = function () {
   when(() => win.Ya && win.Ya.Metrika, () => {
     try {
 
-      const ymClientId = win.Ya._metrika && win.Ya._metrika.counter && win.Ya._metrika.counter.getClientID();
+      const ymId = win.Ya._metrika && win.Ya._metrika.counter && win.Ya._metrika.counter.getClientID();
 
-      if (ymClientId) {
-        this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {ymClientId});
+      if (ymId) {
+        this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {ymId});
       }
 
     } catch (e) {

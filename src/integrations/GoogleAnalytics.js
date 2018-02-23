@@ -16,10 +16,10 @@ const GoogleAnalytics = function () {
     win.ga(() => {
       try {
 
-        const gaClientId = win.ga && win.ga.getAll && win.ga.getAll()[0] && win.ga.getAll()[0].get('clientId');
+        const gaId = win.ga && win.ga.getAll && win.ga.getAll()[0] && win.ga.getAll()[0].get('clientId');
 
-        if (gaClientId) {
-          this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {gaClientId});
+        if (gaId) {
+          this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {gaId});
         }
 
       } catch (e) {
