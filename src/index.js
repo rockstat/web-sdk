@@ -1,34 +1,28 @@
 import './polyfill';
-import {addHandler, removeHandler, isDocInteractive, isDocComplete} from "./functions/domEvents";
-import {win, doc, nav} from "./Browser";
+import {documentReady} from "./functions/domEvents";
+import {win} from "./Browser";
 
 // Main
 import Alcolytics from './Alcolytics';
 
-const varname = 'alco';
-const alco = win[varname];
+const holder = win['alco'];
 const alcolytics = new Alcolytics();
 alcolytics.configure({
-  server: alco.server,
-  snippet: alco.snippet
+  server: holder.server,
+  snippet: holder.snippet
 });
 
 // Attaching method to page
-alco.doCall = function (args) {
+holder.doCall = function (args) {
   args = args.slice(0);
   const method = args.shift();
   return alcolytics[method]
     ? alcolytics[method].apply(alcolytics, args)
     : new Error('Method not supported');
 };
-alco.queue.map(alco.doCall);
-alco.queue = [];
+holder.queue.map(holder.doCall);
+holder.queue = [];
 
-if (isDocInteractive() || isDocComplete()) {
+documentReady(() => {
   alcolytics.initialize();
-} else {
-  addHandler(doc, 'DOMContentLoaded', function () {
-    alcolytics.initialize();
-    removeHandler(doc, 'DOMContentLoaded', this);
-  });
-}
+});

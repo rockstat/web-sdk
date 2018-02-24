@@ -115,6 +115,10 @@ SessionTracker.prototype.getPageNum = function () {
 
 };
 
+/**
+ * Get state of session events counter
+ * @return {Number} current value
+ */
 SessionTracker.prototype.getEventNum = function () {
 
   return this.storage.get(KEY_EVENTS_COUNTER, {session: true});
@@ -123,8 +127,6 @@ SessionTracker.prototype.getEventNum = function () {
 
 
 SessionTracker.prototype.sessionData = function () {
-
-
 
   return objectAssign({
     pageNum: this.getPageNum(),
@@ -141,6 +143,10 @@ SessionTracker.prototype.setUserParams = function (params) {
 
 };
 
+/**
+ *
+ * @return {*}
+ */
 SessionTracker.prototype.userData = function () {
 
   const id = this.storage.get(KEY_USER_ID);

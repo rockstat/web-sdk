@@ -1,5 +1,4 @@
 import objectAssing from '../functions/objectAssing';
-import toArray from '../functions/toArray';
 import each from '../functions/each';
 import Emitter from 'component-emitter';
 import {win, doc} from '../Browser';
@@ -15,7 +14,6 @@ import {
   removeHandler,
   addHandler
 } from '../functions/domEvents';
-import ClickTracker from './ClickTracker';
 
 const log = createLogger('FormTracker');
 
@@ -25,25 +23,35 @@ const elementsTags = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?o
 const formEvents = ['submit'];
 const elementEvents = ['focus', 'blur', 'change', 'invalid'];
 
-function extractFormData(form) {
-  if (!form) {
-    return {};
+
+/**
+ *
+ * @param element {Element}
+ * @return {object}
+ */
+function extractFormData(element) {
+  if (!element) {
+    return {ferr: 'Form element absent'};
   }
 
   return {
-    fmthd: form.getAttribute('method'),
-    fact: form.getAttribute('action'),
-    fname: form.getAttribute('name'),
-    fcls: form.className,
-    fid: form.id
+    fmthd: element.getAttribute('method'),
+    fact: element.getAttribute('action'),
+    fname: element.getAttribute('name'),
+    fcls: element.className,
+    fid: element.id
   }
 }
 
+/**
+ *
+ * @param element {Element}
+ * @return {object}
+ */
 function extractElementData(element) {
   if (!element) {
-    return {};
+    return {eerr: 'Input element absent'};
   }
-
   return {
     etag: element.tagName && element.tagName.toLocaleLowerCase(),
     etype: element.getAttribute('type'),
@@ -54,7 +62,11 @@ function extractElementData(element) {
   }
 }
 
-
+/**
+ *
+ * @param options {object}
+ * @constructor
+ */
 const FormTracker = function (options) {
 
   this.options = objectAssing({}, options);
@@ -67,16 +79,17 @@ const FormTracker = function (options) {
 
 Emitter(FormTracker.prototype);
 
+
 FormTracker.prototype.initialize = function () {
 
   if (useCaptureSupport) {
 
     each(formEvents, (event) => {
-      doc.addEventListener(event, this.formEventHandler, true);
+      addHandler(doc, event, this.formEventHandler, true);
     });
 
     each(elementEvents, (event) => {
-      doc.addEventListener(event, this.elementEventHandler, true);
+      addHandler(doc, event, this.elementEventHandler, true);
     });
 
   }
@@ -89,17 +102,20 @@ FormTracker.prototype.unload = function () {
   if (useCaptureSupport) {
 
     each(formEvents, (event) => {
-      doc.removeEventListener(event, this.formEventHandler, true);
+      removeHandler(doc, event, this.formEventHandler, true);
     });
 
     each(elementEvents, (event) => {
-      doc.removeEventListener(event, this.elementEventHandler, true);
+      removeHandler(doc, event, this.elementEventHandler, true);
     });
-
   }
 };
 
 
+/**
+ *
+ * @param e {Event}
+ */
 FormTracker.prototype.formEventHandler = function (e) {
 
   const target = e.target || e.srcElement;
@@ -119,9 +135,12 @@ FormTracker.prototype.formEventHandler = function (e) {
   };
 
   this.emit(EVENT, event);
-
 };
 
+
+/**
+ * @param e {Event}
+ */
 FormTracker.prototype.elementEventHandler = function (e) {
 
   const target = e.target || e.srcElement;
@@ -140,7 +159,6 @@ FormTracker.prototype.elementEventHandler = function (e) {
   };
 
   this.emit(EVENT, event);
-
 };
 
 
