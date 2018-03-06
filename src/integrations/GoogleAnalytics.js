@@ -19,6 +19,7 @@ const GoogleAnalytics = function () {
         const gaId = win.ga && win.ga.getAll && win.ga.getAll()[0] && win.ga.getAll()[0].get('clientId');
 
         if (gaId) {
+
           this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {gaId});
         }
 

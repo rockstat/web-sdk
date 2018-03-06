@@ -1,5 +1,5 @@
 import objectAssign from './functions/objectAssing';
-import pageDefaults from './functions/pageDefaults';
+import pageDefaults from './data/pageDefaults';
 import createLogger from './functions/createLogger';
 import autoDomain from './functions/autoDomain';
 import Cookies from 'js-cookie';
@@ -17,7 +17,7 @@ function CookieStorageAdapter(options) {
 
   this.secure = this.options.allowHTTP !== true;
   this.domain = this.options.cookieDomain === 'auto'
-    ? autoDomain(pd.hostname)
+    ? autoDomain(pd.domain)
     : this.options.cookieDomain;
 
   this.available = this.checkAvailability();

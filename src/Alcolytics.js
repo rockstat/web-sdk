@@ -2,10 +2,10 @@ import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';
 import CookieStorageAdapter from './CookieStorageAdapter';
-import pageDefaults from './functions/pageDefaults';
-import browserData from './functions/browserData';
-import clientData from './functions/clientData';
-import clientFeatures from './functions/clientFeatures';
+import pageDefaults from './data/pageDefaults';
+import browserData from './data/browserData';
+import clientData from './data/clientData';
+import clientFeatures from './data/clientFeatures';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
 import ActivityTracker from './trackers/ActivityTracker';
@@ -19,6 +19,7 @@ import SelfishPerson from './SelfishPerson';
 import Transport from './Transport';
 import Emitter from 'component-emitter';
 import each from './functions/each';
+
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
@@ -42,7 +43,7 @@ function Alcolytics() {
   log('starting Alcolytics');
 
   this.initialized = false;
-  this.configured = false;
+  this.configured_flag = false;
   this.queue = [];
   this.options = {
     sessionTimeout: 1800, // 30 min
@@ -99,7 +100,7 @@ Alcolytics.prototype.initialize = function () {
   this.initialized = true;
 
   // Check is configured
-  if (!this.configured) {
+  if (!this.configured_flag) {
     log.warn('Initializing before configuration complete');
   }
 
@@ -195,7 +196,7 @@ Alcolytics.prototype.configure = function (options) {
     return log.warn('Configuration cant be applied because already initialized');
   }
 
-  this.configured = true;
+  this.configured_flag = true;
   this.options = objectAssign(this.options, options);
 
 };
@@ -221,8 +222,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     return this.sessionTracker.setUserData(data);
   }
 
-  const page = pageDefaults();
-  this.sessionTracker.handleEvent(name, data, page);
+  this.sessionTracker.handleEvent(name, data, pageDefaults());
 
   const msg = {
     name: name,
@@ -230,9 +230,9 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
     user: this.sessionTracker.userData(),
-    page: page,
+    page: pageDefaults({short:true}),
     session: this.sessionTracker.sessionData(),
-    library: this.libInfo,
+    lib: this.libInfo,
     client: clientData(),
     cf: clientFeatures,
     browser: browserData()
