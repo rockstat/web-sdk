@@ -1,3 +1,4 @@
+import objectKeys from './objectKeys';
 
 export default Object.assign ? Object.assign : function(target, firstSource) {
 
@@ -12,7 +13,7 @@ export default Object.assign ? Object.assign : function(target, firstSource) {
       continue;
     }
 
-    const keysArray = Object.keys(Object(nextSource));
+    const keysArray = objectKeys(Object(nextSource));
     for (let nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
       const nextKey = keysArray[nextIndex];
       const desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);

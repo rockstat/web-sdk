@@ -7,7 +7,7 @@ import createLogger from '../functions/createLogger';
 import {
   EVENT,
   EVENT_OPTION_OUTBOUND,
-  EVENT_OPTION_SCHEDULED
+  EVENT_OPTION_TERMINATOR
 } from '../Variables';
 import {
   useCaptureSupport,
@@ -130,7 +130,7 @@ FormTracker.prototype.formEventHandler = function (e) {
       ...extractFormData(form)
     },
     options: {
-      [EVENT_OPTION_SCHEDULED]: (type === 'submit')
+      [EVENT_OPTION_TERMINATOR]: (type === 'submit')
     }
   };
 

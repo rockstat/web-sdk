@@ -11,9 +11,10 @@ import {
   DOM_COMPLETE,
   DOM_BEFORE_UNLOAD,
   DOM_UNLOAD,
-  INTERNAL_EVENT, EVENT, EVENT_PAGE_LOADED
+  INTERNAL_EVENT,
+  EVENT,
+  EVENT_PAGE_LOADED
 } from "../Variables";
-import each from "../functions/each";
 
 const log = createLogger('Aclo::BET');
 

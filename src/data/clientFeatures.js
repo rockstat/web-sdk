@@ -17,14 +17,28 @@ function checkWPush() {
     && ('showNotification' in ServiceWorkerRegistration.prototype);
 }
 
+export function checkSendBeacon() {
+  return 'sendBeacon' in nav;
+}
 
-const features = {
+export function checkXDR() {
+  return !!win.XDomainRequest;
+}
+
+export function checkXHR() {
+  return !!win.XMLHttpRequest
+}
+
+export function checkXHRCreds() {
+  return checkXHR && ('withCredentials' in new win.XMLHttpRequest())
+}
+
+export default {
   'locstor': 'localStorage' in win && checkLS(),
   'addel': 'addEventListener' in win,
   'promise': 'Promise' in win,
-  'sbeacon': 'sendBeacon' in nav,
+  'sbeacon': checkSendBeacon(),
   'atob': !!win.atob,
   'wpush': checkWPush()
 };
 
-export default features;

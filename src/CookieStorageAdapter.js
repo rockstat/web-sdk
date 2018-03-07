@@ -1,4 +1,5 @@
 import objectAssign from './functions/objectAssing';
+import objectKeys from './functions/objectKeys';
 import pageDefaults from './data/pageDefaults';
 import createLogger from './functions/createLogger';
 import autoDomain from './functions/autoDomain';
@@ -105,7 +106,7 @@ CookieStorageAdapter.prototype.getAllKeys = function (options) {
   const prefix = this.getPrefixedKey('', options);
   const result = [];
 
-  let keys = Object.keys(Cookies.get());
+  let keys = objectKeys(Cookies.get());
   for (let i = 0; i < keys.length; i++) {
 
     const key = keys[i];

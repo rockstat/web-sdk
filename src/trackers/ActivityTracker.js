@@ -10,7 +10,6 @@ import {
   addHandler
 } from "../functions/domEvents";
 import {
-  DOM_BEFORE_UNLOAD,
   EVENT,
   EVENT_ACTIVITY,
   EVENT_SCROLL,
@@ -206,12 +205,12 @@ ActivityTracker.prototype.fireActivityEvent = function () {
 
 ActivityTracker.prototype.unload = function () {
 
+  this.fireActivityEvent();
+
   each(activityEvents, (event) => {
     removeHandler(doc, event, this.eventHandler);
   });
-
   clearInterval(this.activityFlushInterval);
-  this.fireActivityEvent();
 
 };
 

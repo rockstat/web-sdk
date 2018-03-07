@@ -8,7 +8,7 @@ import Emitter from 'component-emitter';
 import {
   EVENT,
   EVENT_OPTION_OUTBOUND,
-  EVENT_OPTION_SCHEDULED,
+  EVENT_OPTION_TERMINATOR,
   EVENT_LINK_CLICK
 } from '../Variables';
 
@@ -46,7 +46,7 @@ ClickTracker.prototype.eventHandler = function (e) {
         outbound: outbound
       },
       options: {
-        [EVENT_OPTION_SCHEDULED]: true,
+        [EVENT_OPTION_TERMINATOR]: true,
         [EVENT_OPTION_OUTBOUND]: outbound
       }
     };

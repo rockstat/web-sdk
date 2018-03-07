@@ -1,4 +1,5 @@
 import objectAssign from './functions/objectAssing';
+import objectKeys from './functions/objectKeys';
 import createLogger from './functions/createLogger';
 
 const log = createLogger('LocalStorage');
@@ -143,7 +144,7 @@ LocalStorageAdapter.prototype.getAllKeys = function (options) {
     return [];
   }
 
-  let keys = Object.keys(localStorage);
+  let keys = objectKeys(localStorage);
   const prefix = this.getPrefixedKey('', options);
   const result = [];
 

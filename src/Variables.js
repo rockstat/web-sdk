@@ -12,6 +12,7 @@ export const EVENT_FIELD_BLUR = 'Field blur';
 export const EVENT_FIELD_CHANGE = 'Field change';
 export const EVENT_USER_PARAMS = 'User params';
 export const EVENT_LINK_CLICK = 'Link click';
+export const EVENT_PAGE_UNLOAD = 'Page unload';
 
 export const EVENTS_ADD_PERF = [EVENT_PAGEVIEW, EVENT_PAGE_LOADED];
 
@@ -34,9 +35,7 @@ export const EVENTS_ADD_SCROLL = [
 ];
 
 export const INTERNAL_EVENT = 'Internal event';
-
-export const EVENT_OPTION_BOUNDED = 'bounded';
-export const EVENT_OPTION_SCHEDULED = 'scheduled';
+export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
 
 export const SESSION_INTERNAL = 'internal';

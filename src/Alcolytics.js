@@ -15,6 +15,7 @@ import FormTracker from './trackers/FormTracker';
 import GoogleAnalytics from './integrations/GoogleAnalytics';
 import YandexMetrika from './integrations/YandexMetrika';
 import {isObject} from './functions/type';
+import msgCropper from './functions/msgCropper';
 import SelfishPerson from './SelfishPerson';
 import Transport from './Transport';
 import Emitter from 'component-emitter';
@@ -32,11 +33,23 @@ import {
   EVENTS_ADD_PERF,
   EVENTS_ADD_SCROLL,
   EVENTS_NO_SCROLL,
-  INTERNAL_EVENT
+  INTERNAL_EVENT, EVENT_PAGE_UNLOAD
 } from './Variables';
 
-const noop = function (){};
+const noop = function () {
+};
 const log = createLogger('Alcolytics');
+
+// Schema used for thin channels
+const msgCropSchema = {
+  name: true,
+  data: true,
+  projectId: true,
+  uid: true,
+  error: true,
+  client: ['ts', 'tzOffset'],
+  session: ['eventNum', 'pageNum', 'num']
+};
 
 function Alcolytics() {
 
@@ -49,14 +62,17 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 201,
+    libver: 210,
     projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto',
     trackActivity: true,
     trackClicks: true,
     trackForms: true,
-    allowHTTP: false
+    allowHTTP: false,
+    useSendBeacon: true,
+    useXHR: true,
+    msgCropper: (msg) => msgCropper(msg, msgCropSchema)
   };
 
   this.integrations = [];
@@ -115,7 +131,6 @@ Alcolytics.prototype.initialize = function () {
   // Transport to server
   this.transport = new Transport(this.options);
 
-
   // Handling browser events
   this.browserEventsTracker = new BrowserEventsTracker();
   this.browserEventsTracker.initialize();
@@ -128,7 +143,7 @@ Alcolytics.prototype.initialize = function () {
   // Main tracker
   this.trackers.push(
     this.browserEventsTracker,
-    this.sessionTracker,
+    this.sessionTracker
   );
 
   // Other tracker
@@ -224,19 +239,21 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
   this.sessionTracker.handleEvent(name, data, pageDefaults());
 
+  // Typical message to server. Can be cropped using {msgCropSchema}
   const msg = {
     name: name,
     data: data,
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
     user: this.sessionTracker.userData(),
-    page: pageDefaults({short:true}),
+    page: pageDefaults({short: true}),
     session: this.sessionTracker.sessionData(),
     lib: this.libInfo,
     client: clientData(),
     cf: clientFeatures,
     browser: browserData()
   };
+
 
   if (EVENTS_ADD_PERF.indexOf(name) >= 0) {
     msg.perf = performanceData();
@@ -246,19 +263,18 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     msg.scroll = this.activityTracker.getPositionData();
   }
 
-
   // Sending to server
   const query = [
     'uid=' + this.sessionTracker.getUid()
   ];
-  const url = this.options.server + '/track?' + query.join('&');
-  this.transport.send(url, msg, options);
+  this.transport.send(query.join('&'), msg, options);
 
 };
 
 Alcolytics.prototype.unload = function () {
 
   log('Unloading...');
+  this.event(EVENT_PAGE_UNLOAD);
 
   each(this.trackers, (tracker) => {
     tracker.unload();
@@ -297,7 +313,10 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
     userId = undefined;
   }
 
-  this.handle(EVENT_IDENTIFY, {userId, userTraits});
+  this.handle(EVENT_IDENTIFY, {
+    userId,
+    userTraits
+  });
 
 };
 
@@ -343,7 +362,6 @@ Alcolytics.prototype.setCustomConfig = function (config) {
   this.selfish.saveConfig(config);
 
 };
-
 
 
 export default Alcolytics;

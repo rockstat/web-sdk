@@ -12,7 +12,7 @@ import {
   SESSION_SOCIAL,
   EVENT_USER_PARAMS,
   EVENT
-} from "../Variables";
+} from '../Variables';
 
 const KEY_LAST_EVENT_TS = 'levent';
 const KEY_LAST_CAMPAIGN = 'lcamp';
@@ -128,10 +128,16 @@ SessionTracker.prototype.getEventNum = function () {
 
 SessionTracker.prototype.sessionData = function () {
 
-  return objectAssign({
-    pageNum: this.getPageNum(),
-    eventNum: this.getEventNum()
-  }, this.lastSession);
+  return objectAssign(
+    {
+      pageNum: this.getPageNum(),
+      eventNum: this.getEventNum()
+    },
+    this.lastSession,
+    {
+      refHash: undefined
+    }
+  );
 
 };
 
@@ -139,7 +145,7 @@ SessionTracker.prototype.sessionData = function () {
 SessionTracker.prototype.setUserParams = function (params) {
 
   this.userParams = objectAssign(this.userParams, params);
-  this.storage.set(KEY_USER_PARAMS, this.userParams)
+  this.storage.set(KEY_USER_PARAMS, this.userParams);
 
 };
 
@@ -156,9 +162,11 @@ SessionTracker.prototype.userData = function () {
   return objectAssign(
     {},
     params,
-    {id, traits}
+    {
+      id,
+      traits
+    }
   );
-
 };
 
 SessionTracker.prototype.setUserData = function (data) {

@@ -1,91 +1,98 @@
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
-import {win, doc, nav} from "./Browser";
+import {win, doc, nav} from './Browser';
+import {checkSendBeacon, checkXHRCreds, checkXHR, checkXDR} from './data/clientFeatures';
 import {
   EVENT_OPTION_OUTBOUND,
-  EVENT_OPTION_SCHEDULED
-} from "./Variables";
+  EVENT_OPTION_TERMINATOR
+} from './Variables';
 
 const log = createLogger('Transport');
 
 const Transport = function (options) {
 
-  this.options = objectAssign({}, this.defaults, options);
-  this.beaconSupport = false;// 'sendBeacon' in nav;
+  this.options = objectAssign({
+    sendTimeout: 5000
+  }, options);
+
+  this.beaconSupport = options.useSendBeacon && checkSendBeacon();
+  this.XHRSupport = options.useXHR && (checkXHR() || checkXDR());
 
   this.server = this.options.server;
+};
 
-  const xhrFound = !!win.XMLHttpRequest;
-  const xhrCreds = xhrFound && ('withCredentials' in new win.XMLHttpRequest());
-  const xdrFound = !!win.XDomainRequest;
+Transport.prototype.sendXHR = function (url, data) {
 
-  if (xhrFound && xhrCreds || xhrFound && !xdrFound) {
-
-    this.XHR = win.XMLHttpRequest;
-
-  } else if (xdrFound) {
-
-    this.XHR = win.XDomainRequest;
-
-  } else {
-    // HZ
+  let xhr;
+  if (checkXHRCreds() || !checkXDR() && checkXHR()) {
+    xhr = new win.XMLHttpRequest();
+  } else if (checkXDR()) {
+    xhr = new win.XDomainRequest();
+    xhr.timeout = this.options.sendTimeout;
+    xhr.onload = noop();
+    xhr.onerror = noop();
+    xhr.ontimeout = noop();
+    xhr.onprogress = noop();
   }
-};
-
-
-Transport.prototype.defaults = {
-  xhrTimeout: 10000
-};
-
-
-Transport.prototype.sendBeacon = function (url, data) {
-
-  data = JSON.stringify(data);
-
-  if (this.beaconSupport) {
-
-    log('sending native beacon');
-
-    nav.sendBeacon(url, data);
-
-  } else {
-
-    log('sending xhr');
-
-    const xhr = new this.XHR();
-    xhr.open('POST', url, true);
-    xhr.withCredentials = true;
-    xhr.send(data);
-
-    // Img load test
-    const img = win.Image ? (new Image(1,1)) : doc.createElement('img');
-    img.src = this.server + '/track?' + (new Date()).getTime();
-    img.onload = () => {
-      log('img loaded');
-    };
-  }
-};
-
-Transport.prototype.sendBasic = function (url, data) {
-
-  data = JSON.stringify(data);
-
-  const xhr = new this.XHR();
   xhr.open('POST', url, true);
   xhr.withCredentials = true;
   xhr.send(data);
+};
 
-  //TODO: handle error, success
+/**
+ *
+ * @param url {string}
+ * @param msg {Object}
+ */
+Transport.prototype.sendIMG = function (url) {
 
+  // Img load test
+  const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
+  img.src = url;
+  img.onload = () => {
+    log('img loaded');
+  };
 };
 
 
-Transport.prototype.send = function (url, data, options = {}) {
+/**
+ *
+ * @param query {string}
+ * @param msg {Object}
+ * @param options {Object}
+ */
+Transport.prototype.send = function (query, msg, options = {}) {
 
-  return (options[EVENT_OPTION_SCHEDULED] || options[EVENT_OPTION_OUTBOUND]
-      ? this.sendBeacon
-      : this.sendBasic
-  ).call(this, url, data, options);
+  const data = JSON.stringify(msg);
+  const useSafe = !!(options[EVENT_OPTION_TERMINATOR] || options[EVENT_OPTION_OUTBOUND]);
+
+  const postURL = this.server + '/track?' + query;
+  const imgURL = this.server + '/img?' + query;
+
+  try {
+
+    if (this.beaconSupport) {
+
+      log('sending using beacon');
+      nav.sendBeacon(postURL, data);
+      return true;
+
+    } else if (!useSafe && this.XHRSupport) {
+
+      log('sending using XHR/XDR');
+      this.sendXHR(postURL, data);
+      return true;
+    }
+  } catch (error) {
+    msg.error = `${error.name}: ${error.message}`;
+  }
+
+  const part = this.options.msgCropper(msg);
+  log('sending using IMG');
+
+  const partData = btoa(JSON.stringify(part));
+  this.sendIMG(imgURL + '&b64=' + partData);
+  return true;
 
 };
 
