@@ -80,7 +80,7 @@ Transport.prototype.send = function (query, msg, options = {}) {
       nav.sendBeacon(postURL, data);
       return true;
 
-    } else if (!useSafe && (options.allowXHR && (isXHRsupported() || isXDRsupported()))) {
+    } else if (!useSafe && (this.options.allowXHR && (isXHRsupported() || isXDRsupported()))) {
 
       log('sending using XHR/XDR');
       this.sendXHR(postURL, data);
@@ -93,7 +93,7 @@ Transport.prototype.send = function (query, msg, options = {}) {
   }
 
   const part = this.options.msgCropper(msg);
-  log.warn('sending using IMG. XDR:'+isXDRsupported());
+  log.warn(`sending using IMG. allowXHR:${this.options.allowXHR} safe${useSafe} XDR:${isXDRsupported()}`);
 
   const partData = btoa(JSON.stringify(part));
   this.sendIMG(imgURL + '&b64=' + partData);
