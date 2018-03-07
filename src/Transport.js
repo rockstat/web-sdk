@@ -8,8 +8,7 @@ import {
 } from './Variables';
 
 const log = createLogger('Transport');
-const noop = () => {
-};
+const noop = () => {};
 
 const Transport = function (options) {
 
@@ -24,22 +23,23 @@ Transport.prototype.sendXHR = function (url, data) {
 
   let xhr;
   if (isXHRWithCreds() || !isXDRsupported() && isXHRsupported()) {
-
     xhr = new win.XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.send(data);
 
   } else if (isXDRsupported()) {
 
-    xhr = new win.XDomainRequest();
-    xhr.timeout = this.options.sendTimeout;
-    xhr.onload = noop();
-    xhr.onerror = noop();
-    xhr.ontimeout = noop();
-    xhr.onprogress = noop();
+    setTimeout(() => {
+      xhr = new win.XDomainRequest();
+      xhr.onload = noop();
+      xhr.onerror = noop();
+      xhr.ontimeout = noop();
+      xhr.onprogress = noop();
+      xhr.open('POST', url, true);
+      xhr.send(data);
+    },0);
 
   }
-  xhr.open('POST', url, true);
-  xhr.withCredentials = true;
-  xhr.send(data);
 };
 
 /**
@@ -67,7 +67,7 @@ Transport.prototype.sendIMG = function (url) {
 Transport.prototype.send = function (query, msg, options = {}) {
 
   const data = JSON.stringify(msg);
-  const useSafe = options[EVENT_OPTION_TERMINATOR] || options[EVENT_OPTION_OUTBOUND];
+  const useSafe = !!options[EVENT_OPTION_TERMINATOR] || !!options[EVENT_OPTION_OUTBOUND];
 
   const postURL = this.server + '/track?' + query;
   const imgURL = this.server + '/img?' + query;
@@ -95,7 +95,7 @@ Transport.prototype.send = function (query, msg, options = {}) {
   }
 
   const part = this.options.msgCropper(msg);
-  log.warn(`sending using IMG. allowXHR:${this.options.allowXHR} safe${useSafe} XDR:${isXDRsupported()}`);
+  log.log(`sending using IMG. safe${useSafe}`);
 
   const partData = btoa(JSON.stringify(part));
   this.sendIMG(imgURL + '&b64=' + partData);
