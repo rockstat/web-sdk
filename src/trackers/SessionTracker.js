@@ -193,7 +193,6 @@ SessionTracker.prototype.setUserData = function (data) {
     this.storage.set(KEY_USER_TRAITS, data.userTraits);
     this.userTraits = data.userTraits;
   }
-
 };
 
 

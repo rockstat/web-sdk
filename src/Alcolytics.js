@@ -70,8 +70,8 @@ function Alcolytics() {
     trackClicks: true,
     trackForms: true,
     allowHTTP: false,
-    useSendBeacon: true,
-    useXHR: true,
+    allowSendBeacon: true,
+    allowXHR: true,
     msgCropper: (msg) => msgCropper(msg, msgCropSchema)
   };
 

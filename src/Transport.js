@@ -1,7 +1,7 @@
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import {win, doc, nav} from './Browser';
-import {checkSendBeacon, checkXHRCreds, checkXHR, checkXDR} from './data/clientFeatures';
+import {checkSendBeacon, isXHRWithCreds, isXHRsupported, isXDRsupported} from './data/clientFeatures';
 import {
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_TERMINATOR
@@ -15,24 +15,25 @@ const Transport = function (options) {
     sendTimeout: 5000
   }, options);
 
-  this.beaconSupport = options.useSendBeacon && checkSendBeacon();
-  this.XHRSupport = options.useXHR && (checkXHR() || checkXDR());
-
   this.server = this.options.server;
 };
 
 Transport.prototype.sendXHR = function (url, data) {
 
   let xhr;
-  if (checkXHRCreds() || !checkXDR() && checkXHR()) {
+  if (isXHRWithCreds() || !isXDRsupported() && isXHRsupported()) {
+
     xhr = new win.XMLHttpRequest();
-  } else if (checkXDR()) {
+
+  } else if (isXDRsupported()) {
+
     xhr = new win.XDomainRequest();
     xhr.timeout = this.options.sendTimeout;
     xhr.onload = noop();
     xhr.onerror = noop();
     xhr.ontimeout = noop();
     xhr.onprogress = noop();
+
   }
   xhr.open('POST', url, true);
   xhr.withCredentials = true;
@@ -64,24 +65,27 @@ Transport.prototype.sendIMG = function (url) {
 Transport.prototype.send = function (query, msg, options = {}) {
 
   const data = JSON.stringify(msg);
-  const useSafe = !!(options[EVENT_OPTION_TERMINATOR] || options[EVENT_OPTION_OUTBOUND]);
+  const useSafe = options[EVENT_OPTION_TERMINATOR] || options[EVENT_OPTION_OUTBOUND];
 
   const postURL = this.server + '/track?' + query;
   const imgURL = this.server + '/img?' + query;
 
+  log(`params. safe:${useSafe} `);
+
   try {
 
-    if (this.beaconSupport) {
+    if (this.options.allowSendBeacon && checkSendBeacon()) {
 
       log('sending using beacon');
       nav.sendBeacon(postURL, data);
       return true;
 
-    } else if (!useSafe && this.XHRSupport) {
+    } else if (!useSafe && (options.allowXHR && (isXHRsupported() || isXDRsupported()))) {
 
       log('sending using XHR/XDR');
       this.sendXHR(postURL, data);
       return true;
+
     }
   } catch (error) {
     msg.error = `${error.name}: ${error.message}`;

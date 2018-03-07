@@ -21,16 +21,16 @@ export function checkSendBeacon() {
   return 'sendBeacon' in nav;
 }
 
-export function checkXDR() {
+export function isXDRsupported() {
   return !!win.XDomainRequest;
 }
 
-export function checkXHR() {
+export function isXHRsupported() {
   return !!win.XMLHttpRequest
 }
 
-export function checkXHRCreds() {
-  return checkXHR && ('withCredentials' in new win.XMLHttpRequest())
+export function isXHRWithCreds() {
+  return isXHRsupported && ('withCredentials' in new win.XMLHttpRequest())
 }
 
 export default {
