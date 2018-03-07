@@ -25,6 +25,7 @@ Transport.prototype.sendXHR = function (url, data) {
   if (isXHRWithCreds() || !isXDRsupported() && isXHRsupported()) {
     xhr = new win.XMLHttpRequest();
     xhr.open('POST', url, true);
+    xhr.withCredentials = true;
     xhr.send(data);
 
   } else if (isXDRsupported()) {
