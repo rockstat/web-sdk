@@ -22,7 +22,7 @@ export function checkSendBeacon() {
 }
 
 export function isXDRsupported() {
-  return !!win.XDomainRequest;
+  return !!window.XDomainRequest;
 }
 
 export function isXHRsupported() {

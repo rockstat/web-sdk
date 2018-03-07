@@ -88,11 +88,12 @@ Transport.prototype.send = function (query, msg, options = {}) {
 
     }
   } catch (error) {
+    log.warn(error);
     msg.error = `${error.name}: ${error.message}`;
   }
 
   const part = this.options.msgCropper(msg);
-  log('sending using IMG');
+  log.warn('sending using IMG. XDR:'+isXDRsupported());
 
   const partData = btoa(JSON.stringify(part));
   this.sendIMG(imgURL + '&b64=' + partData);
