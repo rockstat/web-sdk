@@ -7,9 +7,11 @@ import {
   EVENT_OPTION_TERMINATOR
 } from './Variables';
 
-const log = createLogger('Transport');
+const noop = () => {
+};
 
 const Transport = function (options) {
+  const log = createLogger('Transport');
 
   this.options = objectAssign({
     sendTimeout: 5000
