@@ -41,7 +41,7 @@ function SessionTracker(alco, options) {
   this.userId = undefined;
   this.userTraits = undefined;
   this.uid = null;
-  this.userParams = this.storage.get(KEY_USER_PARAMS) || {};
+  this.userParams = this.getUserParams();
 }
 
 Emitter(SessionTracker.prototype);
@@ -141,6 +141,19 @@ SessionTracker.prototype.sessionData = function () {
 
 };
 
+SessionTracker.prototype.getUserParams = function () {
+
+  const params = this.storage.get(KEY_USER_PARAMS) || {};
+
+  // Removing old vars
+  if(params.gaClientId){
+    params.gaClientId = undefined;
+  }
+  if(params.ymClientId){
+    params.ymClientId = undefined;
+  }
+  return params;
+};
 
 SessionTracker.prototype.setUserParams = function (params) {
 
