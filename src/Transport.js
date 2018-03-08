@@ -46,7 +46,6 @@ Transport.prototype.sendXHR = function (url, data) {
 /**
  *
  * @param url {string}
- * @param msg {Object}
  */
 Transport.prototype.sendIMG = function (url) {
 
@@ -95,6 +94,7 @@ Transport.prototype.send = function (query, msg, options = {}) {
     msg.error = `${error.name}: ${error.message}`;
   }
 
+  // Send only part when using gif
   const part = this.options.msgCropper(msg);
   log.log(`sending using IMG. safe${useSafe}`);
 
