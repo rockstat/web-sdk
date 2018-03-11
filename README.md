@@ -12,7 +12,7 @@ a new server deployment system.
 систему развертывания нового сервера.
 [Подробнее](https://alco.readme.io/docs) 
 
-![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-tracker/master/docs/alco-scheme.png)
+![Alcolytics sheme](https://alcolytics.ru/media/alco-scheme.png)
 
 ## About AlcoJS library
 
@@ -26,42 +26,11 @@ JavaScript библиотека для отслеживания web прилож
 Лучше всего установить код между `<head>` и `</head>`или сразу после `<body>`. 
 Можно поставить через Google Tag Manager, тут есть свои плюсы, минуты и особенности, надо проверять.
 
-    <script type="text/javascript">
-      !function (win, doc, stag, shost, alco, el, head) {
-        if(win.alco) return;
-        alco = win.alco = function () {
-          var args = Array.prototype.slice.call(arguments);
-          alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
-        };
-        alco.push = alco;
-        alco.loaded = !0;
-        alco.snippet = 1;
-        alco.queue = [];
-        alco.server = 'https://' + shost;
-        alco.load = function (src) {
-          el = doc.createElement(stag);
-          el.async = !0;
-          el.src = src;
-          head = doc.getElementsByTagName(stag)[0];
-          head.parentNode.insertBefore(el, head);
-        };
-        alco.load(alco.server + '/lib.js');
-      }(window, document, 'script', 'alco.yourdomain.some');
-      
-      # Конфигурация трекера
-      alco('configure', {
-        projectId: 6,
-        cookieDomain: 'yourdomain.some'
-      });
-      
-      # По завершении загрузки, будет отправлено событие просмотра страницы
-      alco('page');
-      
-    </script>
+![Alcolytics sheme](https://alcolytics.ru/media/snippet.png)
+
     
-актуальная весия загрузчика находится в `snippet/snippet.html`
-    
-Подробнее про установку и настройку на странице [AlcoJS API](https://alco.readme.io/docs/js-api) 
+Подробнее про установку и настройку на странице [AlcoJS API](https://alco.readme.io/docs/js-api)
+ 
 
 ## События
 
