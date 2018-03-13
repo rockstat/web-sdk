@@ -25,6 +25,8 @@ import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
   EVENT_PAGE_LOADED,
+  EVENT_PAGE_UNLOAD,
+  EVENT_OPTION_MEAN,
   READY,
   EVENT,
   CB_DOM_EVENT,
@@ -33,14 +35,14 @@ import {
   EVENTS_ADD_PERF,
   EVENTS_ADD_SCROLL,
   EVENTS_NO_SCROLL,
-  INTERNAL_EVENT, EVENT_PAGE_UNLOAD
+  INTERNAL_EVENT,
 } from './Variables';
 
-const noop = function () {
+const noop = () => {
 };
 const log = createLogger('Alcolytics');
 
-// Schema used for thin channels
+// Schema used for minify data at thin channels
 const msgCropSchema = {
   name: true,
   data: true,
@@ -51,6 +53,10 @@ const msgCropSchema = {
   session: ['eventNum', 'pageNum', 'num']
 };
 
+/**
+ * Main Alcolytics class
+ * @constructor
+ */
 function Alcolytics() {
 
   log('starting Alcolytics');
@@ -59,11 +65,11 @@ function Alcolytics() {
   this.configured_flag = false;
   this.queue = [];
   this.options = {
+    projectId: 1,
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
     libver: 210,
-    projectId: 1,
     initialUid: 0,
     cookieDomain: 'auto',
     trackActivity: true,
@@ -72,6 +78,7 @@ function Alcolytics() {
     allowHTTP: false,
     allowSendBeacon: true,
     allowXHR: true,
+    activateWs: false,
     msgCropper: (msg) => msgCropper(msg, msgCropSchema)
   };
 
@@ -117,7 +124,7 @@ Alcolytics.prototype.initialize = function () {
 
   // Check is configured
   if (!this.configured_flag) {
-    log.warn('Initializing before configuration complete');
+    log.warn('Initializing before configuration was complete');
   }
 
 
@@ -203,14 +210,13 @@ Alcolytics.prototype.isInitialized = function () {
 
 /**
  * Applying configuration block. Can be called multiple times
- * @param options
+ * @param {Object} options
  */
 Alcolytics.prototype.configure = function (options) {
 
   if (this.initialized) {
     return log.warn('Configuration cant be applied because already initialized');
   }
-
   this.configured_flag = true;
   this.options = objectAssign(this.options, options);
 
@@ -218,9 +224,9 @@ Alcolytics.prototype.configure = function (options) {
 
 /**
  * Handling event
- * @param name
- * @param data
- * @param options
+ * @param {string} name
+ * @param {Object|undefined} data
+ * @param {Object} options - Event properties
  */
 Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
@@ -264,12 +270,35 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
   }
 
   // Sending to server
+  this.sendToServer(msg, options);
+};
+
+
+/**
+ * Log remote: send to server log
+ * @param {string} level
+ * @param {Array} args
+ */
+Alcolytics.prototype.logOnServer = function (level, args) {
+
+  this.sendToServer(
+    {name: 'log', level: level, args: args},
+    {[EVENT_OPTION_MEAN]: true}
+  );
+};
+
+/**
+ *
+ * @param msg {Object}
+ * @param options {Object}
+ */
+Alcolytics.prototype.sendToServer = function (msg, options) {
   const query = [
     'uid=' + this.sessionTracker.getUid()
   ];
   this.transport.send(query.join('&'), msg, options);
-
 };
+
 
 Alcolytics.prototype.unload = function () {
 
@@ -355,7 +384,7 @@ Alcolytics.prototype.getUid = function () {
 
 /**
  * Save personal config overrides
- * @param config
+ * @param {Object} config
  */
 Alcolytics.prototype.setCustomConfig = function (config) {
 

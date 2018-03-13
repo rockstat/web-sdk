@@ -37,6 +37,7 @@ export const EVENTS_ADD_SCROLL = [
 export const INTERNAL_EVENT = 'Internal event';
 export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
+export const EVENT_OPTION_MEAN = 'mean';
 
 export const SESSION_INTERNAL = 'internal';
 export const SESSION_DIRECT = 'direct';

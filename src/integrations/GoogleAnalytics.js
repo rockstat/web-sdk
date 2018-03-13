@@ -24,11 +24,10 @@ const GoogleAnalytics = function () {
         }
 
       } catch (e) {
-        log.error('Error:',e)
+        log.error('Error while getting GA Client id:', e)
       }
     })
   }, 25, 40);
-
 };
 
 Emitter(GoogleAnalytics.prototype);
