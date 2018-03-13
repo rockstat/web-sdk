@@ -1,15 +1,16 @@
 import {nav, win} from '../Browser';
+import {isHttps} from './pageDefaults';
 
 function checkLS() {
   try {
+    const ls = localStorage;
     const x = '__storage_test__';
-    localStorage.setItem(x, x);
-    localStorage.removeItem(x);
-    return localStorage.getItem(x) === x;
+    ls.setItem(x, x);
+    ls.removeItem(x);
+    return ls.getItem(x) === x;
   }
-  catch (e) {
-    return false;
-  }
+  catch (e) {}
+  return false;
 }
 
 function checkWPush() {
@@ -26,11 +27,27 @@ export function isXDRsupported() {
 }
 
 export function isXHRsupported() {
-  return !!win.XMLHttpRequest
+  return !!win.XMLHttpRequest;
 }
 
 export function isXHRWithCreds() {
-  return isXHRsupported && ('withCredentials' in new win.XMLHttpRequest())
+  return isXHRsupported && ('withCredentials' in new win.XMLHttpRequest());
+}
+
+export function wsSupported() {
+  const protocol = isHttps() ? 'wss' : 'ws';
+
+  if ('WebSocket' in window) {
+    let protoBin = ('binaryType' in WebSocket.prototype);
+    if (protoBin) {
+      return protoBin;
+    }
+    try {
+      return !!(new WebSocket(protocol + '://.').binaryType);
+    } catch (e) {}
+  }
+
+  return false;
 }
 
 export default {
