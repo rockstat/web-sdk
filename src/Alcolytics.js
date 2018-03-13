@@ -69,7 +69,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 210,
+    libver: 211,
     initialUid: 0,
     cookieDomain: 'auto',
     trackActivity: true,
@@ -281,10 +281,13 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
  */
 Alcolytics.prototype.logOnServer = function (level, args) {
 
-  this.sendToServer(
-    {name: 'log', level: level, args: args},
-    {[EVENT_OPTION_MEAN]: true}
-  );
+  if (this.isInitialized()){
+    this.sendToServer(
+      {name: 'log', level: level, args: args},
+      {[EVENT_OPTION_MEAN]: true}
+    );
+  }
+
 };
 
 /**
