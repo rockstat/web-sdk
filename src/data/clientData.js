@@ -13,7 +13,7 @@ export default function () {
     ts: d.getTime(),
     tz: getTimeZone(d),
     tzOffset: -d.getTimezoneOffset()*1000,
-    platform: n.platform,
+    platform: n.platform || not_present,
     product: n.product || not_present
   }
 }
