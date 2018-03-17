@@ -1,3 +1,5 @@
+import {win} from '../Browser';
+
 const isProd = PRODUCTION;
 
 
@@ -23,7 +25,7 @@ export default function createLogger(name) {
   };
 
   const log = function (...args) {
-    if (!isProd) {
+    if (!isProd || window._alco_logger) {
       logger('log', args, prefix());
     }
   };

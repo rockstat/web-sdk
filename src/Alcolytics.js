@@ -37,6 +37,7 @@ import {
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
 } from './Variables';
+import {win} from './Browser';
 
 const noop = () => {
 };
@@ -332,6 +333,25 @@ Alcolytics.prototype.event = function (name, data, options) {
 Alcolytics.prototype.page = function (data, options) {
 
   this.handle(EVENT_PAGEVIEW, data, options);
+
+};
+
+
+/**
+ * Show warn log record. For testing purposes
+ */
+Alcolytics.prototype.warn = function (msg) {
+
+  log.warn(msg);
+
+};
+
+/**
+ * Show warn log record. For testing purposes
+ */
+Alcolytics.prototype.enableLogger = function () {
+
+  win._alco_logger = true;
 
 };
 
