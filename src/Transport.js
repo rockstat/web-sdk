@@ -125,8 +125,8 @@ Transport.prototype.send = function (query, msg, options = {}) {
   log(`sending using IMG. useSafe: ${useSafe}`, part);
 
   try {
-    const partData = btoa(JSON.stringify(part));
-    this.sendIMG(imgURL + '&b64=' + encodeURIComponent(partData));
+    const partData = JSON.stringify(part);
+    this.sendIMG(imgURL + '&j=' + encodeURIComponent(partData));
   } catch (e) {
     log.error('Error during sending data using image', e);
   }

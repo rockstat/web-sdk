@@ -73,7 +73,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 212,
+    libver: 213,
     initialUid: 0,
     cookieDomain: 'auto',
     trackActivity: true,
