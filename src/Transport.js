@@ -126,7 +126,7 @@ Transport.prototype.send = function (query, msg, options = {}) {
 
   try {
     const partData = btoa(JSON.stringify(part));
-    this.sendIMG(imgURL + '&b64=' + partData);
+    this.sendIMG(imgURL + '&b64=' + encodeURIComponent(partData));
   } catch (e) {
     log.error('Error during sending data using image', e);
   }
