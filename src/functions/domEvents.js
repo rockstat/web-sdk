@@ -18,7 +18,7 @@ const checkPassiveSupport = () => {
 };
 
 
-const useAddEL = !!win.addEventListener;
+export const hasAddEL = !!win.addEventListener;
 const passiveSupport = checkPassiveSupport();
 
 /**
@@ -38,7 +38,7 @@ const stateIsInteractive = () => {
 /**
  * @type {Boolean}
  */
-export const useCaptureSupport = useAddEL;
+export const useCaptureSupport = hasAddEL;
 
 /**
  * @param elem {Element}
@@ -48,7 +48,7 @@ export const useCaptureSupport = useAddEL;
  * @return {*}
  */
 export function addHandler(elem, type, handler, useCapture = false) {
-  if (useAddEL) {
+  if (hasAddEL) {
     elem.addEventListener(type, handler, useCapture);
   } else {
     log('.addEventListener not supported');
@@ -63,7 +63,7 @@ export function addHandler(elem, type, handler, useCapture = false) {
  * @return {*}
  */
 export function removeHandler(elem, type, handler, useCapture = false) {
-  if (useAddEL) {
+  if (hasAddEL) {
     elem.removeEventListener(type, handler, useCapture);
   }
 }

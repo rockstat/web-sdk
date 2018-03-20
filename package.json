@@ -1,6 +1,6 @@
 {
   "name": "alco-alcojs",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "alcojs is client tracking code for Alcolytics platform",
   "main": "src/index.js",
   "scripts": {

@@ -12,14 +12,13 @@ const log = createLogger('Alco GA');
 const GoogleAnalytics = function () {
 
   // Getting Google Analytics ClientId
-  when(() => win.ga, () => {
+  when(() => win.ga && win.ga.getAll && win.ga.getAll()[0], () => {
     win.ga(() => {
       try {
 
-        const gaId = win.ga && win.ga.getAll && win.ga.getAll()[0] && win.ga.getAll()[0].get('clientId');
+        const gaId = win.ga.getAll()[0].get('clientId');
 
         if (gaId) {
-
           this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {gaId});
         }
 

@@ -51,7 +51,10 @@ const msgCropSchema = {
   uid: true,
   error: true,
   client: ['ts', 'tzOffset'],
-  session: ['eventNum', 'pageNum', 'num']
+  session: ['eventNum', 'pageNum', 'num'],
+  // error fields
+  args: true,
+  lvl: true
 };
 
 /**
@@ -70,7 +73,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'alco.js',
-    libver: 211,
+    libver: 212,
     initialUid: 0,
     cookieDomain: 'auto',
     trackActivity: true,
@@ -281,10 +284,9 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
  * @param {Array} args
  */
 Alcolytics.prototype.logOnServer = function (level, args) {
-
   if (this.isInitialized()){
     this.sendToServer(
-      {name: 'log', level: level, args: args},
+      {name: 'log', lvl: level, args: args},
       {[EVENT_OPTION_MEAN]: true}
     );
   }
@@ -342,7 +344,7 @@ Alcolytics.prototype.page = function (data, options) {
  */
 Alcolytics.prototype.warn = function (msg) {
 
-  log.warn(msg);
+  log.warn(new Error(msg));
 
 };
 

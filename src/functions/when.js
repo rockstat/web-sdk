@@ -1,4 +1,4 @@
-const nextTick = require('next-tick');
+import nextTick from './nextTick';
 
 /**
  * Loop on a short interval until `condition()` is true, then call `fn`.
