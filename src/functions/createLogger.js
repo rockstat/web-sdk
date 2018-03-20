@@ -8,7 +8,8 @@ const logger = function (type, arr, prefix) {
 
     // Sending to remote log
     if(window['alco'] && (type === 'warn' || type === 'error')){
-      window.alco('logOnServer', type, arr);
+      const estr = arr.map(e => e instanceof Error ? e+"": e);
+      window.alco('logOnServer', type, estr);
     }
     const call = Function.prototype.call;
     call.apply(call, [console[type], console].concat(prefix ? [prefix] : [])

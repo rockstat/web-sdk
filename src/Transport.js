@@ -118,12 +118,11 @@ Transport.prototype.send = function (query, msg, options = {}) {
     }
   } catch (error) {
     log.warn(error);
-    msg.error = `${error.name}: ${error.message}`;
   }
 
   // Send only part when using gif
   const part = this.options.msgCropper(msg);
-  log.log(`sending using IMG. useSafe: ${useSafe}`);
+  log(`sending using IMG. useSafe: ${useSafe}`, part);
 
   try {
     const partData = btoa(JSON.stringify(part));

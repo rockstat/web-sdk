@@ -40,7 +40,7 @@ function extractFormData(element) {
     fname: element.getAttribute('name'),
     fcls: element.className,
     fid: element.id
-  }
+  };
 }
 
 /**
@@ -59,7 +59,7 @@ function extractElementData(element) {
     eph: element.getAttribute('placeholder'),
     ecl: element.className,
     eid: element.id
-  }
+  };
 }
 
 /**
@@ -70,6 +70,8 @@ function extractElementData(element) {
 const FormTracker = function (options) {
 
   this.options = objectAssing({}, options);
+  this.initialized = false;
+
   this.formEventHandler = this.formEventHandler.bind(this);
   this.elementEventHandler = this.elementEventHandler.bind(this);
 
@@ -82,83 +84,89 @@ Emitter(FormTracker.prototype);
 
 FormTracker.prototype.initialize = function () {
 
-  if (useCaptureSupport) {
-
-    each(formEvents, (event) => {
-      addHandler(doc, event, this.formEventHandler, true);
-    });
-
-    each(elementEvents, (event) => {
-      addHandler(doc, event, this.elementEventHandler, true);
-    });
-
+  if (!useCaptureSupport) {
+    return log.warn('addEventListener not supported');
   }
 
-};
+  each(formEvents, (event) => {
+    addHandler(doc, event, this.formEventHandler, true);
+  });
 
+  each(elementEvents, (event) => {
+    addHandler(doc, event, this.elementEventHandler, true);
+  });
+
+  this.initialized = true;
+};
 
 FormTracker.prototype.unload = function () {
 
-  if (useCaptureSupport) {
+  if (!this.initialized) {
+    return log('Not initialized');
+  }
 
-    each(formEvents, (event) => {
-      removeHandler(doc, event, this.formEventHandler, true);
-    });
+  each(formEvents, (event) => {
+    removeHandler(doc, event, this.formEventHandler, true);
+  });
 
-    each(elementEvents, (event) => {
-      removeHandler(doc, event, this.elementEventHandler, true);
-    });
+  each(elementEvents, (event) => {
+    removeHandler(doc, event, this.elementEventHandler, true);
+  });
+
+};
+
+
+/**
+ * Handler for form element events
+ * @param ev {Event} Dom event
+ */
+FormTracker.prototype.formEventHandler = function (ev) {
+
+  const target = ev.target || ev.srcElement;
+  const type = ev.type;
+
+  const form = closest(target, formTag, true);
+
+  if (form) {
+    const event = {
+      name: `Form ${type}`,
+      data: {
+        event: type,
+        ...extractFormData(form)
+      },
+      options: {
+        [EVENT_OPTION_TERMINATOR]: (type === 'submit')
+      }
+    };
+
+    this.emit(EVENT, event);
   }
 };
 
 
 /**
- *
- * @param e {Event}
+ * Handler for form inputs events
+ * @param ev {Event} Dom event
  */
-FormTracker.prototype.formEventHandler = function (e) {
+FormTracker.prototype.elementEventHandler = function (ev) {
 
-  const target = e.target || e.srcElement;
-  const type = e.type;
-
-  const form = closest(target, formTag, true);
-
-  const event = {
-    name: `Form ${type}`,
-    data: {
-      event: type,
-      ...extractFormData(form)
-    },
-    options: {
-      [EVENT_OPTION_TERMINATOR]: (type === 'submit')
-    }
-  };
-
-  this.emit(EVENT, event);
-};
-
-
-/**
- * @param e {Event}
- */
-FormTracker.prototype.elementEventHandler = function (e) {
-
-  const target = e.target || e.srcElement;
-  const type = e.type;
+  const target = ev.target || ev.srcElement;
+  const type = ev.type;
 
   const element = closest(target, elementsTags.join(','), true);
-
   const form = element && closest(element, formTag);
-  const event = {
-    name: `Field ${type}`,
-    data: {
-      event: type,
-      ...extractElementData(element),
-      ...extractFormData(form)
-    }
-  };
 
-  this.emit(EVENT, event);
+  if (element) {
+    const event = {
+      name: `Field ${type}`,
+      data: {
+        event: type,
+        ...extractElementData(element),
+        ...extractFormData(form)
+      }
+    };
+    this.emit(EVENT, event);
+  }
 };
 
 
