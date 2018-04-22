@@ -2,7 +2,10 @@ import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';
 import CookieStorageAdapter from './CookieStorageAdapter';
-import pageDefaults from './data/pageDefaults';
+import {
+  pageDefaults,
+  isHttps
+} from './data/pageDefaults';
 import browserData from './data/browserData';
 import clientData from './data/clientData';
 import clientFeatures from './data/clientFeatures';
@@ -12,15 +15,18 @@ import ActivityTracker from './trackers/ActivityTracker';
 import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
-import GoogleAnalytics from './integrations/GoogleAnalytics';
-import YandexMetrika from './integrations/YandexMetrika';
-import {isObject} from './functions/type';
+import GoogleAnalytics from './syncs/GoogleAnalytics';
+import YandexMetrika from './syncs/YandexMetrika';
+import {
+  isObject
+} from './functions/type';
 import msgCropper from './functions/msgCropper';
 import SelfishPerson from './SelfishPerson';
-import Transport from './Transport';
+import {
+  Transport
+} from './Transport';
 import Emitter from 'component-emitter';
 import each from './functions/each';
-
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
@@ -36,11 +42,13 @@ import {
   EVENTS_ADD_SCROLL,
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
+  SERVER_MESSAGE,
 } from './Variables';
-import {win} from './Browser';
+import {
+  win
+} from './Browser';
 
-const noop = () => {
-};
+const noop = () => {};
 const log = createLogger('Alcolytics');
 
 // Schema used for minify data at thin channels
@@ -60,13 +68,14 @@ const msgCropSchema = {
 /**
  * Main Alcolytics class
  * @constructor
+ * @property {Transport} transport class used for communicate with server
  */
 function Alcolytics() {
 
   log('starting Alcolytics');
 
   this.initialized = false;
-  this.configured_flag = false;
+  this.configured = false;
   this.queue = [];
   this.options = {
     projectId: 1,
@@ -83,14 +92,13 @@ function Alcolytics() {
     allowSendBeacon: true,
     allowXHR: true,
     activateWs: false,
+    wssPort: 443,
     msgCropper: (msg) => msgCropper(msg, msgCropSchema)
   };
 
-  this.integrations = [];
+  this.syncs = [];
   this.trackers = [];
-
-  this.on(DOM_BEFORE_UNLOAD, this.unload);
-
+  this.transport = null;
 }
 
 Emitter(Alcolytics.prototype);
@@ -100,18 +108,25 @@ Emitter(Alcolytics.prototype);
  */
 Alcolytics.prototype.initialize = function () {
 
-  // Check is HTTPS
-  const page = pageDefaults();
-
-  if (page.proto !== 'https' && !this.options.allowHTTP) {
-    return log.warn('Works only on https');
-  }
   // Check is initialized
   if (this.initialized) {
     return;
   }
 
-  // Constructing storage methods (should be before any other actions)
+  // Check is HTTPS
+  if (!isHttps() && !this.options.allowHTTP) {
+    return log.warn('Works only on https');
+  }
+
+  log('Initializing...');
+
+
+  // Check is configured
+  if (!this.configured) {
+    log.warn('Initializing before configuration yet complete');
+  }
+
+  // Constructing storage adapters (should be before any other actions)
   this.localStorage = new LocalStorageAdapter(this.options);
   this.cookieStorage = new CookieStorageAdapter({
     cookieDomain: this.options.cookieDomain,
@@ -122,25 +137,12 @@ Alcolytics.prototype.initialize = function () {
   this.selfish = new SelfishPerson(this, this.options);
   this.configure(this.selfish.getConfig());
 
-  log('Initializing');
-
-  this.initialized = true;
-
-  // Check is configured
-  if (!this.configured_flag) {
-    log.warn('Initializing before configuration was complete');
-  }
-
-
   // Library data
   this.libInfo = {
     name: this.options.library,
     libver: this.options.libver,
     snippet: this.options.snippet
   };
-
-  // Transport to server
-  this.transport = new Transport(this.options);
 
   // Handling browser events
   this.browserEventsTracker = new BrowserEventsTracker();
@@ -150,6 +152,11 @@ Alcolytics.prototype.initialize = function () {
   this.sessionTracker = new SessionTracker(this, this.options)
     .subscribe(this)
     .handleUid(this.options.initialUid);
+
+  // Transport to communicate with server
+  this.transport = new Transport(this.options)
+    .setCreds(this.sessionTracker.creds())
+    .connect();
 
   // Main tracker
   this.trackers.push(
@@ -174,42 +181,44 @@ Alcolytics.prototype.initialize = function () {
   }
 
   // Integrations
-  this.integrations.push(
+  this.syncs.push(
     new GoogleAnalytics(),
     new YandexMetrika()
   );
 
-  // Receiving events from trackers and plugins
-  const plugins = [].concat(this.trackers, this.integrations);
+  // Receiving events from trackers and syncs
+  const plugins = [this.transport].concat(this.trackers, this.syncs);
 
   each(plugins, (plugin) => {
-
-    plugin.on(EVENT, ({name, data, options}) => {
+    plugin.on(EVENT, ({
+      name,
+      data,
+      options
+    }) => {
       this.handle(name, data, options);
     });
 
     plugin.on(INTERNAL_EVENT, (name, data) => {
+      log(`on-in:${name}`);
       this.emit(name, data);
     });
-
   });
 
   // Fire ready
   this.emit(READY);
+  this.on(DOM_BEFORE_UNLOAD, this.unload);
+
+  this.initialized = true;
 
   // Handling queue
   this.queue.map(e => {
     this.handle.apply(this, e);
   });
   this.queue = [];
-
 };
 
-
 Alcolytics.prototype.isInitialized = function () {
-
   return this.initialized;
-
 };
 
 /**
@@ -221,9 +230,8 @@ Alcolytics.prototype.configure = function (options) {
   if (this.initialized) {
     return log.warn('Configuration cant be applied because already initialized');
   }
-  this.configured_flag = true;
+  this.configured = true;
   this.options = objectAssign(this.options, options);
-
 };
 
 /**
@@ -256,14 +264,15 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
     user: this.sessionTracker.userData(),
-    page: pageDefaults({short: true}),
+    page: pageDefaults({
+      short: true
+    }),
     session: this.sessionTracker.sessionData(),
     lib: this.libInfo,
     client: clientData(),
     cf: clientFeatures,
     browser: browserData()
   };
-
 
   if (EVENTS_ADD_PERF.indexOf(name) >= 0) {
     msg.perf = performanceData();
@@ -277,20 +286,21 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
   this.sendToServer(msg, options);
 };
 
-
 /**
  * Log remote: send to server log
  * @param {string} level
  * @param {Array} args
  */
 Alcolytics.prototype.logOnServer = function (level, args) {
-  if (this.isInitialized()){
-    this.sendToServer(
-      {name: 'log', lvl: level, args: args},
-      {[EVENT_OPTION_MEAN]: true}
-    );
+  if (this.isInitialized()) {
+    this.sendToServer({
+      name: 'log',
+      lvl: level,
+      args: args
+    }, {
+      [EVENT_OPTION_MEAN]: true
+    });
   }
-
 };
 
 /**
@@ -300,21 +310,19 @@ Alcolytics.prototype.logOnServer = function (level, args) {
  */
 Alcolytics.prototype.sendToServer = function (msg, options) {
   const query = [
-    'uid=' + this.sessionTracker.getUid()
+    'uid=' + this.sessionTracker.getUid(),
+    'name=' + msg.name
   ];
   this.transport.send(query.join('&'), msg, options);
 };
 
-
 Alcolytics.prototype.unload = function () {
-
   log('Unloading...');
   this.event(EVENT_PAGE_UNLOAD);
 
   each(this.trackers, (tracker) => {
     tracker.unload();
   });
-
 };
 
 /**
@@ -324,18 +332,14 @@ Alcolytics.prototype.unload = function () {
  * @param options
  */
 Alcolytics.prototype.event = function (name, data, options) {
-
   this.handle(name, data, options);
-
 };
 
 /**
  * Track page load
  */
 Alcolytics.prototype.page = function (data, options) {
-
   this.handle(EVENT_PAGEVIEW, data, options);
-
 };
 
 
@@ -343,35 +347,28 @@ Alcolytics.prototype.page = function (data, options) {
  * Show warn log record. For testing purposes
  */
 Alcolytics.prototype.warn = function (msg) {
-
   log.warn(new Error(msg));
-
 };
 
 /**
  * Show warn log record. For testing purposes
  */
 Alcolytics.prototype.enableLogger = function () {
-
   win._alco_logger = true;
-
 };
 
 /**
  * Adding user details
  */
 Alcolytics.prototype.identify = function (userId, userTraits) {
-
   if (isObject(userId)) {
     userTraits = userId;
     userId = undefined;
   }
-
   this.handle(EVENT_IDENTIFY, {
     userId,
     userTraits
   });
-
 };
 
 /**
@@ -379,12 +376,9 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
  * @param cb
  */
 Alcolytics.prototype.onReady = function (cb) {
-
-  return this.isInitialized()
-    ? (cb || noop)()
-    : this.on(READY, cb);
-
-
+  return this.isInitialized() ?
+    (cb || noop)() :
+    this.on(READY, cb);
 };
 
 /**
@@ -392,9 +386,15 @@ Alcolytics.prototype.onReady = function (cb) {
  * @param cb
  */
 Alcolytics.prototype.onEvent = function (cb) {
-
   this.on(EVENT, cb);
+};
 
+/**
+ * Add external event callback
+ * @param cb
+ */
+Alcolytics.prototype.onServerMessage = function (name, cb) {
+  this.on(SERVER_MESSAGE, cb);
 };
 
 /**
@@ -402,9 +402,7 @@ Alcolytics.prototype.onEvent = function (cb) {
  * @return {String}
  */
 Alcolytics.prototype.getUid = function () {
-
   return this.sessionTracker.getUid();
-
 };
 
 /**
@@ -412,10 +410,7 @@ Alcolytics.prototype.getUid = function () {
  * @param {Object} config
  */
 Alcolytics.prototype.setCustomConfig = function (config) {
-
   this.selfish.saveConfig(config);
-
 };
-
 
 export default Alcolytics;

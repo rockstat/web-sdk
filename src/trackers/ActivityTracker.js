@@ -3,7 +3,12 @@ import runOnStop from '../functions/runOnStop';
 import objectKeys from '../functions/objectKeys';
 import each from '../functions/each';
 import Emitter from 'component-emitter';
-import {win, doc, html, body} from "../Browser";
+import {
+  win,
+  doc,
+  html,
+  body
+} from "../Browser";
 import {
   useCaptureSupport,
   removeHandler,
@@ -38,7 +43,7 @@ const getDocumentHeight = function () {
  */
 const getTopOffset = function () {
   const value = win.pageYOffset || html.scrollTop;
-  return value >= 0 ? Math.round(value): value;
+  return value >= 0 ? Math.round(value) : value;
 };
 
 
@@ -57,7 +62,9 @@ const getClientHeight = function () {
  */
 const ActivityTracker = function (options) {
 
-  this.options = objectAssing({}, this.defaults, options);
+  this.options = objectAssing({
+    flushInterval: 5
+  }, options);
 
   // Activity handling
   this.iteration = 0;
@@ -86,10 +93,6 @@ const ActivityTracker = function (options) {
     )
   }
 
-};
-
-ActivityTracker.prototype.defaults = {
-  flushInterval: 5
 };
 
 Emitter(ActivityTracker.prototype);
@@ -147,21 +150,17 @@ ActivityTracker.prototype.handleScroll = function () {
     )
   );
 
-  this.maxScroll = currentScroll > this.maxScroll
-    ? currentScroll
-    : this.maxScroll;
+  this.maxScroll = currentScroll > this.maxScroll ?
+    currentScroll :
+    this.maxScroll;
 
   this.scrollData = {
     docHeight: docHeight,
     clientHeight: clientHeight,
     topOffset: topOffset,
     scroll: currentScroll,
-    maxScroll: this.maxScroll,
-    src: {
-      clientHeight, topOffset, docHeight, currentScroll
-    }
+    maxScroll: this.maxScroll
   };
-
 };
 
 ActivityTracker.prototype.getPositionData = function () {
@@ -206,12 +205,10 @@ ActivityTracker.prototype.fireActivityEvent = function () {
 ActivityTracker.prototype.unload = function () {
 
   this.fireActivityEvent();
-
   each(activityEvents, (event) => {
     removeHandler(doc, event, this.eventHandler);
   });
   clearInterval(this.activityFlushInterval);
-
 };
 
 

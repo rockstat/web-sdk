@@ -5,8 +5,7 @@ import simpleHash from './simpleHash';
 import removeWww from './removeWww';
 import objectKeys from './objectKeys';
 import {isArray} from './type';
-import qs from 'component-querystring';
-import url from 'component-url';
+import urlParse from 'url-parse';
 import punycode from 'punycode';
 
 import {
@@ -17,6 +16,8 @@ import {
   SESSION_REFERRAL,
   SESSION_SOCIAL,
 } from "../Variables";
+
+const qs = urlParse.qs;
 
 const ENGINE_GOOGLE = 'google';
 const ENGINE_YANDEX = 'yandex';
@@ -138,7 +139,7 @@ export default function pageSource(page) {
   // Processing ref
   let ref;
   if (page.referrer) {
-    ref = url.parse(page.referrer);
+    ref = urlParse(page.referrer);
   }
   source.refHash = simpleHash(page.referrer);
 

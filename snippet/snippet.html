@@ -3,23 +3,24 @@
     if(win.alco) return;
     alco = win.alco = function () {
       args = Array.prototype.slice.call(arguments);
-      return alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
+      return alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args) && undefined;
     };
-    alco.push = alco; alco.loaded = !0; alco.snippet = 2; alco.queue = []; alco.server = 'https://' + shost;
+    alco.push = alco; alco.loaded = !0; alco.snippet = 3; alco.queue = []; alco.server = 'https://' + shost;
     alco.load = function (src) {
       el = doc.createElement(stag); el.async = !0; el.src = src;
       head = doc.getElementsByTagName(stag)[0];
       head.parentNode.insertBefore(el, head);
     };
     alco.load(alco.server + '/lib.js');
-  }(window, document, 'script', '{{ tracker_domain }}');
-
-  // Если у вас много сайтов, придумайте им номера и подставьте в projectId
+  }(window, document, 'script', 'STAT.YOUR.DOMAIN'); // <<< Подставьте домен, на котором расположен трекер
   alco('configure', {
-    projectId: 1
+    projectId: 1 // <<< придумайте номер сайта, если их несколько
   });
-
-  // Отправка просмотра страницы
-  alco('page');
+  alco('page'); // <<< отправка просмотра страницы, убирается на SPA
 </script>
-<!-- После изменений обновить в ansible и документации! -->
+<!--
+Чеклист, что ничего не забыли:
+- [ ] Прописан домен трекера
+- [ ] Подставлен projectId
+- [ ] (для разработчиков) Если код сниппета изменился, обновить его в документации и ansible
+-->

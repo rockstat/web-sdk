@@ -15,14 +15,15 @@ if (holder) {
   });
 
 // Attaching method to page
-  holder.doCall = function (args) {
+  const doCall = function (args) {
     args = args.slice(0);
     const method = args.shift();
     return alcolytics[method]
       ? alcolytics[method].apply(alcolytics, args)
       : new Error('Method not supported');
   };
-  holder.queue.map(holder.doCall);
+  holder.queue.map(doCall);
+  holder.doCall = doCall;
   holder.queue = [];
 
   documentReady(() => {

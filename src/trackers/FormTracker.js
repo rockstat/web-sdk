@@ -1,8 +1,13 @@
+import Emitter from 'component-emitter';
+import {
+  closest
+} from 'dom-utils';
 import objectAssing from '../functions/objectAssing';
 import each from '../functions/each';
-import Emitter from 'component-emitter';
-import {win, doc} from '../Browser';
-import {closest} from 'dom-utils';
+import {
+  win,
+  doc
+} from '../Browser';
 import createLogger from '../functions/createLogger';
 import {
   EVENT,
@@ -23,7 +28,6 @@ const elementsTags = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?o
 const formEvents = ['submit'];
 const elementEvents = ['focus', 'blur', 'change', 'invalid'];
 
-
 /**
  *
  * @param element {Element}
@@ -31,7 +35,9 @@ const elementEvents = ['focus', 'blur', 'change', 'invalid'];
  */
 function extractFormData(element) {
   if (!element) {
-    return {ferr: 'Form element absent'};
+    return {
+      ferr: 'Form element absent'
+    };
   }
 
   return {
@@ -50,7 +56,9 @@ function extractFormData(element) {
  */
 function extractElementData(element) {
   if (!element) {
-    return {eerr: 'Input element absent'};
+    return {
+      eerr: 'Input element absent'
+    };
   }
   return {
     etag: element.tagName && element.tagName.toLocaleLowerCase(),

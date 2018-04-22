@@ -1,6 +1,8 @@
 import objectAssign from './functions/objectAssing';
 import objectKeys from './functions/objectKeys';
-import pageDefaults from './data/pageDefaults';
+import {
+  pageDefaults
+} from './data/pageDefaults';
 import createLogger from './functions/createLogger';
 import autoDomain from './functions/autoDomain';
 import Cookies from 'js-cookie';
@@ -17,13 +19,13 @@ function CookieStorageAdapter(options) {
   const pd = pageDefaults();
 
   this.secure = this.options.allowHTTP !== true;
-  this.domain = this.options.cookieDomain === 'auto'
-    ? autoDomain(pd.domain)
-    : this.options.cookieDomain;
+  this.domain = this.options.cookieDomain === 'auto' ?
+    autoDomain(pd.domain) :
+    this.options.cookieDomain;
 
   this.available = this.checkAvailability();
   this.prefix = this.options.prefix;
-  this.exp = new Date((new Date()).getTime() + 3*31536e+6);
+  this.exp = new Date((new Date()).getTime() + 3 * 31536e+6);
 
 }
 
@@ -49,11 +51,11 @@ CookieStorageAdapter.prototype.set = function (key, value, options = {}) {
 
   key = this.getPrefixedKey(key, options);
 
-  const exp = !!options.session
-    ? undefined
-    : (options.exp
-      ? new Date((new Date()).getTime() + options.exp * 1000)
-      : this.exp);
+  const exp = !!options.session ?
+    undefined :
+    (options.exp ?
+      new Date((new Date()).getTime() + options.exp * 1000) :
+      this.exp);
 
   Cookies.set(key, value, {
     expires: exp,
@@ -94,7 +96,10 @@ CookieStorageAdapter.prototype.rm = function (key, options) {
   options = options || {};
   key = this.getPrefixedKey(key, options);
 
-  Cookies.remove(key, { domain: this.domain, secure: true });
+  Cookies.remove(key, {
+    domain: this.domain,
+    secure: true
+  });
 };
 
 

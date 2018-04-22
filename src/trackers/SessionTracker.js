@@ -92,16 +92,22 @@ SessionTracker.prototype.setStoredUid = function (uid) {
 SessionTracker.prototype.handleUid = function (uid) {
 
   log(`Handling initial ${uid}`);
-
   this.initialUid = uid;
   this.uid = this.getStoredUid() || this.initialUid;
-
   // Saving uid
   this.setStoredUid(this.uid);
-
   return this;
-
 };
+
+/**
+ * Get user credentials
+ * @returns {Object} containing main user credentials
+ */
+SessionTracker.prototype.creds = function () {
+  return {
+    uid: this.uid
+  }
+}
 
 SessionTracker.prototype.getUid = function () {
 
@@ -111,7 +117,9 @@ SessionTracker.prototype.getUid = function () {
 
 SessionTracker.prototype.getPageNum = function () {
 
-  return this.storage.get(KEY_PAGES_COUNTER, {session: true});
+  return this.storage.get(KEY_PAGES_COUNTER, {
+    session: true
+  });
 
 };
 
@@ -121,20 +129,20 @@ SessionTracker.prototype.getPageNum = function () {
  */
 SessionTracker.prototype.getEventNum = function () {
 
-  return this.storage.get(KEY_EVENTS_COUNTER, {session: true});
+  return this.storage.get(KEY_EVENTS_COUNTER, {
+    session: true
+  });
 
 };
 
 
 SessionTracker.prototype.sessionData = function () {
 
-  return objectAssign(
-    {
+  return objectAssign({
       pageNum: this.getPageNum(),
       eventNum: this.getEventNum()
     },
-    this.lastSession,
-    {
+    this.lastSession, {
       refHash: undefined
     }
   );
@@ -146,10 +154,10 @@ SessionTracker.prototype.getUserParams = function () {
   const params = this.storage.get(KEY_USER_PARAMS) || {};
 
   // Removing old vars
-  if(params.gaClientId){
+  if (params.gaClientId) {
     params.gaClientId = undefined;
   }
-  if(params.ymClientId){
+  if (params.ymClientId) {
     params.ymClientId = undefined;
   }
   return params;
@@ -172,10 +180,8 @@ SessionTracker.prototype.userData = function () {
   const traits = this.storage.get(KEY_USER_TRAITS);
   const params = this.storage.get(KEY_USER_PARAMS);
 
-  return objectAssign(
-    {},
-    params,
-    {
+  return objectAssign({},
+    params, {
       id,
       traits
     }
@@ -212,9 +218,9 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   this.storage.set(KEY_LAST_EVENT_TS, now);
 
   // Starting new session if needed
-  let shouldRestart = lastEventTS === undefined
-    || (now - lastEventTS) > this.options.sessionTimeout * 1000
-    || this.shouldRestart(lastSession, source);
+  let shouldRestart = lastEventTS === undefined ||
+    (now - lastEventTS) > this.options.sessionTimeout * 1000 ||
+    this.shouldRestart(lastSession, source);
 
   if (shouldRestart) {
 
@@ -222,12 +228,20 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
     source.start = now;
 
     // Cleaning old session vars
-    this.storage.rmAll({session: true});
+    this.storage.rmAll({
+      session: true
+    });
 
     // Updating counters
-    this.storage.set(KEY_LAST_SESSION_TS, now, {session: true});
-    this.storage.set(KEY_PAGES_COUNTER, 0, {session: true});
-    this.storage.set(KEY_EVENTS_COUNTER, 0, {session: true});
+    this.storage.set(KEY_LAST_SESSION_TS, now, {
+      session: true
+    });
+    this.storage.set(KEY_PAGES_COUNTER, 0, {
+      session: true
+    });
+    this.storage.set(KEY_EVENTS_COUNTER, 0, {
+      session: true
+    });
 
     // Saving last session
     this.storage.set(KEY_LAST_SESSION, source);
@@ -235,14 +249,19 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 
     // Applying last campaign
     if (source.type === SESSION_CAMPAIGN) {
-      this.storage.set(KEY_LAST_CAMPAIGN, source, {exp: 7776000});
+      this.storage.set(KEY_LAST_CAMPAIGN, source, {
+        exp: 7776000
+      });
     }
   }
 
   // Increment counters
-  (name === EVENT_PAGEVIEW)
-    ? this.storage.inc(KEY_PAGES_COUNTER, {session: true})
-    : this.storage.inc(KEY_EVENTS_COUNTER, {session: true});
+  (name === EVENT_PAGEVIEW) ?
+  this.storage.inc(KEY_PAGES_COUNTER, {
+    session: true
+  }): this.storage.inc(KEY_EVENTS_COUNTER, {
+    session: true
+  });
 
   // Emitting session event
   if (shouldRestart) {

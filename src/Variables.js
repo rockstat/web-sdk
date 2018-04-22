@@ -34,7 +34,9 @@ export const EVENTS_ADD_SCROLL = [
   EVENT_SCROLL
 ];
 
+export const SERVER_MESSAGE = 'server-message';
 export const INTERNAL_EVENT = 'Internal event';
+
 export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
 export const EVENT_OPTION_MEAN = 'mean';

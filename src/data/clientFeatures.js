@@ -1,5 +1,10 @@
-import {nav, win} from '../Browser';
-import {isHttps} from './pageDefaults';
+import {
+  nav,
+  win
+} from '../Browser';
+import {
+  isHttps
+} from './pageDefaults';
 
 function checkLS() {
   try {
@@ -8,18 +13,21 @@ function checkLS() {
     ls.setItem(x, x);
     ls.removeItem(x);
     return ls.getItem(x) === x;
-  }
-  catch (e) {}
+  } catch (e) {}
   return false;
 }
 
 function checkWPush() {
-  return ('serviceWorker' in nav && 'PushManager' in win)
-    && ('showNotification' in ServiceWorkerRegistration.prototype);
+  return ('serviceWorker' in nav && 'PushManager' in win) &&
+    ('showNotification' in ServiceWorkerRegistration.prototype);
 }
 
-export function checkSendBeacon() {
+export function isSendBeacon() {
   return 'sendBeacon' in nav;
+}
+
+export function isBlobSupported() {
+  return 'Blob' in win;
 }
 
 export function isXDRsupported() {
@@ -54,8 +62,7 @@ export default {
   'locstor': 'localStorage' in win && checkLS(),
   'addel': 'addEventListener' in win,
   'promise': 'Promise' in win,
-  'sbeacon': checkSendBeacon(),
+  'sbeacon': isSendBeacon(),
   'atob': !!win.atob,
   'wpush': checkWPush()
 };
-

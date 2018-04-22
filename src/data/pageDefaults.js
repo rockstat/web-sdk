@@ -1,32 +1,38 @@
-import {win, doc, html, body} from "../Browser";
+import {
+  win,
+  doc,
+  html,
+  body
+} from "../Browser";
+import urlParse from "url-parse";
 
-function getProto() {
+export function getProto() {
   const proto = win.location.protocol;
   return proto.substr(0, proto.length - 1)
 }
 
-export default function(params) {
+export function pageDefaults(params) {
 
   params = params || {};
   params.short = params.short || false;
 
   const loc = win.location;
-  return params.short
-    ? {
-      title: doc.title,
-      referrer: doc.referrer,
-      url: loc.href
-    }
-    : {
-      path: loc.pathname,
-      domain: loc.hostname,
-      referrer: doc.referrer,
-      query: loc.search,
-      title: doc.title,
-      url: loc.href,
-      hash: loc.hash,
-      proto: getProto()
-    };
+  const pageUrl = loc.href;
+  const parsed = urlParse(pageUrl);
+
+  return params.short ? {
+    title: doc.title,
+    referrer: doc.referrer,
+    url: pageUrl
+  } : {
+    path: parsed.pathname,
+    referrer: doc.referrer,
+    query: parsed.query,
+    domain: parsed.hostname,
+    title: doc.title,
+    url: pageUrl,
+    proto: getProto()
+  };
 }
 
 export function isHttps() {
