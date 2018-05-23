@@ -15,7 +15,7 @@ import {
   SESSION_ORGANIC,
   SESSION_REFERRAL,
   SESSION_SOCIAL,
-} from "../Variables";
+} from "../Constants";
 
 const qs = urlParse.qs;
 

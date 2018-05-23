@@ -18,7 +18,7 @@ import {
   EVENT,
   EVENT_ACTIVITY,
   EVENT_SCROLL,
-} from "../Variables";
+} from "../Constants";
 
 const scrollEvent = 'scroll';
 const activityEvents = [

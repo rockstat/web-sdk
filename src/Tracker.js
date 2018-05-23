@@ -43,13 +43,13 @@ import {
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
   SERVER_MESSAGE,
-} from './Variables';
+} from './Constants';
 import {
   win
 } from './Browser';
 
 const noop = () => {};
-const log = createLogger('Alcolytics');
+const log = createLogger('RST');
 
 // Schema used for minify data at thin channels
 const msgCropSchema = {
@@ -81,8 +81,8 @@ function Alcolytics() {
     projectId: 1,
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
-    library: 'alco.js',
-    libver: 213,
+    library: 'libjs',
+    libver: 3.11*1000,
     initialUid: 0,
     cookieDomain: 'auto',
     trackActivity: true,
@@ -153,7 +153,7 @@ Alcolytics.prototype.initialize = function () {
     .subscribe(this)
     .handleUid(this.options.initialUid);
 
-  // Transport to communicate with server
+  // Interract with server
   this.transport = new Transport(this.options)
     .setCreds(this.sessionTracker.creds())
     .connect();
@@ -310,10 +310,9 @@ Alcolytics.prototype.logOnServer = function (level, args) {
  */
 Alcolytics.prototype.sendToServer = function (msg, options) {
   const query = [
-    'uid=' + this.sessionTracker.getUid(),
-    'name=' + msg.name
+    // 'uid=' + this.sessionTracker.getUid()
   ];
-  this.transport.send(query.join('&'), msg, options);
+  this.transport.send(msg, query, options);
 };
 
 Alcolytics.prototype.unload = function () {

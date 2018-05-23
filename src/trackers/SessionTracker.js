@@ -12,7 +12,7 @@ import {
   SESSION_SOCIAL,
   EVENT_USER_PARAMS,
   EVENT
-} from '../Variables';
+} from '../Constants';
 
 const KEY_LAST_EVENT_TS = 'levent';
 const KEY_LAST_CAMPAIGN = 'lcamp';

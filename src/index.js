@@ -5,40 +5,31 @@ import {
 import {
   win
 } from './Browser';
+import Tracker from './Tracker';
 
-// Main
-import Alcolytics from './Alcolytics';
-
-const holder = win['alco'];
+const holder = win['rstat'];
 
 if (holder) {
-  const buildTracker = function (stub) {
+  // const buildTracker = function (stub) {
+  const tracker = new Tracker();
+  tracker.configure({
+    snippet: holder._sv
+  });
+  // Attaching method to page
+  const doCall = function (args) {
+    args = args.slice(0);
+    const method = args.shift();
+    return tracker[method] ?
+      tracker[method].apply(tracker, args) :
+      new Error('Undefined method');
+  };
 
-    const tracker = new Alcolytics();
-    tracker.configure({
-      server: holder.server,
-      snippet: holder.snippet
-    });
-
-    // Attaching method to page
-    const doCall = function (args) {
-      args = args.slice(0);
-      const method = args.shift();
-      return alcolytics[method] ?
-        alcolytics[method].apply(alcolytics, args) :
-        new Error('Method not supported');
-    };
-
-
-    holder.queue.map(doCall);
-    holder.doCall = doCall;
-    holder.queue = [];
-
-  }
-
-
+  holder._q.map(doCall);
+  holder.doCall = doCall;
+  holder.queue = [];
+  // }
 
   documentReady(() => {
-    alcolytics.initialize();
+    tracker.initialize();
   });
 }

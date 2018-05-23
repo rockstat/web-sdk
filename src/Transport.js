@@ -5,7 +5,8 @@ import createLogger from './functions/createLogger';
 import {
   win,
   doc,
-  nav
+  nav,
+  enc
 } from './Browser';
 import {
   isSendBeacon,
@@ -21,13 +22,22 @@ import {
   EVENT_OPTION_TERMINATOR,
   SERVER_MESSAGE,
   INTERNAL_EVENT
-} from './Variables';
+} from './Constants';
 import {
   qs
 } from 'url-parse';
+import {
+  METHODS
+} from 'http';
 
+const HTTPS = 'https://';
 const log = createLogger('Transport');
 const noop = () => {};
+
+function buildQuery(pairsArray) {
+  return pairsArray.length ? pairsArray.map((k, v) => `${enc(k)}=${enc(v)}`).join('&') : '';
+}
+
 
 /**
  * Transport class containing general connecting methods
@@ -66,6 +76,21 @@ Transport.prototype.setCreds = function (creds) {
   this.creds = creds;
   return this;
 }
+
+
+/**
+ * Transform path to query url
+ * @param {string} path
+ * @param {Array} pairsArray
+ * @returns {Transport}
+ */
+Transport.prototype.makeURL = function (path, pairsArray = []) {
+  const query = pairsArray.length ? '?' + buildQuery(pairsArray) : '';
+  return HTTPS + this.server + path;
+}
+
+
+
 
 /**
  * Old good friend XHR
@@ -112,19 +137,20 @@ Transport.prototype.sendIMG = function (url) {
 
 /**
  *
- * @param query {string}
  * @param msg {Object}
+ * @param query {Array}
  * @param options {Object}
  */
-Transport.prototype.send = function (query, msg, options = {}) {
+Transport.prototype.send = function (msg, query, options = {}) {
 
   const data = JSON.stringify(msg);
   const useSafe = !!options[EVENT_OPTION_TERMINATOR] ||
     !!options[EVENT_OPTION_OUTBOUND] ||
     !!options[EVENT_OPTION_MEAN];
 
-  const postURL = this.server + '/track?' + query;
-  const imgURL = this.server + '/img?' + query;
+
+  const postPath = `/track/${msg.projectId}/${msg.name}`;
+  const imgPath = `/img/${msg.projectId}/${msg.name}?${query}`;
 
   // log(`params. safe: ${useSafe}`);
 
@@ -132,12 +158,12 @@ Transport.prototype.send = function (query, msg, options = {}) {
 
     if (this.options.allowSendBeacon && isSendBeacon() && isBlobSupported()) {
       log('sending using beacon');
-      nav.sendBeacon(postURL, data);
+      nav.sendBeacon(this.makeURL(postPath, query), data);
       return true;
 
     } else if (!useSafe && (this.options.allowXHR && (isXHRsupported() || isXDRsupported()))) {
       log('sending using XHR/XDR');
-      this.sendXHR(postURL, data);
+      this.sendXHR(this.makeURL(postPath, query), data);
       return true;
 
     }
@@ -151,9 +177,9 @@ Transport.prototype.send = function (query, msg, options = {}) {
 
   try {
     const partData = JSON.stringify(part);
-    this.sendIMG(imgURL + '&j=' + encodeURIComponent(partData));
+    this.sendIMG(this.makeURL(imgPath, query.push(['j', partData])));
   } catch (e) {
-    log.error('Error during sending data using image', e);
+    log('Error during sending data using image', e);
   }
 };
 
@@ -162,14 +188,11 @@ Transport.prototype.send = function (query, msg, options = {}) {
  */
 Transport.prototype.connect = function () {
   if (this.options.activateWs && wsSupported()) {
-
     const {
       wssPort,
       server
     } = this.options;
-    const [, host] = server.split('//');
-
-    this.startWs(host, wssPort);
+    this.startWs(server, wssPort);
   }
   return this;
 }

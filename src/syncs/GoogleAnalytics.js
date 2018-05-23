@@ -5,7 +5,7 @@ import {win} from '../Browser';
 import {
   INTERNAL_EVENT,
   EVENT_USER_PARAMS
-} from "../Variables";
+} from "../Constants";
 
 const log = createLogger('Alco GA');
 
