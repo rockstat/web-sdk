@@ -7,9 +7,9 @@ import {
 } from './Browser';
 import Tracker from './Tracker';
 
-const holder = win['rstat'];
-
-if (holder) {
+const wk = 'rstat';
+if (win[wk]) {
+  const holder = win[wk];
   // const buildTracker = function (stub) {
   const tracker = new Tracker();
   tracker.configure({

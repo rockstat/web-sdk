@@ -140,8 +140,8 @@ Alcolytics.prototype.initialize = function () {
   // Library data
   this.libInfo = {
     name: this.options.library,
-    libver: this.options.libver,
-    snippet: this.options.snippet
+    lv: this.options.libver,
+    sv: this.options.snippet
   };
 
   // Handling browser events
@@ -227,6 +227,8 @@ Alcolytics.prototype.isInitialized = function () {
  */
 Alcolytics.prototype.configure = function (options) {
 
+  log(options)
+
   if (this.initialized) {
     return log.warn('Configuration cant be applied because already initialized');
   }
@@ -309,10 +311,7 @@ Alcolytics.prototype.logOnServer = function (level, args) {
  * @param options {Object}
  */
 Alcolytics.prototype.sendToServer = function (msg, options) {
-  const query = [
-    // 'uid=' + this.sessionTracker.getUid()
-  ];
-  this.transport.send(msg, query, options);
+  this.transport.send(msg, options);
 };
 
 Alcolytics.prototype.unload = function () {

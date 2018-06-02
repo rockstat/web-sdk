@@ -141,7 +141,7 @@ Transport.prototype.sendIMG = function (url) {
  * @param query {Array}
  * @param options {Object}
  */
-Transport.prototype.send = function (msg, query, options = {}) {
+Transport.prototype.send = function (msg, options = {}) {
 
   const data = JSON.stringify(msg);
   const useSafe = !!options[EVENT_OPTION_TERMINATOR] ||
@@ -150,13 +150,16 @@ Transport.prototype.send = function (msg, query, options = {}) {
 
 
   const postPath = `/track/${msg.projectId}/${msg.name}`;
-  const imgPath = `/img/${msg.projectId}/${msg.name}?${query}`;
+  const imgPath = `/img/${msg.projectId}/${msg.name}`;
 
   // log(`params. safe: ${useSafe}`);
 
   try {
 
-    if (this.options.allowSendBeacon && isSendBeacon() && isBlobSupported()) {
+    if (this.wsConnected) {
+      this.sendMessage(msg)
+      return true;
+    } else if (this.options.allowSendBeacon && isSendBeacon() && isBlobSupported()) {
       log('sending using beacon');
       nav.sendBeacon(this.makeURL(postPath, query), data);
       return true;
@@ -238,9 +241,6 @@ Transport.prototype.startWs = function (host, port) {
 };
 
 
-Transport.prototype.sendMessage = function (name, data) {
-  const msg = objectAssign({
-    name
-  }, data, this.creds);
-  this.ws.json(msg);
+Transport.prototype.sendMessage = function (msg) {
+  this.ws.json(objectAssign(msg, this.creds));
 }
