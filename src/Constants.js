@@ -1,3 +1,6 @@
+export const SERVICE_TRACK = 'track';
+
+
 export const EVENT = 'event';
 export const EVENT_PAGEVIEW = 'page';
 export const EVENT_IDENTIFY = 'identify';

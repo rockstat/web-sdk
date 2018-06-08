@@ -14,10 +14,12 @@
   }(window, document, 'script', 'configure', 'https://', '/lib.js');
   // Configuration
   rstat('configure', {
-    projectId: 1, // <<< придумайте номер сайта, если их несколько
-    server: 'tracker.rockstat.test' // <<< Подстановка хоста с трекером и начало загрузки
+    // можете указать номер сайта, если их несколько
+    // домен где разположена платформа
+    server: 'tracker.rockstat.test'
   });
-  rstat('page'); // <<< отправка просмотра страницы, после загрузки. Убирается на SPA
+  // отправка просмотра страницы, после загрузки. Убирается на SPA
+  rstat('page');
   //rstat('onReady', function(){
   //  console.log('rstat` ready callback! uid:', rstat('getUid'));
   //});

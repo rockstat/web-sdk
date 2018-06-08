@@ -20,11 +20,13 @@ import {
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_TERMINATOR,
   SERVER_MESSAGE,
-  INTERNAL_EVENT
+  INTERNAL_EVENT,
+  SERVICE_TRACK
 } from './Constants';
 import {
   qs
 } from 'url-parse';
+import queryStringify from 'qs/lib/stringify';
 import {
   METHODS
 } from 'http';
@@ -34,13 +36,7 @@ const HTTPS = 'https://';
 const log = createLogger('Transport');
 const noop = () => {};
 
-function buildQuery(qpairs) {
-  const res = qpairs.length ? qpairs.map((v) => {
-    return enc(v[0]) + '=' + enc(v[1])
-  }) : '';
-  console.dir(qpairs);
-  return res;
-}
+
 
 
 /**
@@ -77,7 +73,7 @@ Emitter(Transport.prototype);
  * @returns {Transport}
  */
 Transport.prototype.setCreds = function (creds) {
-  this.creds = creds;
+  this.creds = objectAssign({}, creds);
   return this;
 }
 
@@ -85,12 +81,12 @@ Transport.prototype.setCreds = function (creds) {
 /**
  * Transform path to query url
  * @param {string} path
- * @param {Array} qpairs
+ * @param {Object} data
  * @returns {Transport}
  */
-Transport.prototype.makeURL = function (path, qpairs = []) {
-  const query = qpairs.length ? `?${buildQuery(qpairs)}` : '';
-  return `${HTTPS}${this.server}${path}${query}`;
+Transport.prototype.makeURL = function (path, data = {}) {
+  const query = queryStringify(data);
+  return `${HTTPS}${this.server}${path}?${query}`;
 }
 
 
@@ -151,11 +147,8 @@ Transport.prototype.send = function (msg, options = {}) {
     !!options[EVENT_OPTION_OUTBOUND] ||
     !!options[EVENT_OPTION_MEAN];
 
-
-  const postPath = `/track/${msg.projectId}/${msg.name}`;
-  const imgPath = `/img/${msg.projectId}/track/${msg.name}`;
-
-  // log(`params. safe: ${useSafe}`);
+  const postPath = `/wh/${msg.projectId}/${msg.service}/${msg.name}`;
+  const imgPath = `/img/${msg.projectId}/${msg.service}/${msg.name}`;
 
   try {
 
@@ -177,14 +170,12 @@ Transport.prototype.send = function (msg, options = {}) {
   }
 
   // Send only part when using gif
-  const part = this.options.msgCropper(msg);
-  log(`sending using IMG. useSafe: ${useSafe}`, part);
+  const smallMsg = (msg.service === SERVICE_TRACK) ?
+    this.options.msgCropper(msg) : msg;
+  log(`sending using IMG. useSafe: ${useSafe}`, smallMsg);
 
   try {
-    const partData = JSON.stringify(part);
-    this.sendIMG(this.makeURL(imgPath, [
-      ['j', partData]
-    ]));
+    this.sendIMG(this.makeURL(imgPath, objectAssign({}, smallMsg, this.creds)));
   } catch (e) {
     log('Error during sending data using image', e);
   }
@@ -210,7 +201,9 @@ Transport.prototype.connect = function () {
  */
 Transport.prototype.startWs = function (host, port) {
   const pinger = setInterval(_ => {
-    this.wsConnected && this.sendMessage({"name":"ping"});
+    this.wsConnected && this.sendMessage({
+      "name": "ping"
+    });
   }, 1e4)
   try {
     const endp = `wss://${host}:${port}/wss?${qs.stringify(this.creds)}`;
@@ -220,7 +213,9 @@ Transport.prototype.startWs = function (host, port) {
       maxAttempts: 10,
       onopen: e => {
         this.wsConnected = true;
-        this.sendMessage({"name":"hello"});
+        this.sendMessage({
+          "name": "hello"
+        });
         log('connected');
       },
       onmessage: e => {

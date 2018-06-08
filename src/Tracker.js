@@ -6,6 +6,10 @@ import {
   pageDefaults,
   isHttps
 } from './data/pageDefaults';
+import {
+  hashCode
+} from './functions/stringHash';
+import autoDomain from './functions/autoDomain';
 import browserData from './data/browserData';
 import clientData from './data/clientData';
 import clientFeatures from './data/clientFeatures';
@@ -43,6 +47,7 @@ import {
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
   SERVER_MESSAGE,
+  SERVICE_TRACK,
 } from './Constants';
 import {
   win
@@ -51,19 +56,6 @@ import {
 const noop = () => {};
 const log = createLogger('RST');
 
-// Schema used for minify data at thin channels
-const msgCropSchema = {
-  name: true,
-  data: true,
-  projectId: true,
-  uid: true,
-  error: true,
-  client: ['ts', 'tzOffset'],
-  session: ['eventNum', 'pageNum', 'num'],
-  // error fields
-  args: true,
-  lvl: true
-};
 
 /**
  * Main Alcolytics class
@@ -74,17 +66,24 @@ function Alcolytics() {
 
   log('starting Alcolytics');
 
+  const pd = pageDefaults();
+  const domain = autoDomain(pd.domain);
+
+
   this.initialized = false;
   this.configured = false;
+  this.valuableFields = undefined;
   this.queue = [];
+
   this.options = {
-    projectId: 1,
+    projectId: hashCode(domain),
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'libjs',
-    libver: 3.11*1000,
+    libver: 3.11 * 1000,
     initialUid: 0,
-    cookieDomain: 'auto',
+    // TODO: remove from cookie storage
+    cookieDomain: domain,
     trackActivity: true,
     trackClicks: true,
     trackForms: true,
@@ -93,7 +92,7 @@ function Alcolytics() {
     allowXHR: true,
     activateWs: false,
     wssPort: 443,
-    msgCropper: (msg) => msgCropper(msg, msgCropSchema)
+    msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
   this.syncs = [];
@@ -259,8 +258,23 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
   this.sessionTracker.handleEvent(name, data, pageDefaults());
 
+
+  // Schema used for minify data at thin channels
+  this.valuableFields = this.valuableFields || {
+    service: true,
+    name: true,
+    data: true,
+    projectId: true,
+    uid: true,
+    user: true,
+    error: true,
+    client: ['ts', 'tzOffset'],
+    session: ['eventNum', 'pageNum', 'num'],
+  };
+
   // Typical message to server. Can be cropped using {msgCropSchema}
   const msg = {
+    service: SERVICE_TRACK,
     name: name,
     data: data,
     projectId: this.options.projectId,

@@ -4,8 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "gulp",
-    "build": "NODE_ENV=production gulp build"
+    "start": "webpack --config webpack.development.js --watch",
+    "build": "rimraf dist && NODE_ENV=production webpack --config webpack.production.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
     "js-cookie": "^2.2.0",
     "next-tick": "^1.0.0",
     "punycode": "^2.1.0",
+    "qs": "^6.5.2",
     "sockette": "^2.0.0",
     "url-parse": "^1.2.0"
   },
@@ -67,6 +68,7 @@
     "gulp-s3": "^0.11.0",
     "gulp-upload": "^1.0.0",
     "gulp-webpack": "^1.5.0",
+    "rimraf": "^2.6.2",
     "uglify-js": "^3.0.27",
     "uglifyjs-webpack-plugin": "^1.0.1",
     "vinyl-buffer": "^1.0.0",
