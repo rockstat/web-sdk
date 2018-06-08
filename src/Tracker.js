@@ -80,7 +80,7 @@ function Alcolytics() {
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     library: 'libjs',
-    libver: 3.11 * 1000,
+    libver: 3.11,
     initialUid: 0,
     // TODO: remove from cookie storage
     cookieDomain: domain,
