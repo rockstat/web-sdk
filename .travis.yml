@@ -9,15 +9,10 @@ cache:
   directories:
     - "node_modules"
 
-
 script:
   - yarn test
   - yarn build
-  - echo my-custom-domain.ru > build/CNAME
+  # - echo my-custom-domain.ru > build/CNAME
 
 after_success:
-- echo "${SFTP_KEY}" | base64 --decode >/tmp/sftp_rsa
-- curl --ftp-create-dirs
-       -T filename
-       --key /tmp/sftp_rsa
-       sftp://${SFTP_USER}:${SFTP_PASSWORD}@example.com/directory/filename
+- curl --ftp-create-dirs -T filename sftp://${SELCDN_USER}:${SELCDN_PASS}@ftp.selcdn.ru/rockstat/dist
