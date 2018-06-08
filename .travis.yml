@@ -15,4 +15,4 @@ script:
   # - echo my-custom-domain.ru > build/CNAME
 
 after_success:
-- curl --ftp-create-dirs -T filename sftp://${SELCDN_USER}:${SELCDN_PASS}@ftp.selcdn.ru/rockstat/dist
+- curl --ftp-create-dirs -T dist/lib.js sftp://${SELCDN_USER}:${SELCDN_PASS}@ftp.selcdn.ru/rockstat/dist/
