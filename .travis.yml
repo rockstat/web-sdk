@@ -11,9 +11,12 @@ cache:
 
 script:
 #  - yarn test
-  - npm version patch
+#  - npm version patch
   - yarn build
   # - echo my-custom-domain.ru > build/CNAME
+
+deploy:
+  skip_cleanup: true
 
 after_success:
 - curl --ftp-create-dirs -T dist/lib.js ftp://${SELCDN_USER}:${SELCDN_PASS}@ftp.selcdn.ru/rockstat/dist/${TRAVIS_BRANCH}/lib-latest.js
