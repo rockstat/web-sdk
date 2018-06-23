@@ -11,8 +11,7 @@ import {
 } from './functions/stringHash';
 import autoDomain from './functions/autoDomain';
 import browserData from './data/browserData';
-import clientData from './data/clientData';
-import clientFeatures from './data/clientFeatures';
+import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
 import ActivityTracker from './trackers/ActivityTracker';
@@ -53,7 +52,7 @@ import {
   win
 } from './Browser';
 
-const noop = () => {};
+const noop = () => { };
 const log = createLogger('RST');
 
 
@@ -79,8 +78,8 @@ function Alcolytics() {
     projectId: hashCode(domain),
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
-    library: 'libjs',
-    libver: 3.11,
+    library: 'rstjs',
+    libver: 3.12,
     initialUid: 0,
     // TODO: remove from cookie storage
     cookieDomain: domain,
@@ -135,13 +134,6 @@ Alcolytics.prototype.initialize = function () {
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
   this.configure(this.selfish.getConfig());
-
-  // Library data
-  this.libInfo = {
-    name: this.options.library,
-    lv: this.options.libver,
-    sv: this.options.snippet
-  };
 
   // Handling browser events
   this.browserEventsTracker = new BrowserEventsTracker();
@@ -268,8 +260,8 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     uid: true,
     user: true,
     error: true,
-    client: ['ts', 'tzOffset'],
-    session: ['eventNum', 'pageNum', 'num'],
+    browser: ['ts', 'tzOffset'],
+    sess: ['eventNum', 'pageNum', 'num'],
   };
 
   // Typical message to server. Can be cropped using {msgCropSchema}
@@ -283,11 +275,14 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     page: pageDefaults({
       short: true
     }),
-    session: this.sessionTracker.sessionData(),
-    lib: this.libInfo,
-    client: clientData(),
-    cf: clientFeatures,
-    browser: browserData()
+    sess: this.sessionTracker.sessionData(),
+    char: browserCharacts,
+    browser: browserData(),
+    lib: {
+      id: this.options.library,
+      v: this.options.libver,
+      sv: this.options.snippet
+    }
   };
 
   if (EVENTS_ADD_PERF.indexOf(name) >= 0) {
@@ -314,8 +309,8 @@ Alcolytics.prototype.logOnServer = function (level, args) {
       lvl: level,
       args: args
     }, {
-      [EVENT_OPTION_MEAN]: true
-    });
+        [EVENT_OPTION_MEAN]: true
+      });
   }
 };
 

@@ -13,6 +13,7 @@ import {
   EVENT_USER_PARAMS,
   EVENT
 } from '../Constants';
+import { tstz } from '../data/browserData';
 
 const KEY_LAST_EVENT_TS = 'levent';
 const KEY_LAST_CAMPAIGN = 'lcamp';
@@ -139,9 +140,9 @@ SessionTracker.prototype.getEventNum = function () {
 SessionTracker.prototype.sessionData = function () {
 
   return objectAssign({
-      pageNum: this.getPageNum(),
-      eventNum: this.getEventNum()
-    },
+    pageNum: this.getPageNum(),
+    eventNum: this.getEventNum()
+  },
     this.lastSession, {
       refHash: undefined
     }
@@ -180,11 +181,8 @@ SessionTracker.prototype.userData = function () {
   const traits = this.storage.get(KEY_USER_TRAITS);
   const params = this.storage.get(KEY_USER_PARAMS);
 
-  return objectAssign({},
-    params, {
-      id,
-      traits
-    }
+  return objectAssign(
+    {}, params, traits, tstz(), { id }
   );
 };
 
@@ -257,11 +255,11 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   // Increment counters
   (name === EVENT_PAGEVIEW) ?
-  this.storage.inc(KEY_PAGES_COUNTER, {
-    session: true
-  }): this.storage.inc(KEY_EVENTS_COUNTER, {
-    session: true
-  });
+    this.storage.inc(KEY_PAGES_COUNTER, {
+      session: true
+    }) : this.storage.inc(KEY_EVENTS_COUNTER, {
+      session: true
+    });
 
   // Emitting session event
   if (shouldRestart) {

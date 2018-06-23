@@ -12,7 +12,7 @@
     "url": "https://github.com/rockstat/jslib.git"
   },
   "author": "Dmitry Rodin <madiedinro@gmail.com>",
-  "license": "APACHE2",
+  "license": "APACHE-2",
   "homepage": "https://github.com/rockstat/jslib.git",
   "dependencies": {
     "component-emitter": "^1.2.1",

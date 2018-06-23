@@ -9,10 +9,11 @@ import {
 function checkLS() {
   try {
     const ls = localStorage;
-    const x = '__storage_test__';
-    ls.setItem(x, x);
-    ls.removeItem(x);
-    return ls.getItem(x) === x;
+    const test = '_rstest_';
+    ls.setItem(test, test);
+    const res = ls.getItem(test);
+    ls.removeItem(test);
+    return res === test;
   } catch (e) {}
   return false;
 }
@@ -59,10 +60,10 @@ export function wsSupported() {
 }
 
 export default {
-  'locstor': 'localStorage' in win && checkLS(),
-  'addel': 'addEventListener' in win,
-  'promise': 'Promise' in win,
-  'sbeacon': isSendBeacon(),
-  'atob': !!win.atob,
-  'wpush': checkWPush()
+  'ls': 'localStorage' in win && checkLS(),
+  'ae': 'addEventListener' in win,
+  'pr': 'Promise' in win,
+  'sb': isSendBeacon(),
+  'ab': !!win.atob,
+  'wp': checkWPush()
 };

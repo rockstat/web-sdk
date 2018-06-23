@@ -1,47 +1,74 @@
-import {win, doc, body, html} from "../Browser";
+import { win, doc, body, html } from "../Browser";
+import objectAssing from '../functions/objectAssing';
+import { nav } from '../Browser';
+
+const not_present = 'not present'
+
+
+function getTimeZone(d) {
+  const extracted = /\((.*)\)/.exec(d.toString());
+  return extracted && extracted[1] || 'not present';
+}
+
+export function tstz() {
+  const d = new Date();
+  return {
+    ts: d.getTime(),
+    tz: getTimeZone(d),
+    tzo: -d.getTimezoneOffset() * 1000
+  }
+}
+
+export function binfo() {
+  const d = new Date();
+  return {
+    plt: nav.platform || not_present,
+    prd: nav.product || not_present
+  }
+}
 
 function if1() {
   try {
     return win === win.top ? 0 : 1;
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function if2() {
   try {
-    return win.parent.frames.length > 0 ? 2: 0;
-  } catch (e){}
+    return win.parent.frames.length > 0 ? 2 : 0;
+  } catch (e) { }
 }
 
 function wh() {
-
   try {
     return {
       w: win.innerWidth || html.clientWidth || body.clientWidth,
-      h: win.innerHeight|| html.clientHeight|| body.clientHeight
+      h: win.innerHeight || html.clientHeight || body.clientHeight
     };
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function sr() {
   try {
-
     const s = win.screen;
-    const o = s.orientation || {};
+    const orient = s.orientation || {};
+    const aspRatio = win.devicePixelRatio
     return {
-      tot: {w: s.width, h: s.height},
-      avail: {w: s.availWidth, h: s.availHeight},
-      asp: Math.round((win.devicePixelRatio && win.devicePixelRatio * 1000) || 0),
-      oAngle: o.angle,
-      oType: o.type
+      tw: s.width || -1,
+      th: s.height || -1,
+      aw: s.availWidth || -1,
+      ah: s.availHeight || -1,
+      sopr: Math.round(aspRatio ? aspRatio * 1000 : -1),
+      soa: orient.angle || -1,
+      sot: orient.type || not_present
     };
 
-  } catch (e) {}
+  } catch (e) { }
 }
 
 export default function () {
-  return {
-    if: [if1(), if2()],
-    wh: wh(),
-    sr: sr()
-  }
+  return objectAssing({
+    if1: if1(),
+    if2: if2(),
+  }, wh(), sr(), binfo())
 }

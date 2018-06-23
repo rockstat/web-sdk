@@ -14,7 +14,7 @@ import {
   isXDRsupported,
   wsSupported,
   isBlobSupported
-} from './data/clientFeatures';
+} from './data/browserCharacts';
 import {
   EVENT_OPTION_MEAN,
   EVENT_OPTION_OUTBOUND,

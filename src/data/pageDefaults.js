@@ -6,7 +6,7 @@ import {
 } from "../Browser";
 import urlParse from "url-parse";
 
-export function getProto() {
+export function getScheme() {
   const proto = win.location.protocol;
   return proto.substr(0, proto.length - 1)
 }
@@ -22,19 +22,19 @@ export function pageDefaults(params) {
 
   return params.short ? {
     title: doc.title,
-    referrer: doc.referrer,
+    ref: doc.referrer,
     url: pageUrl
   } : {
+    title: doc.title,
     path: parsed.pathname,
-    referrer: doc.referrer,
+    ref: doc.referrer,
+    url: pageUrl,
     query: parsed.query,
     domain: parsed.hostname,
-    title: doc.title,
-    url: pageUrl,
-    proto: getProto()
+    scheme: getScheme()
   };
 }
 
 export function isHttps() {
-  return getProto() === 'https';
+  return getScheme() === 'https';
 }
