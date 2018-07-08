@@ -7,9 +7,9 @@ const logger = function (type, arr, prefix) {
   if (('console' in window) && (type in console)) {
 
     // Sending to remote log
-    if(window['alco'] && (type === 'warn' || type === 'error')){
+    if(window['rstat'] && (type === 'warn' || type === 'error')){
       const estr = arr.map(e => e instanceof Error ? e+"": e);
-      window.alco('logOnServer', type, estr);
+      window.rstat('logOnServer', type, estr);
     }
     const call = Function.prototype.call;
     call.apply(call, [console[type], console].concat(prefix ? [prefix] : [])
@@ -26,7 +26,7 @@ export default function createLogger(name) {
   };
 
   const log = function (...args) {
-    if (!isProd || window._alco_logger) {
+    if (!isProd || window._rstat_logger) {
       logger('log', args, prefix());
     }
   };
