@@ -1,40 +1,23 @@
 import objectAssign from './functions/objectAssing';
 import objectKeys from './functions/objectKeys';
-import {
-  pageDefaults
-} from './data/pageDefaults';
 import createLogger from './functions/createLogger';
-import autoDomain from './functions/autoDomain';
 import Cookies from 'js-cookie';
 
 const log = createLogger('CookieStorage');
 
 function CookieStorageAdapter(options) {
   options = options || {};
-
-  this.options = objectAssign({
-    prefix: 'alc-',
-  }, options);
-
-  const pd = pageDefaults();
-
-  this.secure = this.options.allowHTTP !== true;
-  this.domain = this.options.cookieDomain === 'auto' ?
-    autoDomain(pd.domain) :
-    this.options.cookieDomain;
-
+  // handle configuration
+  this.secure = options.allowHTTP !== true;
+  this.domain = options.cookieDomain;
+  // check cookie is enabled
   this.available = this.checkAvailability();
-  this.prefix = this.options.prefix;
+  this.prefix = options.cookiePrefix || '';
+  this.path = options.cookiePath || '/';
+  // exp date
   this.exp = new Date((new Date()).getTime() + 3 * 31536e+6);
 
 }
-
-CookieStorageAdapter.prototype.initialize = function () {
-
-  let prefix = this.prefix;
-  return prefix + key;
-
-};
 
 
 CookieStorageAdapter.prototype.getPrefixedKey = function (key, options) {
@@ -60,7 +43,8 @@ CookieStorageAdapter.prototype.set = function (key, value, options = {}) {
   Cookies.set(key, value, {
     expires: exp,
     domain: this.domain,
-    secure: this.secure
+    secure: this.secure,
+    path: this.path
   });
 };
 

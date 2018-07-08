@@ -52,18 +52,20 @@ import {
   win
 } from './Browser';
 
+
+const LIBRARY = 'rst-sdk-web';
+const LIBVER = 3.13;
 const noop = () => { };
 const log = createLogger('RST');
 
-
 /**
- * Main Alcolytics class
+ * Main Tracker class
  * @constructor
  * @property {Transport} transport class used for communicate with server
  */
-function Alcolytics() {
+function Tracker() {
 
-  log('starting Alcolytics');
+  log('starting RST Tracker');
 
   const pd = pageDefaults();
   const domain = autoDomain(pd.domain);
@@ -78,11 +80,11 @@ function Alcolytics() {
     projectId: hashCode(domain),
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
-    library: 'rstjs',
-    libver: 3.12,
     initialUid: 0,
-    // TODO: remove from cookie storage
     cookieDomain: domain,
+    cookiePrefix: 'rst-',
+    cookiePath: '/',
+    pathPrefix: '',
     trackActivity: true,
     trackClicks: true,
     trackForms: true,
@@ -90,7 +92,6 @@ function Alcolytics() {
     allowSendBeacon: true,
     allowXHR: true,
     activateWs: false,
-    wssPort: 443,
     msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
@@ -99,12 +100,12 @@ function Alcolytics() {
   this.transport = null;
 }
 
-Emitter(Alcolytics.prototype);
+Emitter(Tracker.prototype);
 
 /**
  * Handle events from queue and start accepting events
  */
-Alcolytics.prototype.initialize = function () {
+Tracker.prototype.initialize = function () {
 
   // Check is initialized
   if (this.initialized) {
@@ -128,6 +129,8 @@ Alcolytics.prototype.initialize = function () {
   this.localStorage = new LocalStorageAdapter(this.options);
   this.cookieStorage = new CookieStorageAdapter({
     cookieDomain: this.options.cookieDomain,
+    cookiePrefix: this.options.cookiePrefix,
+    cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
 
@@ -208,7 +211,7 @@ Alcolytics.prototype.initialize = function () {
   this.queue = [];
 };
 
-Alcolytics.prototype.isInitialized = function () {
+Tracker.prototype.isInitialized = function () {
   return this.initialized;
 };
 
@@ -216,9 +219,9 @@ Alcolytics.prototype.isInitialized = function () {
  * Applying configuration block. Can be called multiple times
  * @param {Object} options
  */
-Alcolytics.prototype.configure = function (options) {
+Tracker.prototype.configure = function (options) {
 
-  log(options)
+  // log(options)
 
   if (this.initialized) {
     return log.warn('Configuration cant be applied because already initialized');
@@ -233,7 +236,7 @@ Alcolytics.prototype.configure = function (options) {
  * @param {Object|undefined} data
  * @param {Object} options - Event properties
  */
-Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
+Tracker.prototype.handle = function (name, data = {}, options = {}) {
 
   if (!this.initialized) {
     return this.queue.push([name, data]);
@@ -279,8 +282,8 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
     char: browserCharacts,
     browser: browserData(),
     lib: {
-      id: this.options.library,
-      v: this.options.libver,
+      id: LIBRARY,
+      v: LIBVER,
       sv: this.options.snippet
     }
   };
@@ -302,7 +305,7 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
  * @param {string} level
  * @param {Array} args
  */
-Alcolytics.prototype.logOnServer = function (level, args) {
+Tracker.prototype.logOnServer = function (level, args) {
   if (this.isInitialized()) {
     this.sendToServer({
       name: 'log',
@@ -319,11 +322,11 @@ Alcolytics.prototype.logOnServer = function (level, args) {
  * @param msg {Object}
  * @param options {Object}
  */
-Alcolytics.prototype.sendToServer = function (msg, options) {
+Tracker.prototype.sendToServer = function (msg, options) {
   this.transport.send(msg, options);
 };
 
-Alcolytics.prototype.unload = function () {
+Tracker.prototype.unload = function () {
   log('Unloading...');
   this.event(EVENT_PAGE_UNLOAD);
 
@@ -338,14 +341,14 @@ Alcolytics.prototype.unload = function () {
  * @param data
  * @param options
  */
-Alcolytics.prototype.event = function (name, data, options) {
+Tracker.prototype.event = function (name, data, options) {
   this.handle(name, data, options);
 };
 
 /**
  * Track page load
  */
-Alcolytics.prototype.page = function (data, options) {
+Tracker.prototype.page = function (data, options) {
   this.handle(EVENT_PAGEVIEW, data, options);
 };
 
@@ -353,21 +356,21 @@ Alcolytics.prototype.page = function (data, options) {
 /**
  * Show warn log record. For testing purposes
  */
-Alcolytics.prototype.warn = function (msg) {
+Tracker.prototype.warn = function (msg) {
   log.warn(new Error(msg));
 };
 
 /**
  * Show warn log record. For testing purposes
  */
-Alcolytics.prototype.enableLogger = function () {
+Tracker.prototype.enableLogger = function () {
   win._alco_logger = true;
 };
 
 /**
  * Adding user details
  */
-Alcolytics.prototype.identify = function (userId, userTraits) {
+Tracker.prototype.identify = function (userId, userTraits) {
   if (isObject(userId)) {
     userTraits = userId;
     userId = undefined;
@@ -382,7 +385,7 @@ Alcolytics.prototype.identify = function (userId, userTraits) {
  * Add external ready callback
  * @param cb
  */
-Alcolytics.prototype.onReady = function (cb) {
+Tracker.prototype.onReady = function (cb) {
   return this.isInitialized() ?
     (cb || noop)() :
     this.on(READY, cb);
@@ -392,7 +395,7 @@ Alcolytics.prototype.onReady = function (cb) {
  * Add external event callback
  * @param cb
  */
-Alcolytics.prototype.onEvent = function (cb) {
+Tracker.prototype.onEvent = function (cb) {
   this.on(EVENT, cb);
 };
 
@@ -400,15 +403,15 @@ Alcolytics.prototype.onEvent = function (cb) {
  * Add external event callback
  * @param cb
  */
-Alcolytics.prototype.onServerMessage = function (name, cb) {
+Tracker.prototype.onServerMessage = function (name, cb) {
   this.on(SERVER_MESSAGE, cb);
 };
 
 /**
- * Returns Alcolytics uid
+ * Returns Tracker uid
  * @return {String}
  */
-Alcolytics.prototype.getUid = function () {
+Tracker.prototype.getUid = function () {
   return this.sessionTracker.getUid();
 };
 
@@ -416,8 +419,8 @@ Alcolytics.prototype.getUid = function () {
  * Save personal config overrides
  * @param {Object} config
  */
-Alcolytics.prototype.setCustomConfig = function (config) {
+Tracker.prototype.setCustomConfig = function (config) {
   this.selfish.saveConfig(config);
 };
 
-export default Alcolytics;
+export default Tracker;

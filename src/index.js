@@ -8,9 +8,9 @@ import {
 import Tracker from './Tracker';
 
 const wk = 'rstat';
+
 if (win[wk]) {
   const holder = win[wk];
-  // const buildTracker = function (stub) {
   const tracker = new Tracker();
   tracker.configure({
     snippet: holder._sv
@@ -27,8 +27,6 @@ if (win[wk]) {
   holder._q.map(doCall);
   holder.doCall = doCall;
   holder.queue = [];
-  // }
-
   documentReady(() => {
     tracker.initialize();
   });

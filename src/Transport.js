@@ -1,7 +1,7 @@
 import Sockette from 'sockette';
 import Emitter from 'component-emitter';
-import objectAssign from './functions/objectAssing';
-import createLogger from './functions/createLogger';
+import queryStringify from 'qs/lib/stringify';
+
 import {
   win,
   doc,
@@ -23,20 +23,14 @@ import {
   INTERNAL_EVENT,
   SERVICE_TRACK
 } from './Constants';
-import {
-  qs
-} from 'url-parse';
-import queryStringify from 'qs/lib/stringify';
-import {
-  METHODS
-} from 'http';
+import objectAssign from './functions/objectAssing';
+import createLogger from './functions/createLogger';
 
-const enc = encodeURIComponent;
-const HTTPS = 'https://';
+const HTTPS = 'https';
+const WSS = 'wss';
+
 const log = createLogger('Transport');
-const noop = () => {};
-
-
+const noop = () => { };
 
 
 /**
@@ -49,18 +43,14 @@ const noop = () => {};
  *
  */
 export function Transport(options) {
-  /**@private */
   this.creds = {};
-  /**@private */
   this.options = objectAssign({
-      sendTimeout: 5000
-    },
+    sendTimeout: 5000
+  },
     options
   );
-
-  /**@private */
+  this.pathPrefix = options.pathPrefix;
   this.server = options.server;
-  /**@private */
   this.wsConnected = false;
 };
 
@@ -84,12 +74,10 @@ Transport.prototype.setCreds = function (creds) {
  * @param {Object} data
  * @returns {Transport}
  */
-Transport.prototype.makeURL = function (path, data = {}) {
+Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
   const query = queryStringify(data);
-  return `${HTTPS}${this.server}${path}?${query}`;
+  return `${proto}://${this.server}${this.pathPrefix}${path}?${query}`;
 }
-
-
 
 
 /**
@@ -121,6 +109,7 @@ Transport.prototype.sendXHR = function (url, data) {
   }
 };
 
+
 /**
  *
  * @param url {string}
@@ -133,6 +122,7 @@ Transport.prototype.sendIMG = function (url) {
     log('img loaded');
   };
 };
+
 
 /**
  *
@@ -181,34 +171,33 @@ Transport.prototype.send = function (msg, options = {}) {
   }
 };
 
+
 /**
  * Establish server connection if configured
  */
 Transport.prototype.connect = function () {
   if (this.options.activateWs && wsSupported()) {
-    const {
-      wssPort,
-      server
-    } = this.options;
-    this.startWs(server, wssPort);
+    this.startWs();
   }
   return this;
 }
+
 
 /**
  * Start WebSocket connection
  * @param server
  */
-Transport.prototype.startWs = function (host, port) {
+Transport.prototype.startWs = function () {
   const pinger = setInterval(_ => {
     this.wsConnected && this.sendMessage({
       "name": "ping"
     });
   }, 1e4)
   try {
-    const endp = `wss://${host}:${port}/wss?${qs.stringify(this.creds)}`;
-    log(`ws endpoing: ${endp}`);
-    this.ws = new Sockette(endp, {
+    // const endp = `wss://${host}:${port}/wss?${qs.stringify()}`;
+    const endpoint = this.makeURL('/wss', this.creds, WSS);
+    log(`ws endpoing: ${endpoint}`);
+    this.ws = new Sockette(endpoint, {
       timeout: 5e3,
       maxAttempts: 10,
       onopen: e => {
@@ -226,7 +215,7 @@ Transport.prototype.startWs = function (host, port) {
           log.warn(err);
         }
       },
-      onreconnect: e => {},
+      onreconnect: e => { },
       onmaximum: e => log.warn('Stop Attempting!', e),
       onclose: e => {
         this.wsConnected = false
