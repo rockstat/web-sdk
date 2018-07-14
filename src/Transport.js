@@ -137,8 +137,8 @@ Transport.prototype.send = function (msg, options = {}) {
     !!options[EVENT_OPTION_OUTBOUND] ||
     !!options[EVENT_OPTION_MEAN];
 
-  const postPath = `/wh/${msg.projectId}/${msg.service}/${msg.name}`;
-  const imgPath = `/img/${msg.projectId}/${msg.service}/${msg.name}`;
+  const postPath = `/${msg.service}/${msg.name}`;
+  const imgPath = `/${msg.service}/${msg.name}`;
 
   try {
 
@@ -160,12 +160,12 @@ Transport.prototype.send = function (msg, options = {}) {
   }
 
   // Send only part when using gif
-  const smallMsg = (msg.service === SERVICE_TRACK) ?
-    this.options.msgCropper(msg) : msg;
+  const smallMsg = (msg.service === SERVICE_TRACK)
+    ? this.options.msgCropper(msg) : msg;
   log(`sending using IMG. useSafe: ${useSafe}`, smallMsg);
 
   try {
-    this.sendIMG(this.makeURL(imgPath, objectAssign({}, smallMsg, this.creds)));
+    this.sendIMG(this.makeURL(imgPath, objectAssign({ channel: 'pixel' }, smallMsg, this.creds)));
   } catch (e) {
     log('Error during sending data using image', e);
   }
