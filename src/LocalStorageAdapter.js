@@ -5,14 +5,8 @@ import createLogger from './functions/createLogger';
 const log = createLogger('LocalStorage');
 
 function LocalStorageAdapter(options) {
-  options = options || {};
-
-  this.options = objectAssign({
-    prefix: 'alc:'
-  }, options);
-
   this.available = this.checkAvailability();
-  this.prefix = this.options.prefix;
+  this.prefix = options && options.prefix || '';
 }
 
 LocalStorageAdapter.prototype.isAvailable = function () {
@@ -21,15 +15,10 @@ LocalStorageAdapter.prototype.isAvailable = function () {
 
 
 LocalStorageAdapter.prototype.getPrefixedKey = function (key, options) {
-
-  options = options || {};
-
   let prefix = this.prefix;
-
-  if (options.session === true) {
+  if (options && options.session === true) {
     prefix += 's:';
   }
-
   return prefix + key;
 };
 
@@ -38,13 +27,9 @@ LocalStorageAdapter.prototype.set = function (key, value, options) {
   if (!this.available) {
     return;
   }
-
-  options = options || {};
   const query_key = this.getPrefixedKey(key, options);
-
   try {
-
-    const exp = options.exp
+    const exp = options && options.exp
       ? Math.round((new Date()).getTime() / 1000) + options.exp
       : '';
 

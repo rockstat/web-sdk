@@ -82,8 +82,10 @@ function Tracker() {
     lastCampaignExpires: 7776000, // 3 month
     initialUid: 0,
     cookieDomain: domain,
-    cookiePrefix: 'rst-',
     cookiePath: '/',
+    // prefix for cookie stored at target website
+    cookiePrefix: 'rst-',
+    loctorPrefix: 'rst:',
     pathPrefix: '',
     trackActivity: true,
     trackClicks: true,
@@ -126,7 +128,9 @@ Tracker.prototype.initialize = function () {
   }
 
   // Constructing storage adapters (should be before any other actions)
-  this.localStorage = new LocalStorageAdapter(this.options);
+  this.localStorage = new LocalStorageAdapter({
+    prefix: this.options.loctorPrefix
+  });
   this.cookieStorage = new CookieStorageAdapter({
     cookieDomain: this.options.cookieDomain,
     cookiePrefix: this.options.cookiePrefix,
