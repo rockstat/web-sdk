@@ -5,6 +5,7 @@
   "main": "dist/lib.js",
   "scripts": {
     "start": "webpack --config webpack.development.js --watch",
+    "dash": "webpack-dashboard",
     "build": "NODE_ENV=production webpack --config webpack.production.js"
   },
   "repository": {
@@ -70,6 +71,7 @@
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.9.0",
     "webpack": "^3.5.4",
-    "webpack-babel-external-helpers": "^0.1.0"
+    "webpack-babel-external-helpers": "^0.1.0",
+    "webpack-dashboard": "^2.0.0"
   }
 }
