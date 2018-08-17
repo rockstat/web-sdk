@@ -20,6 +20,7 @@ import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
 import GoogleAnalytics from './syncs/GoogleAnalytics';
 import YandexMetrika from './syncs/YandexMetrika';
+// import { PixelSync} from './syncs/PixelSync';
 import {
   isObject
 } from './functions/type';
@@ -181,7 +182,8 @@ Tracker.prototype.initialize = function () {
   // Integrations
   this.syncs.push(
     new GoogleAnalytics(),
-    new YandexMetrika()
+    new YandexMetrika(),
+    // new PixelSync()
   );
 
   // Receiving events from trackers and syncs
@@ -368,7 +370,7 @@ Tracker.prototype.warn = function (msg) {
  * Show warn log record. For testing purposes
  */
 Tracker.prototype.enableLogger = function () {
-  win._alco_logger = true;
+  win._rst_logger = true;
 };
 
 /**

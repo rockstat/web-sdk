@@ -29,10 +29,10 @@ const KEY_USER_PARAMS = 'userpr';
 
 const log = createLogger('ST');
 
-function SessionTracker(alco, options) {
+function SessionTracker(tracker, options) {
 
-  this.localStorage = alco.localStorage;
-  this.cookieStorage = alco.cookieStorage;
+  this.localStorage = tracker.localStorage;
+  this.cookieStorage = tracker.cookieStorage;
 
   this.storage = this.localStorage;
 

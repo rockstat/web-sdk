@@ -4,8 +4,8 @@ const STORE_KEY = 'slfsh';
 
 class SelfishPerson {
 
-  constructor(alco, options) {
-    this.storage = alco.localStorage;
+  constructor(tracker, options) {
+    this.storage = tracker.localStorage;
 
   }
 

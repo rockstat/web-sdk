@@ -26,7 +26,7 @@ export default function createLogger(name) {
   };
 
   const log = function (...args) {
-    if (!isProd || window._rstat_logger) {
+    if (!isProd || window._rst_logger) {
       logger('log', args, prefix());
     }
   };
