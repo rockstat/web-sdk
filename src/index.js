@@ -11,23 +11,28 @@ const wk = 'rstat';
 
 if (win[wk]) {
   const holder = win[wk];
-  const tracker = new Tracker();
-  tracker.configure({
-    snippet: holder._sv
-  });
-  // Attaching method to page
-  const doCall = function (args) {
-    args = args.slice(0);
-    const method = args.shift();
-    return tracker[method] ?
-      tracker[method].apply(tracker, args) :
-      new Error('Undefined method');
-  };
+  if (!holder._loaded) {
+    const tracker = new Tracker();
+    tracker.configure({
+      snippet: holder._sv
+    });
+    // Attaching method to page
+    const doCall = function (args) {
+      args = args.slice(0);
+      const method = args.shift();
+      return tracker[method] ?
+        tracker[method].apply(tracker, args) :
+        new Error('Undefined method');
+    };
 
-  holder._q.map(doCall);
-  holder.doCall = doCall;
-  holder.queue = [];
-  documentReady(() => {
-    tracker.initialize();
-  });
+    holder._q.map(doCall);
+    holder.doCall = doCall;
+    holder._loaded = true;
+    holder._q = [];
+    documentReady(() => {
+      tracker.initialize();
+    });
+  } else {
+    console && console.error && console.error('rockstat already loaded');
+  }
 }
