@@ -1,25 +1,34 @@
-import {nav, win} from '../Browser';
-import {isHttps} from './pageDefaults';
+import {
+  nav,
+  win
+} from '../Browser';
+import {
+  isHttps
+} from './pageDefaults';
 
 function checkLS() {
   try {
     const ls = localStorage;
-    const x = '__storage_test__';
-    ls.setItem(x, x);
-    ls.removeItem(x);
-    return ls.getItem(x) === x;
-  }
-  catch (e) {}
+    const test = '_rstest_';
+    ls.setItem(test, test);
+    const res = ls.getItem(test);
+    ls.removeItem(test);
+    return res === test;
+  } catch (e) {}
   return false;
 }
 
 function checkWPush() {
-  return ('serviceWorker' in nav && 'PushManager' in win)
-    && ('showNotification' in ServiceWorkerRegistration.prototype);
+  return ('serviceWorker' in nav && 'PushManager' in win) &&
+    ('showNotification' in ServiceWorkerRegistration.prototype);
 }
 
-export function checkSendBeacon() {
+export function isSendBeacon() {
   return 'sendBeacon' in nav;
+}
+
+export function isBlobSupported() {
+  return 'Blob' in win;
 }
 
 export function isXDRsupported() {
@@ -51,11 +60,10 @@ export function wsSupported() {
 }
 
 export default {
-  'locstor': 'localStorage' in win && checkLS(),
-  'addel': 'addEventListener' in win,
-  'promise': 'Promise' in win,
-  'sbeacon': checkSendBeacon(),
-  'atob': !!win.atob,
-  'wpush': checkWPush()
+  'ls': 'localStorage' in win && checkLS(),
+  'ae': 'addEventListener' in win,
+  'pr': 'Promise' in win,
+  'sb': isSendBeacon(),
+  'ab': !!win.atob,
+  'wp': checkWPush()
 };
-

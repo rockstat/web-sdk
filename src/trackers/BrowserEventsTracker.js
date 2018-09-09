@@ -14,7 +14,7 @@ import {
   INTERNAL_EVENT,
   EVENT,
   EVENT_PAGE_LOADED
-} from "../Variables";
+} from "../Constants";
 
 const log = createLogger('Aclo::BET');
 

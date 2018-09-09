@@ -1,18 +1,21 @@
-export const EVENT = 'Event';
-export const EVENT_PAGEVIEW = 'pageview';
+export const SERVICE_TRACK = 'track';
+
+
+export const EVENT = 'event';
+export const EVENT_PAGEVIEW = 'page';
 export const EVENT_IDENTIFY = 'identify';
 export const EVENT_SESSION = 'session';
-export const EVENT_PAGE_LOADED = 'Page loaded';
-export const EVENT_ACTIVITY = 'Activity';
-export const EVENT_SCROLL = 'Scroll';
-export const EVENT_FORM_SUMBIT = 'Form submit';
-export const EVENT_FORM_INVALID = 'Form invalid';
-export const EVENT_FIELD_FOCUS = 'Field focus';
-export const EVENT_FIELD_BLUR = 'Field blur';
-export const EVENT_FIELD_CHANGE = 'Field change';
-export const EVENT_USER_PARAMS = 'User params';
-export const EVENT_LINK_CLICK = 'Link click';
-export const EVENT_PAGE_UNLOAD = 'Page unload';
+export const EVENT_PAGE_LOADED = 'page_loaded';
+export const EVENT_ACTIVITY = 'activity';
+export const EVENT_SCROLL = 'scroll';
+export const EVENT_FORM_SUMBIT = 'form_submit';
+export const EVENT_FORM_INVALID = 'form_invalid';
+export const EVENT_FIELD_FOCUS = 'field_focus';
+export const EVENT_FIELD_BLUR = 'field_blur';
+export const EVENT_FIELD_CHANGE = 'field_change';
+export const EVENT_USER_PARAMS = 'user_params';
+export const EVENT_LINK_CLICK = 'link_click';
+export const EVENT_PAGE_UNLOAD = 'page_unload';
 
 export const EVENTS_ADD_PERF = [EVENT_PAGEVIEW, EVENT_PAGE_LOADED];
 
@@ -34,7 +37,9 @@ export const EVENTS_ADD_SCROLL = [
   EVENT_SCROLL
 ];
 
-export const INTERNAL_EVENT = 'Internal event';
+export const SERVER_MESSAGE = 'server-message';
+export const INTERNAL_EVENT = 'internal_event';
+
 export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
 export const EVENT_OPTION_MEAN = 'mean';
@@ -47,14 +52,14 @@ export const SESSION_REFERRAL = 'referral';
 export const SESSION_SOCIAL = 'social';
 export const SESSION_UNKNOWN = 'unknown';
 
-export const DOM_INTERACTIVE = 'domInteractive';
-export const DOM_COMPLETE = 'domLoaded';
-export const DOM_BEFORE_UNLOAD = 'beforeunload';
+export const DOM_INTERACTIVE = 'dom_interactive';
+export const DOM_COMPLETE = 'dom_loaded';
+export const DOM_BEFORE_UNLOAD = 'before_unload';
 export const DOM_UNLOAD = 'unload';
 
 export const READY = 'ready';
 
-export const CB_DOM_EVENT = 'domEvent';
+export const CB_DOM_EVENT = 'dom_event';
 
 
 

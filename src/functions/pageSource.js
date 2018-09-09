@@ -5,8 +5,7 @@ import simpleHash from './simpleHash';
 import removeWww from './removeWww';
 import objectKeys from './objectKeys';
 import {isArray} from './type';
-import qs from 'component-querystring';
-import url from 'component-url';
+import urlParse from 'url-parse';
 import punycode from 'punycode';
 
 import {
@@ -16,7 +15,9 @@ import {
   SESSION_ORGANIC,
   SESSION_REFERRAL,
   SESSION_SOCIAL,
-} from "../Variables";
+} from "../Constants";
+
+const qs = urlParse.qs;
 
 const ENGINE_GOOGLE = 'google';
 const ENGINE_YANDEX = 'yandex';
@@ -137,10 +138,10 @@ export default function pageSource(page) {
 
   // Processing ref
   let ref;
-  if (page.referrer) {
-    ref = url.parse(page.referrer);
+  if (page.ref) {
+    ref = urlParse(page.ref);
   }
-  source.refHash = simpleHash(page.referrer);
+  source.refHash = simpleHash(page.ref);
 
   // Direct with marks -> campaign
   if (!ref) {
@@ -152,17 +153,17 @@ export default function pageSource(page) {
     return source;
   }
 
-  source.refHost = punycode.toUnicode(removeWww(ref.hostname));
+  source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
   // Internal
-  if (ref && source.refHost === removeWww(page.hostname)) {
+  if (ref && source.refhost === removeWww(page.hostname)) {
     source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
     return source;
   }
 
   // Other types: campaigns, organic, social
 
-  const refDomainParts = source.refHost.split('.').reverse();
+  const refDomainParts = source.refhost.split('.').reverse();
 
   for (let i = 0; i < RULES.length; i++) {
     const rule = RULES[i];

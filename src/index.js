@@ -1,31 +1,38 @@
 import './polyfill';
-import {documentReady} from './functions/domEvents';
-import {win} from './Browser';
+import {
+  documentReady
+} from './functions/domEvents';
+import {
+  win
+} from './Browser';
+import Tracker from './Tracker';
 
-// Main
-import Alcolytics from './Alcolytics';
+const wk = 'rstat';
 
-const holder = win['alco'];
+if (win[wk]) {
+  const holder = win[wk];
+  if (!holder._loaded) {
+    const tracker = new Tracker();
+    tracker.configure({
+      snippet: holder._sv
+    });
+    // Attaching method to page
+    const doCall = function (args) {
+      args = args.slice(0);
+      const method = args.shift();
+      return tracker[method] ?
+        tracker[method].apply(tracker, args) :
+        new Error('Undefined method');
+    };
 
-if (holder) {
-  const alcolytics = new Alcolytics();
-  alcolytics.configure({
-    server: holder.server,
-    snippet: holder.snippet
-  });
-
-// Attaching method to page
-  holder.doCall = function (args) {
-    args = args.slice(0);
-    const method = args.shift();
-    return alcolytics[method]
-      ? alcolytics[method].apply(alcolytics, args)
-      : new Error('Method not supported');
-  };
-  holder.queue.map(holder.doCall);
-  holder.queue = [];
-
-  documentReady(() => {
-    alcolytics.initialize();
-  });
+    holder._q.map(doCall);
+    holder.doCall = doCall;
+    holder._loaded = true;
+    holder._q = [];
+    documentReady(() => {
+      tracker.initialize();
+    });
+  } else {
+    console && console.error && console.error('rockstat already loaded');
+  }
 }

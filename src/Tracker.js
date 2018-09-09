@@ -2,25 +2,35 @@ import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';
 import CookieStorageAdapter from './CookieStorageAdapter';
-import pageDefaults from './data/pageDefaults';
+import {
+  pageDefaults,
+  isHttps
+} from './data/pageDefaults';
+import {
+  hashCode
+} from './functions/stringHash';
+import autoDomain from './functions/autoDomain';
 import browserData from './data/browserData';
-import clientData from './data/clientData';
-import clientFeatures from './data/clientFeatures';
+import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
 import ActivityTracker from './trackers/ActivityTracker';
 import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
-import GoogleAnalytics from './integrations/GoogleAnalytics';
-import YandexMetrika from './integrations/YandexMetrika';
-import {isObject} from './functions/type';
+import GoogleAnalytics from './syncs/GoogleAnalytics';
+import YandexMetrika from './syncs/YandexMetrika';
+import { PixelSync } from './syncs/PixelSync';
+import {
+  isObject
+} from './functions/type';
 import msgCropper from './functions/msgCropper';
 import SelfishPerson from './SelfishPerson';
-import Transport from './Transport';
+import {
+  Transport
+} from './Transport';
 import Emitter from 'component-emitter';
 import each from './functions/each';
-
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
@@ -36,46 +46,48 @@ import {
   EVENTS_ADD_SCROLL,
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
-} from './Variables';
-import {win} from './Browser';
+  SERVER_MESSAGE,
+  SERVICE_TRACK,
+} from './Constants';
+import {
+  win
+} from './Browser';
 
-const noop = () => {
-};
-const log = createLogger('Alcolytics');
 
-// Schema used for minify data at thin channels
-const msgCropSchema = {
-  name: true,
-  data: true,
-  projectId: true,
-  uid: true,
-  error: true,
-  client: ['ts', 'tzOffset'],
-  session: ['eventNum', 'pageNum', 'num'],
-  // error fields
-  args: true,
-  lvl: true
-};
+const LIBRARY = 'rst-sdk-web';
+const LIBVER = 3.13;
+const noop = () => { };
+const log = createLogger('RST');
 
 /**
- * Main Alcolytics class
+ * Main Tracker class
  * @constructor
+ * @property {Transport} transport class used for communicate with server
  */
-function Alcolytics() {
+function Tracker() {
 
-  log('starting Alcolytics');
+  log('starting RST Tracker');
+
+  const pd = pageDefaults();
+  const domain = autoDomain(pd.domain);
+
 
   this.initialized = false;
-  this.configured_flag = false;
+  this.configured = false;
+  this.valuableFields = undefined;
   this.queue = [];
+
   this.options = {
-    projectId: 1,
+    projectId: hashCode(domain),
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
-    library: 'alco.js',
-    libver: 213,
     initialUid: 0,
-    cookieDomain: 'auto',
+    cookieDomain: domain,
+    cookiePath: '/',
+    // prefix for cookie stored at target website
+    cookiePrefix: 'rst-',
+    loctorPrefix: 'rst:',
+    pathPrefix: '',
     trackActivity: true,
     trackClicks: true,
     trackForms: true,
@@ -83,64 +95,55 @@ function Alcolytics() {
     allowSendBeacon: true,
     allowXHR: true,
     activateWs: false,
-    msgCropper: (msg) => msgCropper(msg, msgCropSchema)
+    pixelSyncEnabled: false,
+    pixelSync: { },
+    msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
-  this.integrations = [];
+  this.syncs = [];
   this.trackers = [];
-
-  this.on(DOM_BEFORE_UNLOAD, this.unload);
-
+  this.transport = null;
 }
 
-Emitter(Alcolytics.prototype);
+Emitter(Tracker.prototype);
 
 /**
  * Handle events from queue and start accepting events
  */
-Alcolytics.prototype.initialize = function () {
+Tracker.prototype.initialize = function () {
 
-  // Check is HTTPS
-  const page = pageDefaults();
-
-  if (page.proto !== 'https' && !this.options.allowHTTP) {
-    return log.warn('Works only on https');
-  }
   // Check is initialized
   if (this.initialized) {
     return;
   }
 
-  // Constructing storage methods (should be before any other actions)
-  this.localStorage = new LocalStorageAdapter(this.options);
+  // Check is HTTPS
+  if (!isHttps() && !this.options.allowHTTP) {
+    return log.warn('Works only on https');
+  }
+
+  log('Initializing...');
+
+
+  // Check is configured
+  if (!this.configured) {
+    log.warn('Initializing before configuration yet complete');
+  }
+
+  // Constructing storage adapters (should be before any other actions)
+  this.localStorage = new LocalStorageAdapter({
+    prefix: this.options.loctorPrefix
+  });
   this.cookieStorage = new CookieStorageAdapter({
     cookieDomain: this.options.cookieDomain,
+    cookiePrefix: this.options.cookiePrefix,
+    cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
 
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
   this.configure(this.selfish.getConfig());
-
-  log('Initializing');
-
-  this.initialized = true;
-
-  // Check is configured
-  if (!this.configured_flag) {
-    log.warn('Initializing before configuration was complete');
-  }
-
-
-  // Library data
-  this.libInfo = {
-    name: this.options.library,
-    libver: this.options.libver,
-    snippet: this.options.snippet
-  };
-
-  // Transport to server
-  this.transport = new Transport(this.options);
 
   // Handling browser events
   this.browserEventsTracker = new BrowserEventsTracker();
@@ -150,6 +153,11 @@ Alcolytics.prototype.initialize = function () {
   this.sessionTracker = new SessionTracker(this, this.options)
     .subscribe(this)
     .handleUid(this.options.initialUid);
+
+  // Interract with server
+  this.transport = new Transport(this.options)
+    .setCreds(this.sessionTracker.creds())
+    .connect();
 
   // Main tracker
   this.trackers.push(
@@ -174,56 +182,59 @@ Alcolytics.prototype.initialize = function () {
   }
 
   // Integrations
-  this.integrations.push(
+  this.syncs.push(
     new GoogleAnalytics(),
     new YandexMetrika()
   );
+  if (this.options.pixelSyncEnabled) {
+    this.syncs.push(new PixelSync());
+  }
 
-  // Receiving events from trackers and plugins
-  const plugins = [].concat(this.trackers, this.integrations);
+  // Receiving events from trackers and syncs
+  const plugins = [this.transport].concat(this.trackers, this.syncs);
 
   each(plugins, (plugin) => {
-
-    plugin.on(EVENT, ({name, data, options}) => {
+    plugin.on(EVENT, ({
+      name,
+      data,
+      options
+    }) => {
       this.handle(name, data, options);
     });
 
     plugin.on(INTERNAL_EVENT, (name, data) => {
+      log(`on-in:${name}`);
       this.emit(name, data);
     });
-
   });
 
   // Fire ready
   this.emit(READY);
+  this.on(DOM_BEFORE_UNLOAD, this.unload);
+
+  this.initialized = true;
 
   // Handling queue
   this.queue.map(e => {
     this.handle.apply(this, e);
   });
   this.queue = [];
-
 };
 
-
-Alcolytics.prototype.isInitialized = function () {
-
+Tracker.prototype.isInitialized = function () {
   return this.initialized;
-
 };
 
 /**
  * Applying configuration block. Can be called multiple times
  * @param {Object} options
  */
-Alcolytics.prototype.configure = function (options) {
-
+Tracker.prototype.configure = function (options) {
   if (this.initialized) {
     return log.warn('Configuration cant be applied because already initialized');
   }
-  this.configured_flag = true;
+  this.configured = true;
   this.options = objectAssign(this.options, options);
-
 };
 
 /**
@@ -232,7 +243,7 @@ Alcolytics.prototype.configure = function (options) {
  * @param {Object|undefined} data
  * @param {Object} options - Event properties
  */
-Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
+Tracker.prototype.handle = function (name, data = {}, options = {}) {
 
   if (!this.initialized) {
     return this.queue.push([name, data]);
@@ -249,21 +260,39 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
 
   this.sessionTracker.handleEvent(name, data, pageDefaults());
 
+  // Schema used for minify data at thin channels
+  this.valuableFields = this.valuableFields || {
+    service: true,
+    name: true,
+    data: true,
+    projectId: true,
+    uid: true,
+    user: true,
+    error: true,
+    browser: ['ts', 'tzOffset'],
+    sess: ['eventNum', 'pageNum', 'num'],
+  };
+
   // Typical message to server. Can be cropped using {msgCropSchema}
   const msg = {
+    service: SERVICE_TRACK,
     name: name,
     data: data,
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
     user: this.sessionTracker.userData(),
-    page: pageDefaults({short: true}),
-    session: this.sessionTracker.sessionData(),
-    lib: this.libInfo,
-    client: clientData(),
-    cf: clientFeatures,
-    browser: browserData()
+    page: pageDefaults({
+      short: true
+    }),
+    sess: this.sessionTracker.sessionData(),
+    char: browserCharacts,
+    browser: browserData(),
+    lib: {
+      id: LIBRARY,
+      v: LIBVER,
+      sv: this.options.snippet
+    }
   };
-
 
   if (EVENTS_ADD_PERF.indexOf(name) >= 0) {
     msg.perf = performanceData();
@@ -277,20 +306,21 @@ Alcolytics.prototype.handle = function (name, data = {}, options = {}) {
   this.sendToServer(msg, options);
 };
 
-
 /**
  * Log remote: send to server log
  * @param {string} level
  * @param {Array} args
  */
-Alcolytics.prototype.logOnServer = function (level, args) {
-  if (this.isInitialized()){
-    this.sendToServer(
-      {name: 'log', lvl: level, args: args},
-      {[EVENT_OPTION_MEAN]: true}
-    );
+Tracker.prototype.logOnServer = function (level, args) {
+  if (this.isInitialized()) {
+    this.sendToServer({
+      name: 'log',
+      lvl: level,
+      args: args
+    }, {
+        [EVENT_OPTION_MEAN]: true
+      });
   }
-
 };
 
 /**
@@ -298,23 +328,17 @@ Alcolytics.prototype.logOnServer = function (level, args) {
  * @param msg {Object}
  * @param options {Object}
  */
-Alcolytics.prototype.sendToServer = function (msg, options) {
-  const query = [
-    'uid=' + this.sessionTracker.getUid()
-  ];
-  this.transport.send(query.join('&'), msg, options);
+Tracker.prototype.sendToServer = function (msg, options) {
+  this.transport.send(msg, options);
 };
 
-
-Alcolytics.prototype.unload = function () {
-
+Tracker.prototype.unload = function () {
   log('Unloading...');
   this.event(EVENT_PAGE_UNLOAD);
 
   each(this.trackers, (tracker) => {
     tracker.unload();
   });
-
 };
 
 /**
@@ -323,99 +347,86 @@ Alcolytics.prototype.unload = function () {
  * @param data
  * @param options
  */
-Alcolytics.prototype.event = function (name, data, options) {
-
+Tracker.prototype.event = function (name, data, options) {
   this.handle(name, data, options);
-
 };
 
 /**
  * Track page load
  */
-Alcolytics.prototype.page = function (data, options) {
-
+Tracker.prototype.page = function (data, options) {
   this.handle(EVENT_PAGEVIEW, data, options);
-
 };
 
 
 /**
  * Show warn log record. For testing purposes
  */
-Alcolytics.prototype.warn = function (msg) {
-
+Tracker.prototype.warn = function (msg) {
   log.warn(new Error(msg));
-
 };
 
 /**
  * Show warn log record. For testing purposes
  */
-Alcolytics.prototype.enableLogger = function () {
-
-  win._alco_logger = true;
-
+Tracker.prototype.enableLogger = function () {
+  win._rst_logger = true;
 };
 
 /**
  * Adding user details
  */
-Alcolytics.prototype.identify = function (userId, userTraits) {
-
+Tracker.prototype.identify = function (userId, userTraits) {
   if (isObject(userId)) {
     userTraits = userId;
     userId = undefined;
   }
-
   this.handle(EVENT_IDENTIFY, {
     userId,
     userTraits
   });
-
 };
 
 /**
  * Add external ready callback
  * @param cb
  */
-Alcolytics.prototype.onReady = function (cb) {
-
-  return this.isInitialized()
-    ? (cb || noop)()
-    : this.on(READY, cb);
-
-
+Tracker.prototype.onReady = function (cb) {
+  return this.isInitialized() ?
+    (cb || noop)() :
+    this.on(READY, cb);
 };
 
 /**
  * Add external event callback
  * @param cb
  */
-Alcolytics.prototype.onEvent = function (cb) {
-
+Tracker.prototype.onEvent = function (cb) {
   this.on(EVENT, cb);
-
 };
 
 /**
- * Returns Alcolytics uid
+ * Add external event callback
+ * @param cb
+ */
+Tracker.prototype.onServerMessage = function (name, cb) {
+  this.on(SERVER_MESSAGE, cb);
+};
+
+/**
+ * Returns Tracker uid
  * @return {String}
  */
-Alcolytics.prototype.getUid = function () {
-
+Tracker.prototype.getUid = function () {
   return this.sessionTracker.getUid();
-
 };
 
 /**
  * Save personal config overrides
  * @param {Object} config
  */
-Alcolytics.prototype.setCustomConfig = function (config) {
-
+Tracker.prototype.setCustomConfig = function (config) {
   this.selfish.saveConfig(config);
-
 };
 
-
-export default Alcolytics;
+export default Tracker;

@@ -10,7 +10,7 @@ import {
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_TERMINATOR,
   EVENT_LINK_CLICK
-} from '../Variables';
+} from '../Constants';
 
 const linkTag = 'a';
 

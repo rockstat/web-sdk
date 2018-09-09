@@ -1,14 +1,19 @@
+import Emitter from 'component-emitter';
+import {
+  closest
+} from 'dom-utils';
 import objectAssing from '../functions/objectAssing';
 import each from '../functions/each';
-import Emitter from 'component-emitter';
-import {win, doc} from '../Browser';
-import {closest} from 'dom-utils';
+import {
+  win,
+  doc
+} from '../Browser';
 import createLogger from '../functions/createLogger';
 import {
   EVENT,
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_TERMINATOR
-} from '../Variables';
+} from '../Constants';
 import {
   useCaptureSupport,
   removeHandler,
@@ -23,6 +28,21 @@ const elementsTags = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?o
 const formEvents = ['submit'];
 const elementEvents = ['focus', 'blur', 'change', 'invalid'];
 
+const nn = (val) => val || '';
+
+
+
+/**
+ * Process event type
+ * @param  {string} event event type
+ * @return {object}
+ */
+function prepareType(event) {
+  return {
+    event: nn(event)
+  };
+}
+
 
 /**
  *
@@ -31,15 +51,17 @@ const elementEvents = ['focus', 'blur', 'change', 'invalid'];
  */
 function extractFormData(element) {
   if (!element) {
-    return {ferr: 'Form element absent'};
+    return {
+      ferr: 'Form element absent'
+    };
   }
 
   return {
-    fmthd: element.getAttribute('method'),
-    fact: element.getAttribute('action'),
-    fname: element.getAttribute('name'),
-    fcls: element.className,
-    fid: element.id
+    fmthd: nn(element.getAttribute('method')),
+    fact: nn(element.getAttribute('action')),
+    fname: nn(element.getAttribute('name')),
+    fcls: nn(element.className),
+    fid: nn(element.id)
   };
 }
 
@@ -50,15 +72,17 @@ function extractFormData(element) {
  */
 function extractElementData(element) {
   if (!element) {
-    return {eerr: 'Input element absent'};
+    return {
+      eerr: 'Input element absent'
+    };
   }
   return {
-    etag: element.tagName && element.tagName.toLocaleLowerCase(),
-    etype: element.getAttribute('type'),
-    ename: element.getAttribute('name'),
-    eph: element.getAttribute('placeholder'),
-    ecl: element.className,
-    eid: element.id
+    etag: nn(element.tagName && element.tagName.toLowerCase()),
+    etype: nn(element.getAttribute('type')),
+    ename: nn(element.getAttribute('name')),
+    eph: nn(element.getAttribute('placeholder')),
+    ecl: nn(element.className),
+    eid: nn(element.id)
   };
 }
 
@@ -129,9 +153,9 @@ FormTracker.prototype.formEventHandler = function (ev) {
 
   if (form) {
     const event = {
-      name: `Form ${type}`,
+      name: `form_${type}`,
       data: {
-        event: type,
+        ...prepareType(event),
         ...extractFormData(form)
       },
       options: {
@@ -149,18 +173,22 @@ FormTracker.prototype.formEventHandler = function (ev) {
  * @param ev {Event} Dom event
  */
 FormTracker.prototype.elementEventHandler = function (ev) {
+  const {
+    type,
+    target
+  } = ev;
 
-  const target = ev.target || ev.srcElement;
-  const type = ev.type;
-
+  if (!target) {
+    return;
+  }
   const element = closest(target, elementsTags.join(','), true);
   const form = element && closest(element, formTag);
 
   if (element) {
     const event = {
-      name: `Field ${type}`,
+      name: `field_${type}`,
       data: {
-        event: type,
+        ...prepareType(type),
         ...extractElementData(element),
         ...extractFormData(form)
       }

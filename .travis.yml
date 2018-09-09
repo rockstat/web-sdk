@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+- '9.11'
+install:
+- yarn install
+cache:
+  directories:
+  - node_modules
+script:
+- yarn build
+- yarn pack -f rst-sdk-web.tgz
+deploy:
+  provider: releases
+  api_key:
+    secure: N++1Uvwv/IN4pr2SVGhtZkRW9WeVUl7gb0bfPhusphsH/r3bJhGMOW4NJr2fWNHxxUTpJ9SDMs+XpYMXhZl/oSY1z/1IJCEh/mL15uJx8tMSTRi1B6yHDpOMZ3hUY87K9u9SJF9QgCHIIPFjKLVvYxBAr793Fbmgdd90F9Vi5jkRk7OJnVyvZ/cBRg01mblAjCZ9eo++AzQtwv7U6U4c+WD22rI04UuugZI+aBFGrt7V8yBGsRB2WaAS4EejqNCusEUjI1KPDdYSHsI4uA+dJhjEVZPT9furGnT144iP/L59EfXGKhfO61NUleSOZ1lsYQarxZ5wfcVUdUU7j1LjOiLmmlNvSShOr93P4MUYWONvH8fgYApM56ffEKXo4I1RnV9cylUBKXRE01Eu9FNKot6zHLxO3ekQrurHEav+GdNSZVivsGDnFalgM+3o3F7mE76Dw9EqqRnbXwcqSa3/NlfNJ7lekn6d6w8YgQt3z0MFCspvuxfUH8UUSq6FD+7aC8opqYkInbXDzIR7kXQ1kM67zniVgQzAlmM0gD59dFNwN50pxcn7nLAiXSh1VUnsvU6vbYnzJ63KOL5TTA2ZNkjE+IkYRx/fCDe3s/VblMHAc8uhhVDXG8ddHP88chzYsYGJfhjOeQGV+3t0PrHpGCHTwGLsfHcGwb8m8u/D4fA=
+  file: rst-sdk-web.tgz
+  on:
+    repo: rockstat/web-sdk
