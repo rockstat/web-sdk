@@ -10,4 +10,4 @@ to_master:
 	git checkout master && git merge $(BR) && git checkout $(BR)
 
 push:
-	git push origin --tags
+	git push origin master --tags
