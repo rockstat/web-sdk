@@ -54,8 +54,8 @@ import {
 } from './Browser';
 
 
-const LIBRARY = 'rst-sdk-web';
-const LIBVER = 3.13;
+const LIBRARY = 'web-sdk-3.14.0';
+const LIBVER = 0;
 const noop = () => { };
 const log = createLogger('RST');
 
