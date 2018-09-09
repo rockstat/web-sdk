@@ -16,13 +16,3 @@ deploy:
   file: rst-sdk-web.tgz
   on:
     repo: rockstat/web-sdk
-# after_success:
-# - curl --ftp-create-dirs -T dist/lib.js ftp://${SELCDN_USER}:${SELCDN_PASS}@ftp.selcdn.ru/rockstat/dist/${TRAVIS_BRANCH}/lib-latest.js
-
-
-
-# deploy:
-#   skip_cleanup: true
-
-# after_success:
-# - curl --ftp-create-dirs -T dist/lib.js ftp://${SELCDN_USER}:${SELCDN_PASS}@ftp.selcdn.ru/rockstat/dist/${TRAVIS_BRANCH}/lib-latest.js

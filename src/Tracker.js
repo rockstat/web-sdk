@@ -20,7 +20,7 @@ import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
 import GoogleAnalytics from './syncs/GoogleAnalytics';
 import YandexMetrika from './syncs/YandexMetrika';
-// import { PixelSync} from './syncs/PixelSync';
+import { PixelSync } from './syncs/PixelSync';
 import {
   isObject
 } from './functions/type';
@@ -95,6 +95,8 @@ function Tracker() {
     allowSendBeacon: true,
     allowXHR: true,
     activateWs: false,
+    pixelSyncEnabled: false,
+    pixelSync: { },
     msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
@@ -182,9 +184,11 @@ Tracker.prototype.initialize = function () {
   // Integrations
   this.syncs.push(
     new GoogleAnalytics(),
-    new YandexMetrika(),
-    // new PixelSync()
+    new YandexMetrika()
   );
+  if (this.options.pixelSyncEnabled) {
+    this.syncs.push(new PixelSync());
+  }
 
   // Receiving events from trackers and syncs
   const plugins = [this.transport].concat(this.trackers, this.syncs);
@@ -226,9 +230,6 @@ Tracker.prototype.isInitialized = function () {
  * @param {Object} options
  */
 Tracker.prototype.configure = function (options) {
-
-  // log(options)
-
   if (this.initialized) {
     return log.warn('Configuration cant be applied because already initialized');
   }
@@ -258,7 +259,6 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
   }
 
   this.sessionTracker.handleEvent(name, data, pageDefaults());
-
 
   // Schema used for minify data at thin channels
   this.valuableFields = this.valuableFields || {

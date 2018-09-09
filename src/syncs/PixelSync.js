@@ -22,7 +22,7 @@ export const PixelSync = function () {
       const handler = {
         set: function (obj, prop, value) {
           if (prop === 'src') {
-            // console.log('gotcha ' + value);
+            log(`gotcha ${value}`);
             if (value && value.indexOf('https://dss.hybrid.ai/Pixel/Track2') === 0) {
               const u = new URL(value);
               const pid = u.searchParams.get('pid');
@@ -46,7 +46,6 @@ export const PixelSync = function () {
       } catch (e) {
         return nativeImage;
       }
-
     }
   }
 
