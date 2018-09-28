@@ -1,20 +1,29 @@
-language: node_js
-node_js:
-- '9.11'
-install:
-- yarn install
-cache:
-  directories:
-  - node_modules
+sudo: required
+dist: trusty
+branches:
+  only:
+  - master
+  - dev
+env:
+  global:
+  - PROJECT_NAME=web-sdk
+  - ORG=rockstat
+  - IMAGE_NAME=$ORG/$PROJECT_NAME
+  - TAG="$( [ $TRAVIS_BRANCH == 'master' ] && echo latest || echo $TRAVIS_BRANCH )"
+  - secure: nRdqm6bygUw4FkKVxEQfjkpCppXEJ25tHQC7k6G9Yz4uwEEvn292I8FdoBgwVqI6E6luAh1IM/KlLQgo3c+XJAkjq75JdMN1YCVojRp27IkSyUXnSYYKtSrKkmfi2nexCQ060K+Cmy2dysEn1VM6Z7uRQl03dxPcyqQtbAFUl3qT6Ef9yMfUR5FGP+NUlrr+yS+/kIvfImZdEVPg/QpVYjuRUmJlXEnD7TZCl5vx7clkZPkcwtzc+q/5HLsjjHWhgdlL9pxsnGf9XWO1hWTGQes1xEjrTPkeYiPU+X6czDtsBsJrSivkBQTlDHoqk0jUFgIhSQJs+P8VTI5hrfZFJ6bvWn1y/2mrPGLG0+TujRiNJk3rZuWivQXWNZDDmVnzr50Gws0VNIb9rxFxaiOUvtSyf4OlsxPXUd/IX4aNGF0DvCQ5MWNne9879S+1/YPlONz/STH3JILIuK/KKrbEDggJHbbUWCQuOwWFOh3vQcXLl3b+LPzzNOyP9i9u4CPLC/kR+qqtcyLNVzC6AVsy3+H8KX30T1LxhyyNkfAMJdcZ2yVn/QA2G9r0nIfDO8c4NlWLqQBjB4qSwmzHodfa/jcxjXkJLwisf673Ps0O62xH01UR+uAwZqyN9iTT+TOmJjYxCcCRdf+1VBM5M/6VNeDXkv4G/0C8o4Tf5GNh/7w=
+services:
+- docker
 script:
-- yarn build
-- yarn pack -f rst-sdk-web.tgz
+- cat Dockerfile | sed  "s/\:latest/\:$TAG/g" > Dockerfile.tag
+- docker build -t $PROJECT_NAME -f Dockerfile.tag .
+after_script:
+- docker images
+before_deploy:
+- docker tag "$PROJECT_NAME" "$IMAGE_NAME:$TAG"
+- docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 deploy:
-  provider: releases
+  provider: script
   skip_cleanup: true
-  api_key:
-    secure: N++1Uvwv/IN4pr2SVGhtZkRW9WeVUl7gb0bfPhusphsH/r3bJhGMOW4NJr2fWNHxxUTpJ9SDMs+XpYMXhZl/oSY1z/1IJCEh/mL15uJx8tMSTRi1B6yHDpOMZ3hUY87K9u9SJF9QgCHIIPFjKLVvYxBAr793Fbmgdd90F9Vi5jkRk7OJnVyvZ/cBRg01mblAjCZ9eo++AzQtwv7U6U4c+WD22rI04UuugZI+aBFGrt7V8yBGsRB2WaAS4EejqNCusEUjI1KPDdYSHsI4uA+dJhjEVZPT9furGnT144iP/L59EfXGKhfO61NUleSOZ1lsYQarxZ5wfcVUdUU7j1LjOiLmmlNvSShOr93P4MUYWONvH8fgYApM56ffEKXo4I1RnV9cylUBKXRE01Eu9FNKot6zHLxO3ekQrurHEav+GdNSZVivsGDnFalgM+3o3F7mE76Dw9EqqRnbXwcqSa3/NlfNJ7lekn6d6w8YgQt3z0MFCspvuxfUH8UUSq6FD+7aC8opqYkInbXDzIR7kXQ1kM67zniVgQzAlmM0gD59dFNwN50pxcn7nLAiXSh1VUnsvU6vbYnzJ63KOL5TTA2ZNkjE+IkYRx/fCDe3s/VblMHAc8uhhVDXG8ddHP88chzYsYGJfhjOeQGV+3t0PrHpGCHTwGLsfHcGwb8m8u/D4fA=
-  file: rst-sdk-web.tgz
+  script: docker push "$IMAGE_NAME:$TAG"
   on:
-    repo: rockstat/web-sdk
-    tags: true
+    all_branches: true

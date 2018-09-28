@@ -52,6 +52,9 @@ export function Transport(options) {
   this.pathPrefix = options.pathPrefix;
   this.server = options.server;
   this.wsConnected = false;
+  this.servicesMap = {
+    'track': 't4k'
+  }
 };
 
 // Extending Emitter
@@ -131,14 +134,13 @@ Transport.prototype.sendIMG = function (url) {
  * @param options {Object}
  */
 Transport.prototype.send = function (msg, options = {}) {
-
   const data = JSON.stringify(msg);
   const useSafe = !!options[EVENT_OPTION_TERMINATOR] ||
     !!options[EVENT_OPTION_OUTBOUND] ||
     !!options[EVENT_OPTION_MEAN];
-
-  const postPath = `/${msg.service}/${msg.name}`;
-  const imgPath = `/${msg.service}/${msg.name}`;
+  const _service = this.servicesMap[msg.service] || msg.service;
+  const postPath = `/${_service}.json`;
+  const imgPath = `/${_service}.gif`;
 
   try {
 
@@ -165,7 +167,7 @@ Transport.prototype.send = function (msg, options = {}) {
   log(`sending using IMG. useSafe: ${useSafe}`, smallMsg);
 
   try {
-    this.sendIMG(this.makeURL(imgPath, objectAssign({ channel: 'pixel' }, smallMsg, this.creds)));
+    this.sendIMG(this.makeURL(imgPath, objectAssign(smallMsg, this.creds)));
   } catch (e) {
     log('Error during sending data using image', e);
   }

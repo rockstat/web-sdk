@@ -6,6 +6,7 @@ import {
   win
 } from './Browser';
 import Tracker from './Tracker';
+import { packSemVer } from './functions/packSemVer';
 
 const wk = 'rstat';
 
@@ -14,7 +15,7 @@ if (win[wk]) {
   if (!holder._loaded) {
     const tracker = new Tracker();
     tracker.configure({
-      snippet: holder._sv
+      snippet: packSemVer(holder._sv)
     });
     // Attaching method to page
     const doCall = function (args) {

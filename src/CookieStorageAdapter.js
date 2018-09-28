@@ -1,9 +1,6 @@
 import objectAssign from './functions/objectAssing';
 import objectKeys from './functions/objectKeys';
-import createLogger from './functions/createLogger';
 import Cookies from 'js-cookie';
-
-const log = createLogger('CookieStorage');
 
 function CookieStorageAdapter(options) {
   options = options || {};

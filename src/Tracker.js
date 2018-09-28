@@ -52,10 +52,12 @@ import {
 import {
   win
 } from './Browser';
+import { packSemVer } from './functions/packSemVer';
 
 
-const LIBRARY = 'web-sdk-3.14.4';
-const LIBVER = 0;
+const LIBRARY = 'web-sdk';
+const LIBVER = packSemVer('3.14.4');
+
 const noop = () => { };
 const log = createLogger('RST');
 
@@ -262,7 +264,6 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
 
   // Schema used for minify data at thin channels
   this.valuableFields = this.valuableFields || {
-    service: true,
     name: true,
     data: true,
     projectId: true,

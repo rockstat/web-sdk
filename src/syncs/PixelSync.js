@@ -1,4 +1,4 @@
-import createLogger from '../functions/createLogger';
+import { logger } from '../Logger';
 import Emitter from 'component-emitter';
 import when from '../functions/when';
 import urlParse from 'url-parse';
@@ -10,7 +10,7 @@ import {
 } from "../Constants";
 import { Object } from 'core-js';
 
-const log = createLogger('Pixel sync');
+const log = logger.create('Pixel sync');
 
 export const PixelSync = function () {
   const NativeImage = Image;
@@ -22,11 +22,11 @@ export const PixelSync = function () {
       const handler = {
         set: function (obj, prop, value) {
           if (prop === 'src') {
-            log(`gotcha ${value}`);
+            log.debug(`gotcha ${value}`);
             if (value && value.indexOf('https://dss.hybrid.ai/Pixel/Track2') === 0) {
               const u = new URL(value);
               const pid = u.searchParams.get('pid');
-              if (pid){
+              if (pid) {
                 self.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, { hybridPid: pid });
               }
             }

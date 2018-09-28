@@ -7,10 +7,6 @@ const logger = function (type, arr, prefix) {
   if (('console' in window) && (type in console)) {
 
     // Sending to remote log
-    if(window['rstat'] && (type === 'warn' || type === 'error')){
-      const estr = arr.map(e => e instanceof Error ? e+"": e);
-      window.rstat('logOnServer', type, estr);
-    }
     const call = Function.prototype.call;
     call.apply(call, [console[type], console].concat(prefix ? [prefix] : [])
       .concat(arr));

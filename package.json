@@ -13,7 +13,7 @@
     "url": "https://github.com/rockstat/web-sdk.git"
   },
   "author": "Dmitry Rodin <madiedinro@gmail.com>",
-  "license": "APACHE-2",
+  "license": "Apache-2.0",
   "homepage": "https://github.com/rockstat/web-sdk",
   "files": [
     "dist/lib.js",
