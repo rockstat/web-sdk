@@ -1,4 +1,6 @@
 import './polyfill';
+import 'core-js';
+
 import {
   documentReady
 } from './functions/domEvents';
@@ -15,7 +17,7 @@ if (win[wk]) {
   if (!holder._loaded) {
     const tracker = new Tracker();
     tracker.configure({
-      snippet: packSemVer(holder._sv)
+      snippet: packSemVer(`${holder._sv}`)
     });
     // Attaching method to page
     const doCall = function (args) {
