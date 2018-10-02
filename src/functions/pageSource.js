@@ -137,19 +137,14 @@ export default function pageSource(page) {
   }
 
   // Processing ref
-  let ref;
-  if (page.ref) {
-    ref = urlParse(page.ref);
-  }
+  const ref = page.ref ? urlParse(page.ref) : '';
   source.refHash = simpleHash(page.ref);
 
   // Direct with marks -> campaign
-  if (!ref) {
-
+  if (ref === '') {
     if (source.hasMarks) {
       source.type = SESSION_CAMPAIGN;
     }
-
     return source;
   }
 

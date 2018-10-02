@@ -139,11 +139,13 @@ SessionTracker.prototype.getEventNum = function () {
 
 SessionTracker.prototype.sessionData = function () {
 
-  return objectAssign({
-    pageNum: this.getPageNum(),
-    eventNum: this.getEventNum()
-  },
-    this.lastSession, {
+  return objectAssign(
+    {
+      pageNum: this.getPageNum(),
+      eventNum: this.getEventNum()
+    },
+    this.lastSession,
+    {
       refHash: undefined
     }
   );
@@ -153,14 +155,9 @@ SessionTracker.prototype.sessionData = function () {
 SessionTracker.prototype.getUserParams = function () {
 
   const params = this.storage.get(KEY_USER_PARAMS) || {};
-
-  // Removing old vars
-  if (params.gaClientId) {
-    params.gaClientId = undefined;
-  }
-  if (params.ymClientId) {
-    params.ymClientId = undefined;
-  }
+  // 
+  // Here can be located paramans migration code
+  // 
   return params;
 };
 
@@ -182,7 +179,13 @@ SessionTracker.prototype.userData = function () {
   const params = this.storage.get(KEY_USER_PARAMS);
 
   return objectAssign(
-    {}, params, traits, tstz(), { id }
+    {},
+    params,
+    traits,
+    tstz(),
+    {
+      id
+    }
   );
 };
 
