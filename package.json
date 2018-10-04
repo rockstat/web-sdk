@@ -1,6 +1,6 @@
 {
   "name": "rst-sdk-web",
-  "version": "3.14.4",
+  "version": "3.15.0",
   "description": "Browser tracking library for Rockstat platform",
   "main": "dist/lib.js",
   "scripts": {
