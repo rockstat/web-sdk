@@ -15,6 +15,7 @@ export const EVENT_FIELD_BLUR = 'field_blur';
 export const EVENT_FIELD_CHANGE = 'field_change';
 export const EVENT_USER_PARAMS = 'user_params';
 export const EVENT_LINK_CLICK = 'link_click';
+export const EVENT_ELEMENT_CLICK = 'element_click';
 export const EVENT_PAGE_UNLOAD = 'page_unload';
 
 export const EVENTS_ADD_PERF = [EVENT_PAGEVIEW, EVENT_PAGE_LOADED];

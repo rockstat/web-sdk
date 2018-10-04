@@ -7,8 +7,6 @@ export function isArray(arg) {
 
 }
 
-export function isObject(arg) {
-
-  return typeof arg === 'object';
-
+export function isObject(obj) {
+  return typeof obj === 'object' && obj !== 'function' && obj !== null;
 }

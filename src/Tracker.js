@@ -59,6 +59,9 @@ const LIBRARY = 'web-sdk';
 const LIBVER = packSemVer('3.14.4');
 
 const noop = () => { };
+const boolOrOptions = (options) => {
+  return isObject(options) ? options : {};
+}
 const log = createLogger('RST');
 
 /**
@@ -91,14 +94,16 @@ function Tracker() {
     loctorPrefix: 'rst:',
     pathPrefix: '',
     trackActivity: true,
-    trackClicks: true,
+    trackClicks: {
+      allClicks: false
+    },
     trackForms: true,
     allowHTTP: false,
     allowSendBeacon: true,
     allowXHR: true,
     activateWs: false,
     pixelSyncEnabled: false,
-    pixelSync: { },
+    pixelSync: {},
     msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
@@ -126,7 +131,6 @@ Tracker.prototype.initialize = function () {
 
   log('Initializing...');
 
-
   // Check is configured
   if (!this.configured) {
     log.warn('Initializing before configuration yet complete');
@@ -142,10 +146,12 @@ Tracker.prototype.initialize = function () {
     cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
-
+  
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
   this.configure(this.selfish.getConfig());
+  
+  log(this.options);
 
   // Handling browser events
   this.browserEventsTracker = new BrowserEventsTracker();
@@ -169,17 +175,17 @@ Tracker.prototype.initialize = function () {
 
   // Other tracker
   if (this.options.trackActivity) {
-    this.activityTracker = new ActivityTracker();
+    this.activityTracker = new ActivityTracker(boolOrOptions(this.options.trackActivity));
     this.trackers.push(this.activityTracker);
   }
 
   if (this.options.trackClicks) {
-    this.clickTracker = new ClickTracker();
+    this.clickTracker = new ClickTracker(boolOrOptions(this.options.trackClicks));
     this.trackers.push(this.clickTracker);
   }
 
   if (this.options.trackForms) {
-    this.formTracker = new FormTracker();
+    this.formTracker = new FormTracker(boolOrOptions(this.options.trackForms));
     this.trackers.push(this.formTracker);
   }
 
