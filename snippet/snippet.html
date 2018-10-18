@@ -12,15 +12,14 @@
       rst._host = conf.server; rst._prefix = conf.pathPrefix || '';
       rst._host && rst._jsl(hs+rst._host+rst._prefix+lj); }
   }(window, document, 'script', 'configure', 'https://', '/lib.js');
-  // Configuration
+  // --- configuration ---
   rstat('configure', {
-    server: 'tracker.rockstat.test'
+    server: 'YOUR_SUBDOMAIN.DOMAIN' // <<< replace
   });
-  // отправка просмотра страницы, после загрузки. Убирается на SPA
-  rstat('page');
+  rstat('page'); // <<< remove if needed
 </script>
 <!--
-Чеклист, что ничего не забыли:
+Required actions:
 - [ ] Прописан домен трекера
 - [ ] (для разработчиков) Если код сниппета изменился, обновить его в документации и ansible
 -->
