@@ -102,7 +102,7 @@ const FormTracker = function (options) {
   this.initialize();
 
 };
-
+FormTracker.prop = 'form_tracker'
 Emitter(FormTracker.prototype);
 
 

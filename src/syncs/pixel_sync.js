@@ -57,5 +57,5 @@ export const PixelSync = function () {
   });
   Image = win.Image = FakeImage;
 };
-
+PixelSync.prop = 'pixel_sync';
 Emitter(PixelSync.prototype);

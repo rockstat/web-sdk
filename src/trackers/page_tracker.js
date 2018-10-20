@@ -23,7 +23,7 @@ const log = createLogger('Aclo::BET');
  * @param options
  * @constructor
  */
-const BrowserEventsTracker = function (options) {
+const PageTracker = function (options) {
 
   this.options = objectAssing({}, options);
 
@@ -55,9 +55,11 @@ const BrowserEventsTracker = function (options) {
   };
 };
 
-Emitter(BrowserEventsTracker.prototype);
+PageTracker.prop = 'page_tracker';
 
-BrowserEventsTracker.prototype.initialize = function () {
+Emitter(PageTracker.prototype);
+
+PageTracker.prototype.initialize = function () {
 
   addHandler(win, 'load', this.loadedHandler);
   addHandler(win, 'beforeunload', this.beforeUnloadHandler);
@@ -65,9 +67,9 @@ BrowserEventsTracker.prototype.initialize = function () {
 
 };
 
-BrowserEventsTracker.prototype.unload = function () {
+PageTracker.prototype.unload = function () {
 
 };
 
 
-export default BrowserEventsTracker;
+export default PageTracker;

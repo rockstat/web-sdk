@@ -13,14 +13,14 @@ import autoDomain from './functions/autoDomain';
 import browserData from './data/browserData';
 import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
-import BrowserEventsTracker from './trackers/BrowserEventsTracker';
-import ActivityTracker from './trackers/ActivityTracker';
-import SessionTracker from './trackers/SessionTracker';
-import ClickTracker from './trackers/ClickTracker';
-import FormTracker from './trackers/FormTracker';
-import GoogleAnalytics from './syncs/GoogleAnalytics';
-import YandexMetrika from './syncs/YandexMetrika';
-import { PixelSync } from './syncs/PixelSync';
+
+import * as Trackers from './trackers';
+import * as Syncs from './syncs';
+
+// import GoogleAnalytics from './syncs/GoogleAnalytics';
+// import YandexMetrika from './syncs/YandexMetrika';
+// import { PixelSync } from './syncs/PixelSync';
+
 import {
   isObject
 } from './functions/type';
@@ -34,16 +34,12 @@ import each from './functions/each';
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
-  EVENT_PAGE_LOADED,
   EVENT_PAGE_UNLOAD,
   EVENT_OPTION_MEAN,
   READY,
   EVENT,
-  CB_DOM_EVENT,
-  DOM_COMPLETE,
   DOM_BEFORE_UNLOAD,
   EVENTS_ADD_PERF,
-  EVENTS_ADD_SCROLL,
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
   SERVER_MESSAGE,
@@ -93,8 +89,8 @@ function Tracker() {
     cookiePrefix: 'rst-',
     loctorPrefix: 'rst:',
     pathPrefix: '',
-    trackActivity: true,
-    trackClicks: {
+    activityTracker: true,
+    clicksTracker: {
       allClicks: false
     },
     trackForms: true,
@@ -104,6 +100,8 @@ function Tracker() {
     activateWs: false,
     pixelSyncEnabled: false,
     pixelSync: {},
+    gaSync: {},
+    ymSync: {},
     msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
@@ -146,11 +144,11 @@ Tracker.prototype.initialize = function () {
     cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
-  
+
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
   this.configure(this.selfish.getConfig());
-  
+
   log(this.options);
 
   // Handling browser events
@@ -166,6 +164,8 @@ Tracker.prototype.initialize = function () {
   this.transport = new Transport(this.options)
     .setCreds(this.sessionTracker.creds())
     .connect();
+
+  const plugins = [this.transport]
 
   // Main tracker
   this.trackers.push(
@@ -189,17 +189,27 @@ Tracker.prototype.initialize = function () {
     this.trackers.push(this.formTracker);
   }
 
+  each(Syncs, (name, Class) => {
+    log('sync', name)
+    if (Class.prop && this.options[Class.prop]) {
+      const options = boolOrOptions(this.options.trackForms)
+      log('tracker opts', options);
+      const plugin = new Class(options);
+      plugins.push(plugin);
+    }
+  })
+
   // Integrations
-  this.syncs.push(
-    new GoogleAnalytics(),
-    new YandexMetrika()
-  );
-  if (this.options.pixelSyncEnabled) {
-    this.syncs.push(new PixelSync());
-  }
+  // this.syncs.push(
+  // new GoogleAnalytics(),
+  // new YandexMetrika()
+  // );
+  // if (this.options.pixelSyncEnabled) {
+  //   this.syncs.push(new PixelSync());
+  // }
 
   // Receiving events from trackers and syncs
-  const plugins = [this.transport].concat(this.trackers, this.syncs);
+
 
   each(plugins, (plugin) => {
     plugin.on(EVENT, ({
@@ -211,7 +221,7 @@ Tracker.prototype.initialize = function () {
     });
 
     plugin.on(INTERNAL_EVENT, (name, data) => {
-      log(`on-in:${name}`);
+      log(`internal:${name}`);
       this.emit(name, data);
     });
   });

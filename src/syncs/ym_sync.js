@@ -9,8 +9,7 @@ import {
 
 const log = createLogger('Alco YM');
 
-const YandexMetrika = function () {
-
+export const YMSync = function () {
   // Getting YM ClientId
   when(() => win.Ya && win.Ya.Metrika, () => {
     try {
@@ -25,9 +24,7 @@ const YandexMetrika = function () {
       log.error('Error:', e)
     }
   }, 25, 40);
-
 };
+YMSync.prop = 'ym_sync';
+Emitter(YMSync.prototype);
 
-Emitter(YandexMetrika.prototype);
-
-export default YandexMetrika;

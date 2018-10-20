@@ -9,7 +9,7 @@ import {
 
 const log = createLogger('Alco GA');
 
-const GoogleAnalytics = function () {
+export const GASync = function () {
 
   // Getting Google Analytics ClientId
   when(() => win.ga && win.ga.getAll && win.ga.getAll()[0], () => {
@@ -28,8 +28,6 @@ const GoogleAnalytics = function () {
     })
   }, 25, 40);
 };
+GASync.prop = 'ga_sync';
+Emitter(GASync.prototype);
 
-Emitter(GoogleAnalytics.prototype);
-
-
-export default GoogleAnalytics;

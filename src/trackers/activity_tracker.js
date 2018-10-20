@@ -82,7 +82,6 @@ const ActivityTracker = function (options) {
   );
 
   if (useCaptureSupport) {
-
     each(activityEvents, (event) => {
       addHandler(doc, event, this.eventHandler, true);
     });
@@ -94,7 +93,7 @@ const ActivityTracker = function (options) {
   }
 
 };
-
+ActivityTracker.prop = 'activity_tracker';
 Emitter(ActivityTracker.prototype);
 
 /**

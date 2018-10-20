@@ -45,6 +45,8 @@ function SessionTracker(tracker, options) {
   this.userParams = this.getUserParams();
 }
 
+SessionTracker.prop = 'session_tracker';
+
 Emitter(SessionTracker.prototype);
 
 SessionTracker.prototype.subscribe = function (emitter) {

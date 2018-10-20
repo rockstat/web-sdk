@@ -28,7 +28,7 @@ const ClickTracker = function (options) {
   this.initialize();
 
 };
-
+ClickTracker.prop = 'click_tracker';
 Emitter(ClickTracker.prototype);
 
 
