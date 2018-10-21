@@ -1,7 +1,7 @@
 import objectAssign from '../functions/objectAssing';
 import createLogger from '../functions/createLogger';
 import pageSource from '../functions/pageSource';
-import isValidUid from '../functions/isValidUid';
+import { isValidUid, cleanUid } from '../functions/isValidUid';
 import Emitter from 'component-emitter';
 
 import {
@@ -61,7 +61,6 @@ SessionTracker.prototype.fireSessionEvent = function () {
     name: EVENT_SESSION,
     data: {}
   });
-
 };
 
 SessionTracker.prototype.shouldRestart = function (session, source) {
@@ -77,11 +76,12 @@ SessionTracker.prototype.shouldRestart = function (session, source) {
 
 
 SessionTracker.prototype.getStoredUid = function () {
-
-  const uid = this.cookieStorage.get(KEY_UID) || this.localStorage.get(KEY_UID);
-  return isValidUid(uid) && uid;
-
+  return (
+    cleanUid(this.cookieStorage.get(KEY_UID)) ||
+    cleanUid(this.localStorage.get(KEY_UID))
+  )
 };
+
 
 SessionTracker.prototype.setStoredUid = function (uid) {
 
@@ -89,6 +89,7 @@ SessionTracker.prototype.setStoredUid = function (uid) {
   this.cookieStorage.set(KEY_UID, uid);
 
 };
+
 
 SessionTracker.prototype.handleUid = function (uid) {
 

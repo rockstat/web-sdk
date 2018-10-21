@@ -4,7 +4,7 @@ import createLogger from './createLogger';
 import simpleHash from './simpleHash';
 import removeWww from './removeWww';
 import objectKeys from './objectKeys';
-import {isArray} from './type';
+import { isArray } from './type';
 import urlParse from 'url-parse';
 import punycode from 'punycode';
 
@@ -41,34 +41,34 @@ const CLIDS = ['yclid', 'gclid'];
 
 const RULES = [
 
-  {domain: 'plus.google.com', engine: ENGINE_GOOGLE, type: SESSION_SOCIAL},
-  {domain: 'plus.url.google.com', engine: ENGINE_GOOGLE, type: SESSION_SOCIAL},
-  {domain: 'google.com.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC},
-  {domain: 'google.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC},
+  { domain: 'plus.google.com', engine: ENGINE_GOOGLE, type: SESSION_SOCIAL },
+  { domain: 'plus.url.google.com', engine: ENGINE_GOOGLE, type: SESSION_SOCIAL },
+  { domain: 'google.com.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC },
+  { domain: 'google.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC },
 
-  {domain: 'yandex.', param: 'text', engine: ENGINE_YANDEX, type: SESSION_ORGANIC},
-  {domain: 'go.mail.ru', param: 'q', engine: ENGINE_MAILRU, type: SESSION_ORGANIC},
-  {domain: 'nigma.ru', param: 's', engine: ENGINE_NIGMA, type: SESSION_ORGANIC},
-  {domain: 'rambler.ru', param: 'query', engine: ENGINE_RAMBLER, type: SESSION_ORGANIC},
-  {domain: 'bing.com', param: 'q', engine: ENGINE_BING, type: SESSION_ORGANIC},
-  {domain: 'yahoo.com', param: 'p', engine: ENGINE_YAHOO, type: SESSION_ORGANIC},
-  {domain: 'duckduckgo.com', engine: ENGINE_DUCKDUCKGO, type: SESSION_ORGANIC},
+  { domain: 'yandex.', param: 'text', engine: ENGINE_YANDEX, type: SESSION_ORGANIC },
+  { domain: 'go.mail.ru', param: 'q', engine: ENGINE_MAILRU, type: SESSION_ORGANIC },
+  { domain: 'nigma.ru', param: 's', engine: ENGINE_NIGMA, type: SESSION_ORGANIC },
+  { domain: 'rambler.ru', param: 'query', engine: ENGINE_RAMBLER, type: SESSION_ORGANIC },
+  { domain: 'bing.com', param: 'q', engine: ENGINE_BING, type: SESSION_ORGANIC },
+  { domain: 'yahoo.com', param: 'p', engine: ENGINE_YAHOO, type: SESSION_ORGANIC },
+  { domain: 'duckduckgo.com', engine: ENGINE_DUCKDUCKGO, type: SESSION_ORGANIC },
 
-  {domain: 'com.google.android.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC}, // app
+  { domain: 'com.google.android.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC }, // app
 
-  {domain: 'facebook.com', engine: ENGINE_FACEBOOK, type: SESSION_SOCIAL},
-  {domain: 'instagram.com', engine: ENGINE_INSTAGRAM, type: SESSION_SOCIAL}, //l.instagram.com
-  {domain: 'vk.com', engine: ENGINE_VK, type: SESSION_SOCIAL}, // away.vk.com
-  {domain: 'linkedin.com', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL},
-  {domain: 'lnkd.in', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL},
-  {domain: 'ok.ru', engine: ENGINE_OK, type: SESSION_SOCIAL},
-  {domain: 't.co', engine: ENGINE_TWITTER, type: SESSION_SOCIAL},
+  { domain: 'facebook.com', engine: ENGINE_FACEBOOK, type: SESSION_SOCIAL },
+  { domain: 'instagram.com', engine: ENGINE_INSTAGRAM, type: SESSION_SOCIAL }, //l.instagram.com
+  { domain: 'vk.com', engine: ENGINE_VK, type: SESSION_SOCIAL }, // away.vk.com
+  { domain: 'linkedin.com', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
+  { domain: 'lnkd.in', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
+  { domain: 'ok.ru', engine: ENGINE_OK, type: SESSION_SOCIAL },
+  { domain: 't.co', engine: ENGINE_TWITTER, type: SESSION_SOCIAL },
 
-  {domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN},
-  {domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN},
-  {domain: 'googleadservices.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN},
-  {domain: 'doubleclick.net', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN},
-  {domain: 'youtube.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN},
+  { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
+  { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
+  { domain: 'googleadservices.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
+  { domain: 'doubleclick.net', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
+  { domain: 'youtube.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
 
 ];
 
@@ -152,6 +152,7 @@ export default function pageSource(page) {
 
   // Internal
   if (ref && source.refhost === removeWww(page.hostname)) {
+    log('internal detect', ref, source.refhost, removeWww(page.hostname))
     source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
     return source;
   }
