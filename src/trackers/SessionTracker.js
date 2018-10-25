@@ -47,31 +47,23 @@ function SessionTracker(tracker, options) {
 
 Emitter(SessionTracker.prototype);
 
-SessionTracker.prototype.subscribe = function (emitter) {
+SessionTracker.prototype.initialize = function (emitter) {
 
+  // Fill last sessions
+  if (!this.lastSession) {
+    this.lastSession = this.storage.get(KEY_LAST_SESSION);
+    this.lastCampaign = this.storage.get(KEY_LAST_CAMPAIGN);
+  }
   emitter.on(EVENT_USER_PARAMS, this.setUserParams.bind(this));
   return this;
-
 };
 
 
 SessionTracker.prototype.fireSessionEvent = function () {
-
   this.emit(EVENT, {
     name: EVENT_SESSION,
     data: {}
   });
-};
-
-SessionTracker.prototype.shouldRestart = function (session, source) {
-
-  // Override session if got organic or campaign
-  const bySource = source.type === SESSION_ORGANIC || source.type === SESSION_CAMPAIGN || source.type === SESSION_SOCIAL;
-
-  // Prevent restarting by refresh enter page
-  const byRef = session.refHash !== source.refHash;
-  return bySource && byRef;
-
 };
 
 
@@ -211,70 +203,98 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
     return null;
   }
 
-  const source = pageSource(page);
+
   const lastEventTS = this.storage.get(KEY_LAST_EVENT_TS);
-  const lastSession = this.storage.get(KEY_LAST_SESSION);
+  const pastSession = this.storage.get(KEY_LAST_SESSION);
 
   // Setting last event
   const now = (new Date()).getTime();
   this.storage.set(KEY_LAST_EVENT_TS, now);
 
   // Starting new session if needed
-  let shouldRestart = lastEventTS === undefined ||
-    (now - lastEventTS) > this.options.sessionTimeout * 1000 ||
-    this.shouldRestart(lastSession, source);
+
+  let source;
+  let sourceRestart;
+
+  const sessionTimedOut = lastEventTS === undefined || (now - lastEventTS) > this.options.sessionTimeout * 1000;
+
+  if (sessionTimedOut || name === EVENT_PAGEVIEW) {
+    source = pageSource(page);
+    sourceRestart = this.sourceRestart(pastSession, source);
+  }
+
+  const shouldRestart = sessionTimedOut || sourceRestart;
 
   if (shouldRestart) {
-
-    source.num = this.storage.inc(KEY_SESSION_COUNTER);
-    source.start = now;
-
-    // Cleaning old session vars
-    this.storage.rmAll({
-      session: true
-    });
-
-    // Updating counters
-    this.storage.set(KEY_LAST_SESSION_TS, now, {
-      session: true
-    });
-    this.storage.set(KEY_PAGES_COUNTER, 0, {
-      session: true
-    });
-    this.storage.set(KEY_EVENTS_COUNTER, 0, {
-      session: true
-    });
-
-    // Saving last session
-    this.storage.set(KEY_LAST_SESSION, source);
-    this.lastSession = source;
-
-    // Applying last campaign
-    if (source.type === SESSION_CAMPAIGN) {
-      this.storage.set(KEY_LAST_CAMPAIGN, source, {
-        exp: 7776000
-      });
-    }
+    this.restart(source, now);
   }
 
   // Increment counters
-  (name === EVENT_PAGEVIEW) ?
+  if (name === EVENT_PAGEVIEW) {
     this.storage.inc(KEY_PAGES_COUNTER, {
       session: true
-    }) : this.storage.inc(KEY_EVENTS_COUNTER, {
+    });
+  }
+  else {
+    this.storage.inc(KEY_EVENTS_COUNTER, {
       session: true
     });
+  }
 
   // Emitting session event
   if (shouldRestart) {
     this.fireSessionEvent();
   }
+};
 
-  // Updating state
-  this.lastSession = this.storage.get(KEY_LAST_SESSION);
-  this.lastCampaign = this.storage.get(KEY_LAST_CAMPAIGN);
+SessionTracker.prototype.sourceRestart = function (pastSession, source) {
+
+  // Override session if got organic or campaign
+  const bySource = source.type === SESSION_ORGANIC || source.type === SESSION_CAMPAIGN || source.type === SESSION_SOCIAL;
+
+  // Prevent restarting by refresh enter page
+  const byRef = pastSession && (pastSession.refHash !== source.refHash);
+  return bySource && byRef;
 
 };
+
+SessionTracker.prototype.restart = function (source, now) {
+  source = source || {};
+  now = now || (new Date()).getTime();
+
+  source.num = this.storage.inc(KEY_SESSION_COUNTER);
+  source.start = now;
+
+  // Cleaning old session vars
+  this.storage.rmAll({
+    session: true
+  });
+
+  // Updating counters
+  this.storage.set(KEY_LAST_SESSION_TS, now, {
+    session: true
+  });
+  this.storage.set(KEY_PAGES_COUNTER, 0, {
+    session: true
+  });
+  this.storage.set(KEY_EVENTS_COUNTER, 0, {
+    session: true
+  });
+
+  // Saving last session
+  this.storage.set(KEY_LAST_SESSION, source);
+  this.lastSession = source;
+
+  // Applying last campaign
+  if (source.type === SESSION_CAMPAIGN) {
+    this.storage.set(KEY_LAST_CAMPAIGN, source, {
+      exp: 7776000
+    });
+    this.lastCampaign = source;
+  }
+};
+
+
 
 SessionTracker.prototype.unload = function () {
 

@@ -1,3 +1,4 @@
+import Promise from 'promise-polyfill';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';
@@ -34,20 +35,16 @@ import each from './functions/each';
 import {
   EVENT_PAGEVIEW,
   EVENT_IDENTIFY,
-  EVENT_PAGE_LOADED,
   EVENT_PAGE_UNLOAD,
-  EVENT_OPTION_MEAN,
   READY,
   EVENT,
-  CB_DOM_EVENT,
-  DOM_COMPLETE,
   DOM_BEFORE_UNLOAD,
   EVENTS_ADD_PERF,
-  EVENTS_ADD_SCROLL,
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
   SERVER_MESSAGE,
   SERVICE_TRACK,
+  EVENT_OPTION_REQUEST,
 } from './Constants';
 import {
   win
@@ -93,6 +90,7 @@ function Tracker() {
     cookiePrefix: 'rst-',
     loctorPrefix: 'rst:',
     pathPrefix: '',
+    urlMark: 'band',
     trackActivity: true,
     trackClicks: {
       allClicks: false
@@ -146,11 +144,11 @@ Tracker.prototype.initialize = function () {
     cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
-  
+
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
   this.configure(this.selfish.getConfig());
-  
+
   log(this.options);
 
   // Handling browser events
@@ -159,7 +157,7 @@ Tracker.prototype.initialize = function () {
 
   // Session tracker
   this.sessionTracker = new SessionTracker(this, this.options)
-    .subscribe(this)
+    .initialize(this)
     .handleUid(this.options.initialUid);
 
   // Interract with server
@@ -321,22 +319,21 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
 Tracker.prototype.logOnServer = function (level, args) {
   if (this.isInitialized()) {
     this.sendToServer({
+      service: SERVICE_TRACK,
       name: 'log',
       lvl: level,
       args: args
-    }, {
-        [EVENT_OPTION_MEAN]: true
-      });
+    });
   }
 };
 
 /**
  *
- * @param msg {Object}
- * @param options {Object}
+ * @param {Object} msg message
+ * @param {Object} options Object contains options
  */
 Tracker.prototype.sendToServer = function (msg, options) {
-  this.transport.send(msg, options);
+  return this.transport.send(msg, options);
 };
 
 Tracker.prototype.unload = function () {
@@ -357,6 +354,23 @@ Tracker.prototype.unload = function () {
 Tracker.prototype.event = function (name, data, options) {
   this.handle(name, data, options);
 };
+
+/**
+ * 
+ * @param {string} service backend service name
+ * @param {string} name event name
+ * @param {object} data that will be passed to backend service
+ * @returns {Promise<any>} result received from server
+ */
+Tracker.prototype.request = function (service, name, data = {}) {
+  if (!isObject(data)) {
+    throw new Error('"data" shold be an object');
+  }
+  return this.sendToServer(
+    { service, name, data },
+    { [EVENT_OPTION_REQUEST]: true }
+  );
+}
 
 /**
  * Track page load
@@ -416,7 +430,7 @@ Tracker.prototype.onEvent = function (cb) {
  * Add external event callback
  * @param cb
  */
-Tracker.prototype.onServerMessage = function (name, cb) {
+Tracker.prototype.onServerMessage = function (cb) {
   this.on(SERVER_MESSAGE, cb);
 };
 
@@ -426,6 +440,14 @@ Tracker.prototype.onServerMessage = function (name, cb) {
  */
 Tracker.prototype.getUid = function () {
   return this.sessionTracker.getUid();
+};
+
+
+/**
+ * Implicit session restart
+ */
+Tracker.prototype.sessionEvent = function () {
+  this.sessionTracker.fireSessionEvent();
 };
 
 /**

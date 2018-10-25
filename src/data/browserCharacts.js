@@ -6,7 +6,7 @@ import {
   isHttps
 } from './pageDefaults';
 
-function checkLS() {
+export const hasLocStoreSupport = (function () {
   try {
     const ls = localStorage;
     const test = '_rstest_';
@@ -14,38 +14,53 @@ function checkLS() {
     const res = ls.getItem(test);
     ls.removeItem(test);
     return res === test;
-  } catch (e) {}
+  } catch (e) { }
   return false;
-}
+})();
 
-function checkWPush() {
+export const hasPromiseSupport = (function () {
+  return 'Promise' in win;
+})();
+
+export const hasAddELSupport =  (function () {
+  return 'addEventListener' in win;
+})();
+
+export const hasWebPushSupport = (function () {
   return ('serviceWorker' in nav && 'PushManager' in win) &&
     ('showNotification' in ServiceWorkerRegistration.prototype);
-}
+})();
 
-export function isSendBeacon() {
+export const hasBeaconSupport = (function () {
   return 'sendBeacon' in nav;
-}
+})();
 
-export function isBlobSupported() {
+export const hasBlobSupport = (function () {
   return 'Blob' in win;
-}
+})();
 
-export function isXDRsupported() {
+export const hasXDRSupport = (function () {
   return !!window.XDomainRequest;
-}
+})();
 
-export function isXHRsupported() {
+export const hasXHRSupport = (function () {
   return !!win.XMLHttpRequest;
-}
+})();
 
-export function isXHRWithCreds() {
-  return isXHRsupported && ('withCredentials' in new win.XMLHttpRequest());
-}
+export const hasXHRWithCreds = (function () {
+  return hasXHRSupport && ('withCredentials' in new win.XMLHttpRequest());
+})();
 
-export function wsSupported() {
+export const hasAnyXRSupport = (function () {
+  return hasXHRSupport || hasXDRSupport;
+})();
+
+export const hasBase64Support = (function () {
+  return win.atob && win.btoa;
+})();
+
+export const hasWSSupport = (function () {
   const protocol = isHttps() ? 'wss' : 'ws';
-
   if ('WebSocket' in window) {
     let protoBin = ('binaryType' in WebSocket.prototype);
     if (protoBin) {
@@ -53,17 +68,16 @@ export function wsSupported() {
     }
     try {
       return !!(new WebSocket(protocol + '://.').binaryType);
-    } catch (e) {}
+    } catch (e) { }
   }
-
   return false;
-}
+})();
 
 export default {
-  'ls': 'localStorage' in win && checkLS(),
-  'ae': 'addEventListener' in win,
-  'pr': 'Promise' in win,
-  'sb': isSendBeacon(),
-  'ab': !!win.atob,
-  'wp': checkWPush()
+  'ls': hasLocStoreSupport,
+  'pr': hasPromiseSupport,
+  'ae': hasAddELSupport,
+  'sb': hasBeaconSupport,
+  'ab': hasBase64Support,
+  'wp': hasWebPushSupport
 };

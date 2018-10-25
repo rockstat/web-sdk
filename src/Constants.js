@@ -18,6 +18,7 @@ export const EVENT_LINK_CLICK = 'link_click';
 export const EVENT_ELEMENT_CLICK = 'element_click';
 export const EVENT_PAGE_UNLOAD = 'page_unload';
 
+
 export const EVENTS_ADD_PERF = [EVENT_PAGEVIEW, EVENT_PAGE_LOADED];
 
 export const EVENTS_NO_SCROLL = [
@@ -38,13 +39,20 @@ export const EVENTS_ADD_SCROLL = [
   EVENT_SCROLL
 ];
 
-export const SERVER_MESSAGE = 'server-message';
+// ######
+export const SERVICE_LOG = 'log';
+export const EVENT_LOG = 'page_unload';
+
+// ######
+export const SERVER_MESSAGE = 'server_message';
 export const INTERNAL_EVENT = 'internal_event';
 
+// ######
 export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
-export const EVENT_OPTION_MEAN = 'mean';
+export const EVENT_OPTION_REQUEST = 'request';
 
+// ######
 export const SESSION_INTERNAL = 'internal';
 export const SESSION_DIRECT = 'direct';
 export const SESSION_ORGANIC = 'organic';
