@@ -185,7 +185,7 @@ SessionTracker.prototype.userData = function () {
 SessionTracker.prototype.setUserData = function (data) {
 
   if (data.userId) {
-    this.storage.set(KEY_USER_ID, data.userId);
+    this.storage.set(KEY_USER_ID, String(data.userId));
     this.userId = data.userId;
   }
 
