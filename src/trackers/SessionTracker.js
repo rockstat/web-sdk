@@ -110,11 +110,9 @@ SessionTracker.prototype.getUid = function () {
 };
 
 SessionTracker.prototype.getPageNum = function () {
-
   return this.storage.get(KEY_PAGES_COUNTER, {
     session: true
   });
-
 };
 
 /**
@@ -122,11 +120,9 @@ SessionTracker.prototype.getPageNum = function () {
  * @return {Number} current value
  */
 SessionTracker.prototype.getEventNum = function () {
-
   return this.storage.get(KEY_EVENTS_COUNTER, {
     session: true
   });
-
 };
 
 
@@ -176,9 +172,7 @@ SessionTracker.prototype.userData = function () {
     params,
     traits,
     tstz(),
-    {
-      id
-    }
+    { id }
   );
 };
 
@@ -203,7 +197,6 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
     return null;
   }
 
-
   const lastEventTS = this.storage.get(KEY_LAST_EVENT_TS);
   const pastSession = this.storage.get(KEY_LAST_SESSION);
 
@@ -212,7 +205,6 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   this.storage.set(KEY_LAST_EVENT_TS, now);
 
   // Starting new session if needed
-
   let source;
   let sourceRestart;
 
@@ -293,12 +285,5 @@ SessionTracker.prototype.restart = function (source, now) {
     this.lastCampaign = source;
   }
 };
-
-
-
-SessionTracker.prototype.unload = function () {
-
-};
-
 
 export default SessionTracker;

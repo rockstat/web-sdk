@@ -24,13 +24,11 @@ const nn = (val) => val || '';
 const ClickTracker = function (options) {
 
   this.options = objectAssing({}, options);
+  this.initialized = false;
   this.eventHandler = this.eventHandler.bind(this);
   this.initialize();
-
 };
-
 Emitter(ClickTracker.prototype);
-
 
 ClickTracker.prototype.eventHandler = function (e) {
 
@@ -54,6 +52,7 @@ ClickTracker.prototype.eventHandler = function (e) {
 };
 
 ClickTracker.prototype.mutateToLinkClick = function (draft, link) {
+
   const loc = win.location;
   const outbound = link.hostname !== loc.hostname || link.port !== loc.port || link.protocol !== loc.protocol;
 
@@ -75,6 +74,7 @@ ClickTracker.prototype.mutateToLinkClick = function (draft, link) {
 }
 
 ClickTracker.prototype.getTargetInfo = function (target) {
+
   if (!target) {
     return {};
   }
@@ -94,17 +94,12 @@ ClickTracker.prototype.getTargetInfo = function (target) {
 ClickTracker.prototype.initialize = function () {
 
   if (!win.addEventListener) return;
-
   doc.addEventListener('click', this.eventHandler, true);
-
+  this.initialized = true;
 };
-
 
 ClickTracker.prototype.unload = function () {
-
   doc.removeEventListener('click', this.eventHandler, true);
-
 };
-
 
 export default ClickTracker;

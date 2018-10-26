@@ -123,23 +123,6 @@ FormTracker.prototype.initialize = function () {
   this.initialized = true;
 };
 
-FormTracker.prototype.unload = function () {
-
-  if (!this.initialized) {
-    return log('Not initialized');
-  }
-
-  each(formEvents, (event) => {
-    removeHandler(doc, event, this.formEventHandler, true);
-  });
-
-  each(elementEvents, (event) => {
-    removeHandler(doc, event, this.elementEventHandler, true);
-  });
-
-};
-
-
 /**
  * Handler for form element events
  * @param ev {Event} Dom event
@@ -195,6 +178,24 @@ FormTracker.prototype.elementEventHandler = function (ev) {
     };
     this.emit(EVENT, event);
   }
+};
+
+/**
+ * Unload handler
+ */
+FormTracker.prototype.unload = function () {
+
+  if (!this.initialized) {
+    return log('Not initialized');
+  }
+
+  each(formEvents, (event) => {
+    removeHandler(doc, event, this.formEventHandler, true);
+  });
+
+  each(elementEvents, (event) => {
+    removeHandler(doc, event, this.elementEventHandler, true);
+  });
 };
 
 

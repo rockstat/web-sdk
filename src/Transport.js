@@ -118,6 +118,7 @@ Transport.prototype.createXHR = function (url) {
   })
 }
 
+
 /**
  * Old good friend XHR
  * @param url

@@ -196,9 +196,8 @@ Tracker.prototype.initialize = function () {
     this.syncs.push(new PixelSync());
   }
 
+  const plugins = [this.transport].concat(this.syncs, this.trackers)
   // Receiving events from trackers and syncs
-  const plugins = [this.transport].concat(this.trackers, this.syncs);
-
   each(plugins, (plugin) => {
     plugin.on(EVENT, ({
       name,
@@ -209,7 +208,7 @@ Tracker.prototype.initialize = function () {
     });
 
     plugin.on(INTERNAL_EVENT, (name, data) => {
-      log(`on-in:${name}`);
+      log(`plugin internal event:${name}`);
       this.emit(name, data);
     });
   });
@@ -227,6 +226,9 @@ Tracker.prototype.initialize = function () {
   this.queue = [];
 };
 
+/**
+ * Check is initialized
+ */
 Tracker.prototype.isInitialized = function () {
   return this.initialized;
 };
@@ -250,14 +252,20 @@ Tracker.prototype.configure = function (options) {
  * @param {Object} options - Event properties
  */
 Tracker.prototype.handle = function (name, data = {}, options = {}) {
-
   if (!this.initialized) {
     return this.queue.push([name, data]);
   }
 
   log(`Handling ${name}`);
-
   this.emit(EVENT, name, data, options);
+
+  if (name === EVENT_PAGEVIEW) {
+    each(this.trackers, (tracker) => {
+      if (tracker.clear){
+        tracker.clear();
+      }
+    });
+  }
 
   // Special handlers
   if (name === EVENT_IDENTIFY) {
@@ -336,12 +344,17 @@ Tracker.prototype.sendToServer = function (msg, options) {
   return this.transport.send(msg, options);
 };
 
+/**
+ * Unload handler
+ */
 Tracker.prototype.unload = function () {
   log('Unloading...');
   this.event(EVENT_PAGE_UNLOAD);
 
   each(this.trackers, (tracker) => {
-    tracker.unload();
+    if(tracker.unload){
+      tracker.unload();
+    }
   });
 };
 
@@ -356,7 +369,6 @@ Tracker.prototype.event = function (name, data, options) {
 };
 
 /**
- * 
  * @param {string} service backend service name
  * @param {string} name event name
  * @param {object} data that will be passed to backend service
@@ -379,16 +391,15 @@ Tracker.prototype.page = function (data, options) {
   this.handle(EVENT_PAGEVIEW, data, options);
 };
 
-
 /**
- * Show warn log record. For testing purposes
+ * Emit warn log message. For testing purposes.
  */
 Tracker.prototype.warn = function (msg) {
   log.warn(new Error(msg));
 };
 
 /**
- * Show warn log record. For testing purposes
+ * Emit warn log message. For testing purposes.
  */
 Tracker.prototype.enableLogger = function () {
   win._rst_logger = true;

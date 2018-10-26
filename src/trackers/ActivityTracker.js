@@ -72,8 +72,8 @@ const ActivityTracker = function (options) {
   this.counter = {};
 
   // Scroll variables
-  this.maxScroll = 0;
-  this.scrollData = {};
+  this.maxPageScroll = 0;
+  this.scrollState = {};
 
   this.eventHandler = this.eventHandler.bind(this);
   this.scrollHandlerWrapper = runOnStop(
@@ -82,7 +82,6 @@ const ActivityTracker = function (options) {
   );
 
   if (useCaptureSupport) {
-
     each(activityEvents, (event) => {
       addHandler(doc, event, this.eventHandler, true);
     });
@@ -92,7 +91,6 @@ const ActivityTracker = function (options) {
       this.options.flushInterval * 1000
     )
   }
-
 };
 
 Emitter(ActivityTracker.prototype);
@@ -105,7 +103,6 @@ Emitter(ActivityTracker.prototype);
 ActivityTracker.prototype.subscribe = function (emitter) {
 
   return this;
-
 };
 
 /**
@@ -119,9 +116,7 @@ ActivityTracker.prototype.eventHandler = function (event) {
   if (type === scrollEvent) {
     this.scrollHandlerWrapper();
   }
-
   this.counter[type] = (this.counter[type] || 0) + 1;
-
 };
 
 
@@ -150,29 +145,29 @@ ActivityTracker.prototype.handleScroll = function () {
     )
   );
 
-  this.maxScroll = currentScroll > this.maxScroll ?
+  this.maxPageScroll = currentScroll > this.maxPageScroll ?
     currentScroll :
-    this.maxScroll;
+    this.maxPageScroll;
 
-  this.scrollData = {
+  this.scrollState = {
     dh: docHeight,
     ch: clientHeight,
     to: topOffset,
     cs: currentScroll,
-    ms: this.maxScroll
+    ms: this.maxPageScroll
   };
 };
 
 ActivityTracker.prototype.getPositionData = function () {
   this.handleScroll();
-  return this.scrollData;
+  return this.scrollState;
 };
 
 
 ActivityTracker.prototype.getEnrichmentData = function () {
   this.handleScroll();
   return {
-    scroll: this.scrollData
+    scroll: this.scrollState
   };
 };
 
@@ -193,17 +188,29 @@ ActivityTracker.prototype.fireActivityEvent = function () {
         active: ++this.active
       }
     };
-
     objectAssing(event.data, this.counter);
     this.emit(EVENT, event);
-
     this.counter = {};
   }
 };
 
+/**
+ * Clear state
+ */
+ActivityTracker.prototype.clear = function () {
+  this.fireActivityEvent();
+  // Activity handling
+  this.iteration = 0;
+  this.active = 0;
+  this.counter = {};
+  this.maxPageScroll = 0;
+  this.scrollState = {};
+};
 
+/**
+ * Unload handler
+ */
 ActivityTracker.prototype.unload = function () {
-
   this.fireActivityEvent();
   each(activityEvents, (event) => {
     removeHandler(doc, event, this.eventHandler);

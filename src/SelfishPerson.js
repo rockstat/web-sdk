@@ -6,7 +6,6 @@ class SelfishPerson {
 
   constructor(tracker, options) {
     this.storage = tracker.localStorage;
-
   }
 
   saveConfig(options){
@@ -16,9 +15,6 @@ class SelfishPerson {
   getConfig(){
     return this.storage.get(STORE_KEY, {}, {});
   }
-
-
 }
-
 
 module.exports = SelfishPerson;

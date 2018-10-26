@@ -6,7 +6,7 @@ import {
   removeHandler,
   addHandler
 } from "../functions/domEvents";
-import {win, doc} from "../Browser";
+import { win, doc } from "../Browser";
 import {
   DOM_COMPLETE,
   DOM_BEFORE_UNLOAD,
@@ -62,12 +62,6 @@ BrowserEventsTracker.prototype.initialize = function () {
   addHandler(win, 'load', this.loadedHandler);
   addHandler(win, 'beforeunload', this.beforeUnloadHandler);
   addHandler(win, 'unload', this.unloadHandler);
-
 };
-
-BrowserEventsTracker.prototype.unload = function () {
-
-};
-
 
 export default BrowserEventsTracker;
