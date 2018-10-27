@@ -11,7 +11,8 @@ import {
   SESSION_CAMPAIGN,
   SESSION_SOCIAL,
   EVENT_USER_PARAMS,
-  EVENT
+  EVENT,
+  EVENT_SIMULATE_SESSION
 } from '../Constants';
 import { tstz } from '../data/browserData';
 
@@ -205,17 +206,20 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   this.storage.set(KEY_LAST_EVENT_TS, now);
 
   // Starting new session if needed
+
   let source;
   let sourceRestart;
 
+  const simulation = name === EVENT_SIMULATE_SESSION;
   const sessionTimedOut = lastEventTS === undefined || (now - lastEventTS) > this.options.sessionTimeout * 1000;
 
-  if (sessionTimedOut || name === EVENT_PAGEVIEW) {
+  if (sessionTimedOut || simulation || name === EVENT_PAGEVIEW) {
     source = pageSource(page);
+    console.log(source);
     sourceRestart = this.sourceRestart(pastSession, source);
   }
 
-  const shouldRestart = sessionTimedOut || sourceRestart;
+  const shouldRestart = sessionTimedOut || sourceRestart || simulation;
 
   if (shouldRestart) {
     this.restart(source, now);
@@ -251,6 +255,8 @@ SessionTracker.prototype.sourceRestart = function (pastSession, source) {
 };
 
 SessionTracker.prototype.restart = function (source, now) {
+  log('restart session');
+
   source = source || {};
   now = now || (new Date()).getTime();
 

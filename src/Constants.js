@@ -5,6 +5,7 @@ export const EVENT = 'event';
 export const EVENT_PAGEVIEW = 'page';
 export const EVENT_IDENTIFY = 'identify';
 export const EVENT_SESSION = 'session';
+export const EVENT_SIMULATE_SESSION = 'simulate-session';
 export const EVENT_PAGE_LOADED = 'page_loaded';
 export const EVENT_ACTIVITY = 'activity';
 export const EVENT_SCROLL = 'scroll';

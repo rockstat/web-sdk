@@ -151,7 +151,7 @@ export default function pageSource(page) {
   source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
   // Internal
-  if (ref && source.refhost === removeWww(page.hostname)) {
+  if (ref && source.refhost === removeWww(page.domain)) {
     log('internal detect', ref, source.refhost, removeWww(page.hostname))
     source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
     return source;
