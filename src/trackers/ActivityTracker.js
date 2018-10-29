@@ -63,7 +63,8 @@ const getClientHeight = function () {
 const ActivityTracker = function (options) {
 
   this.options = objectAssing({
-    flushInterval: 5
+    flushInterval: 5,
+    zeroEvents: false
   }, options);
 
   // Activity handling
@@ -178,8 +179,8 @@ ActivityTracker.prototype.getEnrichmentData = function () {
 ActivityTracker.prototype.fireActivityEvent = function () {
 
   this.iteration++;
-
-  if (objectKeys(this.counter).length > 0) {
+  // check activity present or enabled zero events submittion
+  if (objectKeys(this.counter).length > 0 || this.options.zeroEvents) {
     const event = {
       name: EVENT_ACTIVITY,
       data: {

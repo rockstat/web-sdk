@@ -56,7 +56,7 @@ const LIBRARY = 'web-sdk';
 const LIBVER = packSemVer('3.16.0');
 
 const noop = () => { };
-const boolOrOptions = (options) => {
+const asObject = (options) => {
   return isObject(options) ? options : {};
 }
 const log = createLogger('RST');
@@ -91,7 +91,9 @@ function Tracker() {
     loctorPrefix: 'rst:',
     pathPrefix: '',
     urlMark: 'band',
-    trackActivity: true,
+    trackActivity: {
+      zeroEvents: false,
+    },
     trackClicks: {
       allClicks: false
     },
@@ -100,8 +102,7 @@ function Tracker() {
     allowSendBeacon: true,
     allowXHR: true,
     activateWs: false,
-    pixelSyncEnabled: false,
-    pixelSync: {},
+    pixelSync: false,
     msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
@@ -173,17 +174,17 @@ Tracker.prototype.initialize = function () {
 
   // Other tracker
   if (this.options.trackActivity) {
-    this.activityTracker = new ActivityTracker(boolOrOptions(this.options.trackActivity));
+    this.activityTracker = new ActivityTracker(asObject(this.options.trackActivity));
     this.trackers.push(this.activityTracker);
   }
 
   if (this.options.trackClicks) {
-    this.clickTracker = new ClickTracker(boolOrOptions(this.options.trackClicks));
+    this.clickTracker = new ClickTracker(asObject(this.options.trackClicks));
     this.trackers.push(this.clickTracker);
   }
 
   if (this.options.trackForms) {
-    this.formTracker = new FormTracker(boolOrOptions(this.options.trackForms));
+    this.formTracker = new FormTracker(asObject(this.options.trackForms));
     this.trackers.push(this.formTracker);
   }
 
@@ -192,21 +193,18 @@ Tracker.prototype.initialize = function () {
     new GoogleAnalytics(),
     new YandexMetrika()
   );
-  if (this.options.pixelSyncEnabled) {
-    this.syncs.push(new PixelSync());
+  if (this.options.pixelSync) {
+    this.syncs.push(new PixelSync(asObject(this.options.pixelSync)));
   }
 
   const plugins = [this.transport].concat(this.syncs, this.trackers)
-  // Receiving events from trackers and syncs
   each(plugins, (plugin) => {
-    plugin.on(EVENT, ({
-      name,
-      data,
-      options
-    }) => {
+    // Listening events
+    plugin.on(EVENT, ({ name, data, options }) => {
+      log(`plugin event:${name}`);
       this.handle(name, data, options);
     });
-
+    // Listening internal events
     plugin.on(INTERNAL_EVENT, (name, data) => {
       log(`plugin internal event:${name}`);
       this.emit(name, data);
@@ -261,7 +259,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
 
   if (name === EVENT_PAGEVIEW) {
     each(this.trackers, (tracker) => {
-      if (tracker.clear){
+      if (tracker.clear) {
         tracker.clear();
       }
     });
@@ -352,7 +350,7 @@ Tracker.prototype.unload = function () {
   this.event(EVENT_PAGE_UNLOAD);
 
   each(this.trackers, (tracker) => {
-    if(tracker.unload){
+    if (tracker.unload) {
       tracker.unload();
     }
   });
