@@ -215,7 +215,6 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   if (sessionTimedOut || simulation || name === EVENT_PAGEVIEW) {
     source = pageSource(page);
-    console.log(source);
     sourceRestart = this.sourceRestart(pastSession, source);
   }
 
