@@ -71,8 +71,7 @@ function Tracker() {
   log('starting RST Tracker');
 
   const pd = pageDefaults();
-  const domain = autoDomain(pd.domain);
-
+  const [domain, domainHash] = this.buildProjectId(pd.domain);
 
   this.initialized = false;
   this.configured = false;
@@ -80,7 +79,7 @@ function Tracker() {
   this.queue = [];
 
   this.options = {
-    projectId: hashCode(domain),
+    projectId: domainHash,
     sessionTimeout: 1800, // 30 min
     lastCampaignExpires: 7776000, // 3 month
     initialUid: 0,
@@ -298,11 +297,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     sess: this.sessionTracker.sessionData(),
     char: browserCharacts,
     browser: browserData(),
-    lib: {
-      id: LIBRARY,
-      v: LIBVER,
-      sv: this.options.snippet
-    }
+    lib: this.getLibInfo()
   };
 
   if (EVENTS_ADD_PERF.indexOf(name) >= 0) {
@@ -339,7 +334,7 @@ Tracker.prototype.logOnServer = function (level, args) {
  * @param {Object} options Object contains options
  */
 Tracker.prototype.sendToServer = function (msg, options) {
-  return this.transport.send(msg, options);
+  return this.transport.send(msg, options).then(() => {}).catch(e => log.warn(e));
 };
 
 /**
@@ -379,6 +374,22 @@ Tracker.prototype.request = function (service, name, data = {}) {
   return this.sendToServer(
     { service, name, data },
     { [EVENT_OPTION_REQUEST]: true }
+  );
+}
+
+/**
+ * @param {string} service backend service name
+ * @param {string} name event name
+ * @param {object} data that will be passed to backend service
+ * @returns {Promise<any>} result received from server
+ */
+Tracker.prototype.notify = function (service, name, data = {}) {
+  if (!isObject(data)) {
+    throw new Error('"data" shold be an object');
+  }
+  this.sendToServer(
+    { service, name, data },
+    {}
   );
 }
 
@@ -466,5 +477,23 @@ Tracker.prototype.sessionEvent = function () {
 Tracker.prototype.setCustomConfig = function (config) {
   this.selfish.saveConfig(config);
 };
+
+
+Tracker.prototype.buildProjectId = function (domain) {
+  domain = domain || pageDefaults().domain;
+  domain = autoDomain(domain);
+  return [domain, hashCode(domain)];
+};
+
+
+Tracker.prototype.getLibInfo = function () {
+  return {
+    id: LIBRARY,
+    v: LIBVER,
+    sv: this.options.snippet
+  }
+};
+
+
 
 export default Tracker;

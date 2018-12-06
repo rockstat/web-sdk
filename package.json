@@ -4,7 +4,7 @@
   "description": "Browser tracking library for Rockstat platform",
   "main": "dist/lib.js",
   "scripts": {
-    "start": "webpack --config webpack.development.js  --mode development --watch",
+    "start:dev": "webpack --config webpack.development.js  --mode development --watch",
     "dash": "webpack-dashboard",
     "build": "NODE_ENV=production webpack --config webpack.production.js --mode production",
     "build:dev": "NODE_ENV=development webpack --config webpack.development.js --mode development"
