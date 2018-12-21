@@ -37,7 +37,7 @@ const ENGINE_INSTAGRAM = 'instagram';
 
 const UTMS = ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term'];
 const OS = '_openstat';
-const CLIDS = ['yclid', 'gclid'];
+const CLIDS = ['yclid', 'gclid', 'fbclid'];
 
 const RULES = [
 
