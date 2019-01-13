@@ -115,21 +115,21 @@ export default function pageSource(page) {
       // UTM
       for (let j = 0; j < UTMS.length; j++) {
         if (key === UTMS[j]) {
-
           source.marks[key] = cleanQueryParam(query[key])
           source.hasMarks = true;
         }
       }
-
+      // OpenStat
       if (key === OS) {
         const os = getOsMarks(query[key]);
         source.marks = objectAssign(source.marks, os);
         source.hasMarks = true;
       }
-
+      // *clid
       for (let j = 0; j < CLIDS.length; j++) {
         if (key === CLIDS[j]) {
           source.marks['has_' + key] = 1;
+          source.marks[key] = query[key]
           source.hasMarks = true;
         }
       }

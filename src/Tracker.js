@@ -26,6 +26,7 @@ import {
   isObject
 } from './functions/type';
 import msgCropper from './functions/msgCropper';
+// import { PushController } from './extensions/web-push';
 import SelfishPerson from './SelfishPerson';
 import {
   Transport
@@ -102,6 +103,7 @@ function Tracker() {
     allowXHR: true,
     activateWs: false,
     pixelSync: false,
+    webPush: true,
     msgCropper: (msg) => msgCropper(msg, this.valuableFields)
   };
 
@@ -144,6 +146,7 @@ Tracker.prototype.initialize = function () {
     cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
+  
 
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
@@ -186,6 +189,10 @@ Tracker.prototype.initialize = function () {
     this.formTracker = new FormTracker(asObject(this.options.trackForms));
     this.trackers.push(this.formTracker);
   }
+
+  // if(this.options.webPush){
+  //   this.webPusb = new PushController(this);
+  // }
 
   // Integrations
   this.syncs.push(
@@ -334,7 +341,7 @@ Tracker.prototype.logOnServer = function (level, args) {
  * @param {Object} options Object contains options
  */
 Tracker.prototype.sendToServer = function (msg, options) {
-  return this.transport.send(msg, options).then(() => {}).catch(e => log.warn(e));
+  return this.transport.send(msg, options).then(() => { }).catch(e => log.warn(e));
 };
 
 /**
