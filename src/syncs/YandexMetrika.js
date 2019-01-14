@@ -11,11 +11,11 @@ const log = createLogger('Alco YM');
 
 const YandexMetrika = function () {
 
-  // Getting YM ClientId
-  when(() => win.Ya && win.Ya.Metrika, () => {
+  // Waiting YM load
+  when(() => win.Ya && (win.Ya.Metrika || win.Ya.Metrika2) && win.Ya._metrika && win.Ya._metrika.counter, () => {
     try {
-
-      const ymId = win.Ya._metrika && win.Ya._metrika.counter && win.Ya._metrika.counter.getClientID();
+      // Getting YM ClientId
+      const ymId = win.Ya._metrika.counter.getClientID();
 
       if (ymId) {
         this.emit(INTERNAL_EVENT, EVENT_USER_PARAMS, {ymId});
