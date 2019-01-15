@@ -95,7 +95,7 @@ const cleanQueryParam = function (val) {
 
 
 export default function pageSource(page) {
-
+  console.log(page)
   const source = {
     type: SESSION_DIRECT,
     marks: {},

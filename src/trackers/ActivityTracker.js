@@ -64,7 +64,9 @@ const ActivityTracker = function (options) {
 
   this.options = objectAssing({
     flushInterval: 5,
-    zeroEvents: false
+    zeroEvents: false,
+    scrollEvents: true,
+    domEvents: true
   }, options);
 
   // Activity handling
@@ -78,7 +80,12 @@ const ActivityTracker = function (options) {
 
   this.eventHandler = this.eventHandler.bind(this);
   this.scrollHandlerWrapper = runOnStop(
-    (e) => this.fireScrollEvent(e),
+    (e) => {
+      this.handleScroll()
+      if (this.options.scrollEvents){
+        this.fireScrollEvent(e)
+      }
+    },
     500
   );
 
@@ -87,10 +94,13 @@ const ActivityTracker = function (options) {
       addHandler(doc, event, this.eventHandler, true);
     });
 
-    this.activityFlushInterval = setInterval(
-      () => this.fireActivityEvent(),
-      this.options.flushInterval * 1000
-    )
+    if (this.options.domEvents){
+      this.activityFlushInterval = setInterval(
+        () => this.fireActivityEvent(),
+        this.options.flushInterval * 1000
+      )  
+    }
+  
   }
 };
 
@@ -102,7 +112,6 @@ Emitter(ActivityTracker.prototype);
  * @return {ActivityTracker}
  */
 ActivityTracker.prototype.subscribe = function (emitter) {
-
   return this;
 };
 
@@ -122,8 +131,6 @@ ActivityTracker.prototype.eventHandler = function (event) {
 
 
 ActivityTracker.prototype.fireScrollEvent = function (e) {
-
-  this.handleScroll();
   const event = {
     name: EVENT_SCROLL
   };
@@ -177,7 +184,6 @@ ActivityTracker.prototype.getEnrichmentData = function () {
  * Emitting activity event
  */
 ActivityTracker.prototype.fireActivityEvent = function () {
-
   this.iteration++;
   // check activity present or enabled zero events submittion
   if (objectKeys(this.counter).length > 0 || this.options.zeroEvents) {
@@ -199,7 +205,9 @@ ActivityTracker.prototype.fireActivityEvent = function () {
  * Clear state
  */
 ActivityTracker.prototype.clear = function () {
-  this.fireActivityEvent();
+  if (this.options.domEvents){
+    this.fireActivityEvent();
+  }
   // Activity handling
   this.iteration = 0;
   this.active = 0;
@@ -212,11 +220,14 @@ ActivityTracker.prototype.clear = function () {
  * Unload handler
  */
 ActivityTracker.prototype.unload = function () {
-  this.fireActivityEvent();
+  if (this.options.domEvents){
+    this.fireActivityEvent();
+    clearInterval(this.activityFlushInterval);
+  }  
   each(activityEvents, (event) => {
     removeHandler(doc, event, this.eventHandler);
   });
-  clearInterval(this.activityFlushInterval);
+  
 };
 
 

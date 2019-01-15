@@ -93,6 +93,8 @@ function Tracker() {
     urlMark: 'band',
     trackActivity: {
       zeroEvents: false,
+      scrollEvents: true,
+      domEvents: true
     },
     trackClicks: {
       allClicks: false
