@@ -75,7 +75,6 @@ const RULES = [
 
 const log = createLogger('PS');
 
-
 const cleanQueryParam = function (val) {
 
   // processing multiple marks
@@ -95,12 +94,13 @@ const cleanQueryParam = function (val) {
 
 
 export default function pageSource(page) {
-  console.log(page)
   const source = {
     type: SESSION_DIRECT,
     marks: {},
     hasMarks: false
   };
+
+  log.info(page)
 
   let query = {};
   let queryKeys = [];

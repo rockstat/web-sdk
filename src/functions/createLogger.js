@@ -27,6 +27,10 @@ export default function createLogger(name) {
     }
   };
 
+  log.info = function (...args) {
+    logger('log', args, prefix());
+  };
+
   log.warn = function (...args) {
     logger('warn', args, prefix());
   };

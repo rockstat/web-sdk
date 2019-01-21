@@ -216,6 +216,7 @@ Tracker.prototype.initialize = function () {
     plugin.on(INTERNAL_EVENT, (name, data) => {
       log(`plugin internal event:${name}`);
       this.emit(name, data);
+      this.emit(INTERNAL_EVENT, name, data);
     });
   });
 
@@ -454,6 +455,15 @@ Tracker.prototype.onReady = function (cb) {
 Tracker.prototype.onEvent = function (cb) {
   this.on(EVENT, cb);
 };
+
+/**
+ * Add external event callback
+ * @param cb
+ */
+Tracker.prototype.onInternalEvent = function (cb) {
+  this.on(INTERNAL_EVENT, cb);
+};
+
 
 /**
  * Add external event callback
