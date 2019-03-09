@@ -13,6 +13,8 @@ ENV NODE_ENV production
 
 RUN yarn build
 
+
+# Working image
 FROM alpine:3.7
 
 VOLUME  /usr/share/web-sdk
