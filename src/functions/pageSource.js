@@ -37,6 +37,9 @@ const ENGINE_INSTAGRAM = 'instagram';
 
 const UTMS = ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term'];
 const OS = '_openstat';
+const YCLID = 'yclid';
+const GCLID = 'gclid';
+const FBCLID = 'fbclid';
 const CLIDS = ['yclid', 'gclid', 'fbclid'];
 
 const RULES = [
@@ -104,6 +107,11 @@ export default function pageSource(page) {
 
   let query = {};
   let queryKeys = [];
+  let has_utm = false;
+  let has_os = false;
+  let has_yclid = false;
+  let has_gclid = false;
+  let has_fbclid = false;
 
   if (page.query) {
     query = qs.parse(page.query);
@@ -117,6 +125,8 @@ export default function pageSource(page) {
         if (key === UTMS[j]) {
           source.marks[key] = cleanQueryParam(query[key])
           source.hasMarks = true;
+          has_utm = true;
+
         }
       }
       // OpenStat
@@ -124,15 +134,38 @@ export default function pageSource(page) {
         const os = getOsMarks(query[key]);
         source.marks = objectAssign(source.marks, os);
         source.hasMarks = true;
+        has_os = true;
+      }
+
+      // YClid
+      if (key === YCLID) {
+        source.hasMarks = true;
+        source.marks['has_' + key] = 1;
+        source.marks[key] = query[key];
+        has_yclid = true;
+      }
+      // GClid
+      if (key === GCLID) {
+        source.hasMarks = true;
+        source.marks['has_' + key] = 1;
+        source.marks[key] = query[key];
+        has_gclid = true;
+      }
+      // FBClid
+      if (key === FBCLID) {
+        source.hasMarks = true;
+        source.marks['has_' + key] = 1;
+        source.marks[key] = query[key];
+        has_fbclid = true;
       }
       // *clid
-      for (let j = 0; j < CLIDS.length; j++) {
-        if (key === CLIDS[j]) {
-          source.marks['has_' + key] = 1;
-          source.marks[key] = query[key]
-          source.hasMarks = true;
-        }
-      }
+      // for (let j = 0; j < CLIDS.length; j++) {
+      //   if (key === CLIDS[j]) {
+      //     source.marks['has_' + key] = 1;
+      //     source.marks[key] = query[key]
+      //     source.hasMarks = true;
+      //   }
+      // }
     }
   }
 
@@ -193,6 +226,13 @@ export default function pageSource(page) {
   if (source.hasMarks) {
     source.type = SESSION_CAMPAIGN;
   }
+
+  // Forcing campaign type id marks present
+  // we dont use fbclid because Facebook adds that to each outgoing link
+  if (has_utm || has_os || has_gclid || has_yclid) {
+    source.type = SESSION_CAMPAIGN;
+  }
+
 
   return source;
 
