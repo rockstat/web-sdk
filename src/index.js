@@ -1,6 +1,7 @@
 import './polyfill';
 import 'core-js';
 
+
 import {
   documentReady
 } from './functions/domEvents';
