@@ -11,3 +11,12 @@ to_master:
 
 push:
 	git push origin master --tags
+
+travis-trigger:
+	curl -vv -s -X POST \
+		-H "Content-Type: application/json" \
+		-H "Accept: application/json" \
+		-H "Travis-API-Version: 3" \
+		-H "Authorization: token $$TRAVIS_TOKEN" \
+		-d '{ "request": { "branch":"$(br)" }}' \
+		https://api.travis-ci.com/repo/$(subst $(DEL),$(PERCENT)2F,$(repo))/requests
