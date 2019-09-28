@@ -238,7 +238,7 @@ Transport.prototype.connect = function () {
  */
 Transport.prototype.startWs = function () {
   const pinger = setInterval(_ => {
-    this.wsConnected && this.wsSendMessage({ "service": "hello", "name": "ping" });
+    this.wsConnected && this.wsSendMessage({ "service": "track", "name": "ping" });
   }, 1e4);
   try {
     const endpoint = this.makeURL('/wss', this.creds, WSS);
@@ -249,7 +249,7 @@ Transport.prototype.startWs = function () {
       onopen: (e) => {
         this.wsConnected = true;
         log('WS connected');
-        this.wsSendMessage({ "service": "hello", "name": "hello" });
+        this.wsSendMessage({ "service": "track", "name": "hello" });
       },
       onmessage: (e) => {
         if (e.data) {
