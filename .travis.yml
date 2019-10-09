@@ -9,7 +9,7 @@ env:
   - PROJECT_NAME=web-sdk
   - ORG=rockstat
   - IMAGE_NAME=$ORG/$PROJECT_NAME
-  - TAG="$( [ $TRAVIS_BRANCH == 'master' ] && echo latest || echo $TRAVIS_BRANCH )"
+  - TAG="$( [ $TRAVIS_BRANCH == 'master' ] && echo latest || echo $TRAVIS_BRANCH)"
   - secure: nRdqm6bygUw4FkKVxEQfjkpCppXEJ25tHQC7k6G9Yz4uwEEvn292I8FdoBgwVqI6E6luAh1IM/KlLQgo3c+XJAkjq75JdMN1YCVojRp27IkSyUXnSYYKtSrKkmfi2nexCQ060K+Cmy2dysEn1VM6Z7uRQl03dxPcyqQtbAFUl3qT6Ef9yMfUR5FGP+NUlrr+yS+/kIvfImZdEVPg/QpVYjuRUmJlXEnD7TZCl5vx7clkZPkcwtzc+q/5HLsjjHWhgdlL9pxsnGf9XWO1hWTGQes1xEjrTPkeYiPU+X6czDtsBsJrSivkBQTlDHoqk0jUFgIhSQJs+P8VTI5hrfZFJ6bvWn1y/2mrPGLG0+TujRiNJk3rZuWivQXWNZDDmVnzr50Gws0VNIb9rxFxaiOUvtSyf4OlsxPXUd/IX4aNGF0DvCQ5MWNne9879S+1/YPlONz/STH3JILIuK/KKrbEDggJHbbUWCQuOwWFOh3vQcXLl3b+LPzzNOyP9i9u4CPLC/kR+qqtcyLNVzC6AVsy3+H8KX30T1LxhyyNkfAMJdcZ2yVn/QA2G9r0nIfDO8c4NlWLqQBjB4qSwmzHodfa/jcxjXkJLwisf673Ps0O62xH01UR+uAwZqyN9iTT+TOmJjYxCcCRdf+1VBM5M/6VNeDXkv4G/0C8o4Tf5GNh/7w=
 services:
 - docker
