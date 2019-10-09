@@ -52,7 +52,8 @@ export function Transport(options) {
     options
   );
   this.pathPrefix = options.pathPrefix;
-  this.server = options.server;
+  this.server = options.wsServer || options.server;
+  this.wsPath = options.wsPath || '/wss';
   this.urlMark = options.urlMark;
   this.wsConnected = false;
   this.servicesMap = {
@@ -87,6 +88,11 @@ Transport.prototype.setCreds = function (creds) {
 Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
   const query = queryStringify(data);
   return `${proto}://${this.server}${this.pathPrefix}${path}?${query}`;
+}
+
+Transport.prototype.makeWsURL = function (path, data = {}) {
+  const query = queryStringify(data);
+  return `${WSS}://${this.wsServer}${path}?${query}`;
 }
 
 
@@ -241,7 +247,7 @@ Transport.prototype.startWs = function () {
     this.wsConnected && this.wsSendMessage({ "service": "track", "name": "ping" });
   }, 1e4);
   try {
-    const endpoint = this.makeURL('/wss', this.creds, WSS);
+    const endpoint = this.makeWsURL(this.wsPath, this.creds);
     log(`ws endpoing: ${endpoint}`);
     this.ws = new Sockette(endpoint, {
       timeout: 5e3,

@@ -91,6 +91,9 @@ function Tracker() {
     loctorPrefix: 'rst:',
     pathPrefix: '',
     urlMark: 'band',
+    server: null,
+    wsServer: null,
+    wsPath: '/wss',
     trackActivity: {
       zeroEvents: false,
       scrollEvents: true,
