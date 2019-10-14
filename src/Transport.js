@@ -98,7 +98,7 @@ Transport.prototype.makeWsURL = function (path, data = {}) {
 
 /**
  * Creates XHR / XDR object
- * @param {string} url 
+ * @param {string} url
  */
 Transport.prototype.createXHR = function (url) {
   return new Promise(function (resolve, reject) {
@@ -109,7 +109,9 @@ Transport.prototype.createXHR = function (url) {
       if (hasXHRWithCreds) {
         xhr.withCredentials = true;
       }
-      // xhr.setRequestHeader('Content-Type', 'application/json'); // not used to prevent options requests
+      // not used to prevent options requests
+      // xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+      xhr.setRequestHeader("Content-Type", "application/json");
       resolve(xhr);
     } else if (hasXDRSupport) {
       // hack to prevent IE 'aborted' bug
