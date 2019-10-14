@@ -174,9 +174,14 @@ export default function pageSource(page) {
   source.refHash = simpleHash(page.ref);
 
   // Direct with marks -> campaign
+  // Direct with fbclid -> facebooj social
   if (ref === '') {
-    if (source.hasMarks) {
+    if (has_utm || has_os || has_gclid || has_yclid) {
       source.type = SESSION_CAMPAIGN;
+    }
+    if(has_fbclid){
+      source.type = SESSION_SOCIAL
+      source.engine = ENGINE_FACEBOOK
     }
     return source;
   }
@@ -222,17 +227,16 @@ export default function pageSource(page) {
     source.type = SESSION_REFERRAL;
   }
 
-  // Forcing campaign type id marks present
-  if (source.hasMarks) {
-    source.type = SESSION_CAMPAIGN;
-  }
+  // // Forcing campaign type id marks present
+  // if (source.hasMarks) {
+  //   source.type = SESSION_CAMPAIGN;
+  // }
 
   // Forcing campaign type id marks present
   // we dont use fbclid because Facebook adds that to each outgoing link
   if (has_utm || has_os || has_gclid || has_yclid) {
     source.type = SESSION_CAMPAIGN;
   }
-
 
   return source;
 
