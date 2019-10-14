@@ -54,7 +54,7 @@ import { packSemVer } from './functions/packSemVer';
 
 
 const LIBRARY = 'web-sdk';
-const LIBVER = packSemVer('3.18.5');
+const LIBVER = packSemVer('3.18.6');
 
 const noop = () => { };
 const asObject = (options) => {
