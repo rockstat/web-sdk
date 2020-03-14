@@ -104,6 +104,7 @@ function Tracker() {
       allClicks: false
     },
     trackForms: true,
+    trackPages: false,
     allowHTTP: false,
     allowSendBeacon: true,
     allowXHR: true,
@@ -200,8 +201,11 @@ Tracker.prototype.initialize = function () {
   // Interract with server
   this.trackers.push(this.formTracker);
 
-  this.pageTracker = new PageTracker(asObject(this.options.trackPage));
-  this.trackers.push(this.pageTracker);
+  if (this.options.trackPages) {
+    this.pageTracker = new PageTracker(asObject(this.options.trackPages));
+    this.trackers.push(this.pageTracker);
+  }
+
 
   // if(this.options.webPush){
   //   this.webPusb = new PushController(this);
