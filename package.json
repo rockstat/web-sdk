@@ -1,6 +1,6 @@
 {
   "name": "@rockstat/web_sdk",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Browser tracking library for Rockstat platform",
   "main": "dist/lib.js",
   "scripts": {
