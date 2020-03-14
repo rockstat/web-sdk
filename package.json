@@ -7,7 +7,8 @@
     "start:dev": "webpack --config webpack.development.js  --mode development --watch",
     "dash": "webpack-dashboard",
     "build": "NODE_ENV=production webpack --config webpack.production.js --mode production",
-    "build:dev": "NODE_ENV=development webpack --config webpack.development.js --mode development"
+    "build:dev": "NODE_ENV=development webpack --config webpack.development.js --mode development",
+    "clean": "rimraf dist"
   },
   "repository": {
     "type": "git",
@@ -40,7 +41,7 @@
     "babel-loader": "^8.0.6",
     "babel-minify-webpack-plugin": "^0.3.1",
     "dotenv": "^8.1.0",
-    "rimraf": "^3.0.0",
+    "rimraf": "^3.0.2",
     "uglify-js": "^3.0.27",
     "uglifyjs-webpack-plugin": "^2.0.1",
     "vinyl-buffer": "^1.0.0",
