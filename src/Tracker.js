@@ -19,6 +19,7 @@ import ActivityTracker from './trackers/ActivityTracker';
 import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
+import PageTracker from './trackers/PageTracker';
 import GoogleAnalytics from './syncs/GoogleAnalytics';
 import YandexMetrika from './syncs/YandexMetrika';
 import { PixelSync } from './syncs/PixelSync';
@@ -151,7 +152,7 @@ Tracker.prototype.initialize = function () {
     cookiePath: this.options.cookiePath,
     allowHTTP: this.options.allowHTTP
   });
-  
+
 
   // Getting and applying personal configuration
   this.selfish = new SelfishPerson(this, this.options);
@@ -172,6 +173,7 @@ Tracker.prototype.initialize = function () {
   this.transport = new Transport(this.options)
     .setCreds(this.sessionTracker.creds())
     .connect();
+
 
   // Main tracker
   this.trackers.push(
@@ -194,6 +196,12 @@ Tracker.prototype.initialize = function () {
     this.formTracker = new FormTracker(asObject(this.options.trackForms));
     this.trackers.push(this.formTracker);
   }
+  this.formTracker = new FormTracker(asObject(this.options.trackForms));
+  // Interract with server
+  this.trackers.push(this.formTracker);
+
+  this.pageTracker = new PageTracker(asObject(this.options.trackPage));
+  this.trackers.push(this.pageTracker);
 
   // if(this.options.webPush){
   //   this.webPusb = new PushController(this);
