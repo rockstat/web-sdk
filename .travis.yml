@@ -1,6 +1,8 @@
 sudo: required
-dist: trusty
-language: javascript
+dist: bionic
+language: node_js
+node_js:
+  - 12
 branches:
   only:
   - master
