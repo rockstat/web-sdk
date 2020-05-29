@@ -1,7 +1,9 @@
 const webpack = require('webpack');
 const config = require('./webpack.common');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const MinifyPlugin = require("babel-minify-webpack-plugin");
+// const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+// const MinifyPlugin = require("babel-minify-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
+
 
 // const CleanWebpackPlugin = require('clean-webpack-plugin');
 // const MinifyPlugin = require("babel-minify-webpack-plugin");
@@ -30,5 +32,10 @@ config.plugins = config.plugins.concat([
   //   comments: false,
   // })
 ]);
+
+
+config.optimization = {
+  minimizer: [new TerserPlugin()],
+},
 
 module.exports = config;
