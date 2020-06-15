@@ -25,7 +25,7 @@ const passiveSupport = checkPassiveSupport();
  * @return {boolean}
  */
 const stateIsComplete = () => {
-  return doc.readyState === 'loaded';
+  return doc.readyState === 'loaded' ||  doc.readyState === 'complete';
 };
 
 /**
