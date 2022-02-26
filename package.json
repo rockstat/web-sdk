@@ -33,7 +33,7 @@
     "punycode": "^2.1.1",
     "qs": "^6.9.4",
     "sockette": "^2.0.0",
-    "url-parse": "^1.4.7"
+    "url-parse": "^1.5.8"
   },
   "devDependencies": {
     "@babel/core": "^7.10.1",
