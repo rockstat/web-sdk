@@ -13,7 +13,7 @@ import {
 import Tracker from './Tracker';
 import { packSemVer } from './functions/packSemVer';
 
-const wk = 'rstat';
+const wk = 'rstat4';
 
 if (win[wk]) {
   const holder = win[wk];
