@@ -15,6 +15,7 @@ import {
   SESSION_ORGANIC,
   SESSION_REFERRAL,
   SESSION_SOCIAL,
+  SESSION_PARTNER
 } from "../Constants";
 
 const qs = urlParse.qs;
@@ -36,6 +37,7 @@ const ENGINE_LINKEDIN = 'linkedin';
 const ENGINE_INSTAGRAM = 'instagram';
 
 const UTMS = ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term'];
+const PARTNER_IDS = ['pid', 'cid'];
 const OS = '_openstat';
 const YCLID = 'yclid';
 const GCLID = 'gclid';

@@ -1,4 +1,4 @@
-FROM node:12-alpine as builder
+FROM node:18-alpine as builder
 
 WORKDIR /build
 
@@ -15,7 +15,7 @@ RUN yarn build && rm -rf node_modules
 
 
 # Working image
-FROM alpine:3.7
+FROM alpine:3.18
 
 VOLUME  /usr/share/web-sdk
 WORKDIR /usr/share/web-sdk

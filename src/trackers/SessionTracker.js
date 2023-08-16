@@ -127,6 +127,19 @@ SessionTracker.prototype.getEventNum = function () {
 };
 
 
+/**
+ * Get state of sessions counter
+ * @return {Number} current value
+ */
+SessionTracker.prototype.getSessNum = function () {
+  return this.storage.get(KEY_SESSION_COUNTER);
+};
+
+
+/**
+ * Get session data
+ * @return {Object} session data
+ */
 SessionTracker.prototype.sessionData = function () {
 
   return objectAssign(

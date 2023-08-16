@@ -23,22 +23,25 @@ module.exports = {
           options: {
             presets: [
               ['@babel/preset-env', {
+                targets: {browsers: ['>1%']},
                 "useBuiltIns": "entry",
-                "corejs":"3.6.5",
+                // "corejs":"3.22",
+                corejs: { version: 3, proposals: true },
               }]
             ],
+            // plugins: ['@babel/plugin-transform-runtime']
           }
         }
       },
     ]
   },
   // stats: 'verbose',
-  stats: {
-    colors: true,
-    modules: true,
-    maxModules: 35,
-    performance: true,
-  },
+  // stats: {
+  //   colors: true,
+  //   modules: true,
+  //   maxModules: 35,
+  //   performance: true,
+  // },
   plugins: [
     new webpack.DefinePlugin({
       'PRODUCTION': JSON.stringify(isProduction)

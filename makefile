@@ -20,3 +20,10 @@ travis-trigger:
 		-H "Authorization: token $$TRAVIS_TOKEN" \
 		-d '{ "request": { "branch":"$(br)" }}' \
 		https://api.travis-ci.com/repo/$(subst $(DEL),$(PERCENT)2F,$(repo))/requests
+
+build:
+	docker build -t web-sdk .
+
+push-latest:
+	docker tag web-sdk rockstat/web-sdk:latest
+	docker push rockstat/web-sdk:latest

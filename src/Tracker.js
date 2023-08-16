@@ -22,7 +22,7 @@ import FormTracker from './trackers/FormTracker';
 import PageTracker from './trackers/PageTracker';
 import GoogleAnalytics from './syncs/GoogleAnalytics';
 import YandexMetrika from './syncs/YandexMetrika';
-import { PixelSync } from './syncs/PixelSync';
+// import { PixelSync } from './syncs/PixelSync';
 import {
   isObject
 } from './functions/type';
@@ -133,7 +133,7 @@ Tracker.prototype.initialize = function () {
 
   // Check is HTTPS
   if (!isHttps() && !this.options.allowHTTP) {
-    return log.warn('Works only on https');
+    return log.warn('Works only over https');
   }
 
   log('Initializing...');
@@ -216,9 +216,9 @@ Tracker.prototype.initialize = function () {
     new GoogleAnalytics(),
     new YandexMetrika()
   );
-  if (this.options.pixelSync) {
-    this.syncs.push(new PixelSync(asObject(this.options.pixelSync)));
-  }
+  // if (this.options.pixelSync) {
+  //   this.syncs.push(new PixelSync(asObject(this.options.pixelSync)));
+  // }
 
   const plugins = [this.transport].concat(this.syncs, this.trackers)
   each(plugins, (plugin) => {
@@ -494,6 +494,14 @@ Tracker.prototype.onServerMessage = function (cb) {
  */
 Tracker.prototype.getUid = function () {
   return this.sessionTracker.getUid();
+};
+
+/**
+ * Session number
+ * @return {Number}
+ */
+Tracker.prototype.getSessNum = function () {
+  return this.sessionTracker.getSessNum();
 };
 
 
