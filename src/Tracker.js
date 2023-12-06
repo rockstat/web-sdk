@@ -88,8 +88,8 @@ function Tracker() {
     cookieDomain: domain,
     cookiePath: '/',
     // prefix for cookie stored at target website
-    cookiePrefix: 'rst-',
-    loctorPrefix: 'rst:',
+    cookiePrefix: 'rst4-',
+    lcPrefix: 'rst4:',
     pathPrefix: '',
     urlMark: 'band',
     server: null,
@@ -145,7 +145,7 @@ Tracker.prototype.initialize = function () {
 
   // Constructing storage adapters (should be before any other actions)
   this.localStorage = new LocalStorageAdapter({
-    prefix: this.options.loctorPrefix
+    prefix: this.options.lcPrefix
   });
   this.cookieStorage = new CookieStorageAdapter({
     cookieDomain: this.options.cookieDomain,
