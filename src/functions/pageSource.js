@@ -110,6 +110,7 @@ export default function pageSource(page) {
   let query = {};
   let queryKeys = [];
   let has_utm = false;
+  let has_partner_ids = false;
   let has_os = false;
   let has_yclid = false;
   let has_gclid = false;
@@ -138,6 +139,17 @@ export default function pageSource(page) {
         source.hasMarks = true;
         has_os = true;
       }
+
+      // Partner
+      for (let j = 0; j < PARTNER_IDS.length; j++) {
+        if (key === PARTNER_IDS[j]) {
+          source.marks[key] = cleanQueryParam(query[key])
+          source.hasMarks = true;
+          has_partner_ids = true;
+
+        }
+      }
+      
 
       // YClid
       if (key === YCLID) {
@@ -238,6 +250,10 @@ export default function pageSource(page) {
   // we dont use fbclid because Facebook adds that to each outgoing link
   if (has_utm || has_os || has_gclid || has_yclid) {
     source.type = SESSION_CAMPAIGN;
+  }
+
+  if (has_partner_ids){
+    source.type = SESSION_PARTNER;
   }
 
   return source;

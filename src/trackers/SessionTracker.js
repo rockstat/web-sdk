@@ -10,6 +10,7 @@ import {
   SESSION_ORGANIC,
   SESSION_CAMPAIGN,
   SESSION_SOCIAL,
+  SESSION_PARTNER,
   EVENT_USER_PARAMS,
   EVENT,
   EVENT_SIMULATE_SESSION
@@ -198,8 +199,10 @@ SessionTracker.prototype.setUserData = function (data) {
   }
 
   if (data.userTraits) {
-    this.storage.set(KEY_USER_TRAITS, data.userTraits);
-    this.userTraits = data.userTraits;
+
+    const traits = this.storage.get(KEY_USER_TRAITS);
+    this.userTraits = objectAssign(traits, data.userTraits);
+    this.storage.set(KEY_USER_TRAITS, this.userTraits);
   }
 };
 
@@ -258,7 +261,7 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 SessionTracker.prototype.sourceRestart = function (pastSession, source) {
 
   // Override session if got organic or campaign
-  const bySource = source.type === SESSION_ORGANIC || source.type === SESSION_CAMPAIGN || source.type === SESSION_SOCIAL;
+  const bySource = source.type === SESSION_PARTNER || source.type === SESSION_ORGANIC || source.type === SESSION_CAMPAIGN || source.type === SESSION_SOCIAL;
 
   // Prevent restarting by refresh enter page
   const byRef = pastSession && (pastSession.refHash !== source.refHash);
