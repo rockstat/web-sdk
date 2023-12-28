@@ -185,7 +185,7 @@ export default function pageSource(page) {
 
   // Processing ref
   const ref = page.ref ? urlParse(page.ref) : '';
-  source.refHash = simpleHash(page.ref);
+  source.refHash = simpleHash(page.ref + page.url);
 
   // Direct with marks -> campaign
   // Direct with fbclid -> facebooj social
