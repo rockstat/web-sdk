@@ -23,11 +23,12 @@ travis-trigger:
 
 build:
 	docker build -t web-sdk .
+	docker tag web-sdk rockstat/web-sdk:ng
 
 push-latest:
 	docker tag web-sdk rockstat/web-sdk:latest
 	docker push rockstat/web-sdk:latest
 
 push-ng:
-	docker tag web-sdk rockstat/web-sdk:ng
+	
 	docker push rockstat/web-sdk:ng

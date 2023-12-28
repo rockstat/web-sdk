@@ -200,7 +200,7 @@ SessionTracker.prototype.setUserData = function (data) {
 
   if (data.userTraits) {
 
-    const traits = this.storage.get(KEY_USER_TRAITS);
+    const traits = this.storage.get(KEY_USER_TRAITS) || {};
     this.userTraits = objectAssign(traits, data.userTraits);
     this.storage.set(KEY_USER_TRAITS, this.userTraits);
   }
