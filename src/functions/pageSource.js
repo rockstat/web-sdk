@@ -193,6 +193,9 @@ export default function pageSource(page) {
     if (has_utm || has_os || has_gclid || has_yclid) {
       source.type = SESSION_CAMPAIGN;
     }
+    if (has_partner_ids) {
+      source.type = SESSION_PARTNER;
+    }
     if(has_fbclid){
       source.type = SESSION_SOCIAL
       source.engine = ENGINE_FACEBOOK
