@@ -28,7 +28,9 @@ export default function createLogger(name) {
   };
 
   log.info = function (...args) {
-    logger('log', args, prefix());
+    if (!isProd || window._rst_logger) {
+      logger('log', args, prefix());
+    }
   };
 
   log.warn = function (...args) {
