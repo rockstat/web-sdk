@@ -105,7 +105,6 @@ const FormTracker = function (options) {
 
 Emitter(FormTracker.prototype);
 
-
 FormTracker.prototype.initialize = function () {
 
   if (!useCaptureSupport) {
@@ -138,7 +137,7 @@ FormTracker.prototype.formEventHandler = function (ev) {
     const event = {
       name: `form_${type}`,
       data: {
-        ...prepareType(event),
+        ...prepareType(type),
         ...extractFormData(form)
       },
       options: {
@@ -149,7 +148,6 @@ FormTracker.prototype.formEventHandler = function (ev) {
     this.emit(EVENT, event);
   }
 };
-
 
 /**
  * Handler for form inputs events
