@@ -1,7 +1,7 @@
 import objectAssign from '../functions/objectAssing';
 import createLogger from '../functions/createLogger';
 import pageSource from '../functions/pageSource';
-import { isValidUid, cleanUid } from '../functions/isValidUid';
+import { cleanUid } from '../functions/isValidUid';
 import Emitter from 'component-emitter';
 
 import {

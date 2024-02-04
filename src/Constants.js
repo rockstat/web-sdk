@@ -61,6 +61,7 @@ export const SESSION_CAMPAIGN = 'campaign';
 export const SESSION_REFERRAL = 'referral';
 export const SESSION_SOCIAL = 'social';
 export const SESSION_PARTNER = 'partner';
+export const SESSION_WEBVIEW = 'webview';
 export const SESSION_UNKNOWN = 'unknown';
 
 export const DOM_INTERACTIVE = 'dom_interactive';

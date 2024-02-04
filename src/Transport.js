@@ -1,7 +1,7 @@
-import Sockette from 'sockette';
+// import Sockette from 'sockette';
 import Emitter from 'component-emitter';
 import queryStringify from 'qs/lib/stringify';
-import Promise from 'promise-polyfill';
+// import Promise from 'promise-polyfill';
 
 import {
   win,
@@ -53,10 +53,10 @@ export function Transport(options) {
   );
   this.pathPrefix = options.pathPrefix;
   this.server = this.options.server;
-  this.wsServer = this.options.wsServer || this.options.server;
-  this.wsPath = this.options.wsPath || '/wss';
+  // this.wsServer = this.options.wsServer || this.options.server;
+  // this.wsPath = this.options.wsPath || '/wss';
   this.urlMark = this.options.urlMark;
-  this.wsConnected = false;
+  // this.wsConnected = false;
   this.servicesMap = {
     'track': 't4k'
   }
@@ -91,10 +91,10 @@ Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
   return `${proto}://${this.server}${this.pathPrefix}${path}?${query}`;
 }
 
-Transport.prototype.makeWsURL = function (data = {}) {
-  const query = queryStringify(data);
-  return `${WSS}://${this.wsServer}${this.wsPath}?${query}`;
-}
+// Transport.prototype.makeWsURL = function (data = {}) {
+//   const query = queryStringify(data);
+//   return `${WSS}://${this.wsServer}${this.wsPath}?${query}`;
+// }
 
 
 /**
@@ -191,23 +191,23 @@ Transport.prototype.send = function (msg, options = {}) {
   try {
     // if websocket activated
 
-    if (this.wsConnected) {
-      log('sending using WS');
-      return this.wsSendMessage(msg);
-    }
+    // if (this.wsConnected) {
+    //   log('sending using WS');
+    //   return this.wsSendMessage(msg);
+    // }
     // user sendBeacon only for notifications requests
-    else if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
+    if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
       log('sending using beacon');
       nav.sendBeacon(this.makeURL(postPath), data);
       return Promise.resolve();
     }
     // regular XMLHttpRequest
-    else if (this.options.allowXHR && hasAnyXRSupport) {
+    if (this.options.allowXHR && hasAnyXRSupport) {
       log('sending using XHR/XDR');
       return this.sendXHR(this.makeURL(postPath), data);
     }
     // If reuquired response but not available transport
-    else if (isRequest) {
+    if (isRequest) {
       const exc = new Error('Not available transport for request');
       log.error(exc)
       return Promise.reject(exc);
@@ -233,60 +233,60 @@ Transport.prototype.send = function (msg, options = {}) {
 /**
  * Establish server connection if configured
  */
-Transport.prototype.connect = function () {
-  if (this.options.activateWs && hasWSSupport) {
-    this.startWs();
-  }
-  return this;
-}
+// Transport.prototype.connect = function () {
+//   if (this.options.activateWs && hasWSSupport) {
+//     this.startWs();
+//   }
+//   return this;
+// }
 
 
 /**
  * Start WebSocket connection
  * @param server
  */
-Transport.prototype.startWs = function () {
-  const pinger = setInterval(_ => {
-    this.wsConnected && this.wsSendMessage({ "service": "track", "name": "ping" });
-  }, 1e4);
-  try {
-    const endpoint = this.makeWsURL(this.creds);
-    log(`ws endpoing: ${endpoint}`);
-    this.ws = new Sockette(endpoint, {
-      timeout: 5e3,
-      maxAttempts: 10,
-      onopen: (e) => {
-        this.wsConnected = true;
-        log('WS connected');
-        this.wsSendMessage({ "service": "track", "name": "hello" });
-      },
-      onmessage: (e) => {
-        if (e.data) {
-          try {
-            const data = JSON.parse(e.data);
-            if (isObject(data) && data.id__) {
-              this.clearWait(data.id__, true, data);
-            } else {
-              this.emit(INTERNAL_EVENT, SERVER_MESSAGE, data);
-            }
-          } catch (err) {
-            log.warn(err);
-          }
-        }
-      },
-      onreconnect: (e) => { },
-      onmaximum: (e) => log.warn('Stop Attempting!', e),
-      onclose: (e) => {
-        this.wsConnected = false;
-        clearInterval(pinger);
-      },
-      onerror: e => log('Error:', e)
-    });
+// Transport.prototype.startWs = function () {
+//   const pinger = setInterval(_ => {
+//     this.wsConnected && this.wsSendMessage({ "service": "track", "name": "ping" });
+//   }, 1e4);
+//   try {
+//     const endpoint = this.makeWsURL(this.creds);
+//     log(`ws endpoing: ${endpoint}`);
+//     // this.ws = new Sockette(endpoint, {
+//       // timeout: 5e3,
+//       // maxAttempts: 10,
+//       // onopen: (e) => {
+//         // this.wsConnected = true;
+//         // log('WS connected');
+//         // this.wsSendMessage({ "service": "track", "name": "hello" });
+//       // },
+//       onmessage: (e) => {
+//         if (e.data) {
+//           try {
+//             const data = JSON.parse(e.data);
+//             if (isObject(data) && data.id__) {
+//               this.clearWait(data.id__, true, data);
+//             } else {
+//               this.emit(INTERNAL_EVENT, SERVER_MESSAGE, data);
+//             }
+//           } catch (err) {
+//             log.warn(err);
+//           }
+//         }
+//       },
+//       onreconnect: (e) => { },
+//       onmaximum: (e) => log.warn('Stop Attempting!', e),
+//       onclose: (e) => {
+//         this.wsConnected = false;
+//         clearInterval(pinger);
+//       },
+//       onerror: e => log('Error:', e)
+//     });
 
-  } catch (e) {
-    log.error('ws error', e);
-  }
-};
+//   } catch (e) {
+//     log.error('ws error', e);
+//   }
+// };
 
 Transport.prototype.clearWait = function (id, success, dataOrError) {
   if (this.waitCallers[id]) {

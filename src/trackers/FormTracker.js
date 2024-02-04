@@ -1,7 +1,4 @@
 import Emitter from 'component-emitter';
-import {
-  closest
-} from 'dom-utils';
 import objectAssing from '../functions/objectAssing';
 import each from '../functions/each';
 import {
@@ -19,6 +16,8 @@ import {
   removeHandler,
   addHandler
 } from '../functions/domEvents';
+import { closest } from '../lib/dom-utils';
+
 
 const log = createLogger('FormTracker');
 

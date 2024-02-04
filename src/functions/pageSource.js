@@ -15,7 +15,8 @@ import {
   SESSION_ORGANIC,
   SESSION_REFERRAL,
   SESSION_SOCIAL,
-  SESSION_PARTNER
+  SESSION_PARTNER,
+  SESSION_WEBVIEW,
 } from "../Constants";
 
 const qs = urlParse.qs;
@@ -42,7 +43,7 @@ const OS = '_openstat';
 const YCLID = 'yclid';
 const GCLID = 'gclid';
 const FBCLID = 'fbclid';
-const CLIDS = ['yclid', 'gclid', 'fbclid'];
+const WEBVIEW_PARAM = 'inWebView';
 
 const RULES = [
 
@@ -115,6 +116,7 @@ export default function pageSource(page) {
   let has_yclid = false;
   let has_gclid = false;
   let has_fbclid = false;
+  let has_webview = false;
 
   if (page.query) {
     query = qs.parse(page.query);
@@ -146,10 +148,14 @@ export default function pageSource(page) {
           source.marks[key] = cleanQueryParam(query[key])
           source.hasMarks = true;
           has_partner_ids = true;
-
         }
       }
-      
+
+      // WebView
+      if (key === WEBVIEW_PARAM) {
+        source.hasMarks['wv'] = true;
+        has_webview = true;
+      }
 
       // YClid
       if (key === YCLID) {
@@ -158,6 +164,7 @@ export default function pageSource(page) {
         source.marks[key] = query[key];
         has_yclid = true;
       }
+
       // GClid
       if (key === GCLID) {
         source.hasMarks = true;
@@ -165,6 +172,7 @@ export default function pageSource(page) {
         source.marks[key] = query[key];
         has_gclid = true;
       }
+
       // FBClid
       if (key === FBCLID) {
         source.hasMarks = true;
@@ -172,14 +180,6 @@ export default function pageSource(page) {
         source.marks[key] = query[key];
         has_fbclid = true;
       }
-      // *clid
-      // for (let j = 0; j < CLIDS.length; j++) {
-      //   if (key === CLIDS[j]) {
-      //     source.marks['has_' + key] = 1;
-      //     source.marks[key] = query[key]
-      //     source.hasMarks = true;
-      //   }
-      // }
     }
   }
 
@@ -199,6 +199,9 @@ export default function pageSource(page) {
     if(has_fbclid){
       source.type = SESSION_SOCIAL
       source.engine = ENGINE_FACEBOOK
+    }
+    if (has_webview){
+      source.type = SESSION_WEBVIEW;
     }
     return source;
   }
@@ -259,6 +262,9 @@ export default function pageSource(page) {
     source.type = SESSION_PARTNER;
   }
 
-  return source;
+  if (has_webview){
+    source.type = SESSION_WEBVIEW;
+  }
 
+  return source;
 }

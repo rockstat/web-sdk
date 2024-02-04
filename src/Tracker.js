@@ -1,4 +1,4 @@
-import Promise from 'promise-polyfill';
+// import Promise from 'promise-polyfill';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';

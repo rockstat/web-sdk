@@ -14,7 +14,7 @@ module.exports = {
       {
         test: /\.js$/,
         include: [
-          path.resolve(__dirname, 'node_modules', 'dom-utils'),
+          // path.resolve(__dirname, 'src', 'lib', 'dom-utils'),
           path.resolve(__dirname, 'src'),
 
         ],
@@ -23,7 +23,11 @@ module.exports = {
           options: {
             presets: [
               ['@babel/preset-env', {
-                targets: {browsers: ['>1%']},
+                targets: {
+                  browsers: ['>0.5%, not dead'],
+                  // browsers: []
+                  // "chrome": "60"
+                },
                 "useBuiltIns": "entry",
                 // "corejs":"3.22",
                 corejs: { version: 3, proposals: true },

@@ -1,9 +1,9 @@
 import objectAssing from '../functions/objectAssing';
-import runOnStop from '../functions/runOnStop';
-import objectKeys from '../functions/objectKeys';
-import each from '../functions/each';
+// import runOnStop from '../functions/runOnStop';
+// import objectKeys from '../functions/objectKeys';
+// import each from '../functions/each';
 import { win, doc } from "../Browser";
-import { closest } from 'dom-utils';
+import { closest } from '../lib/dom-utils';
 import Emitter from 'component-emitter';
 import {
   EVENT,
