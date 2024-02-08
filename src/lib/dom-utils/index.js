@@ -1,19 +1,15 @@
+// "author": {
+//   "name": "Philip Walton",
+//   "email": "philip@philipwalton.com",
+//   "url": "http://philipwalton.com"
+// },
+
 /**
  * Returns an array of a DOM element's parent elements.
  * @param {!Element} element The DOM element whose parents to get.
  * @return {!Array} An array of all parent elemets, or an empty array if no
  *     parent elements are found.
  */
-
-
-```
-"author": {
-    "name": "Philip Walton",
-    "email": "philip@philipwalton.com",
-    "url": "http://philipwalton.com"
-  },
-  ```
-
 export function parents(element) {
   const list = [];
   while (element && element.parentNode && element.parentNode.nodeType == 1) {
