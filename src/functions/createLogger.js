@@ -4,7 +4,7 @@ const isProd = PRODUCTION;
 
 
 const logger = function (type, arr, prefix) {
-  if (('console' in window) && (type in console)) {
+  if (('console' in win) && (type in console)) {
 
     // Sending to remote log
     const call = Function.prototype.call;
@@ -17,18 +17,18 @@ export default function createLogger(name) {
 
   const prefix = () => {
     const time = (new Date()).toISOString()
-      .substr(11);
+      .substring(11);
     return `${time} ${name}:`;
   };
 
   const log = function (...args) {
-    if (!isProd || window._rst_logger) {
+    if (!isProd || win._rst_logger) {
       logger('log', args, prefix());
     }
   };
 
   log.info = function (...args) {
-    if (!isProd || window._rst_logger) {
+    if (!isProd || win._rst_logger) {
       logger('log', args, prefix());
     }
   };
