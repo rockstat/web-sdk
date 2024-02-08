@@ -1,7 +1,7 @@
 import {doc, win} from '../Browser';
 import createLogger from './createLogger';
 
-const log = createLogger('DomEvents');
+const log = createLogger('RSP/DomEvents');
 // const checkPassiveSupport = () => {
 //   let result = false;
 //   try {

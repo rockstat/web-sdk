@@ -87,12 +87,12 @@ const RULES = [
   { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'googleadservices.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'doubleclick.net', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
-  
+
   { domain: 'youtube.com', engine: ENGINE_YOUTUBE, type: SESSION_SOCIAL },
 ];
 
 
-const log = createLogger('PS');
+const log = createLogger('RST/PageSource');
 
 const cleanQueryParam = function (val) {
 

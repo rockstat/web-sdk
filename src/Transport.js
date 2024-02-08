@@ -26,12 +26,12 @@ import {
 } from './Constants';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
-import { isObject } from './functions/type';
+// import { isObject } from './functions/type';
 
 const HTTPS = 'https';
 const WSS = 'wss';
 
-const log = createLogger('RST-TR');
+const log = createLogger('RST/Transport');
 const noop = () => { };
 
 

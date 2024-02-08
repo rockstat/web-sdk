@@ -1,13 +1,11 @@
 import objectAssing from '../functions/objectAssing';
 import { win, doc } from "../Browser";
 import Emitter from 'component-emitter';
-import {lo} from '../Logger'
 import {
   EVENT,
   EVENT_PAGEVIEW
 } from '../Constants';
 import createLogger from '../functions/createLogger';
-
 
 const log = createLogger('PAGETRACK');
 

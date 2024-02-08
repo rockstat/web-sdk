@@ -19,7 +19,7 @@ import {
 import { closest } from '../lib/dom-utils';
 
 
-const log = createLogger('FormTracker');
+const log = createLogger('RST/FormTracker');
 
 const formTag = 'form';
 const elementsTags = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?option ?button ?submit

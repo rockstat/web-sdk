@@ -16,20 +16,19 @@ const logger = function (type, arr, prefix) {
 export default function createLogger(name) {
 
   const prefix = () => {
-    const time = (new Date()).toISOString()
-      .substring(11);
+    const time = (new Date()).toISOString().substring(11);
     return `${time} ${name}:`;
   };
 
   const log = function (...args) {
     if (!isProd || win._rst_logger) {
-      logger('log', args, prefix());
+      logger('info', args, prefix());
     }
   };
 
   log.info = function (...args) {
     if (!isProd || win._rst_logger) {
-      logger('log', args, prefix());
+      logger('info', args, prefix());
     }
   };
 

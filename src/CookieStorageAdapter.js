@@ -41,7 +41,8 @@ CookieStorageAdapter.prototype.set = function (key, value, options = {}) {
     expires: exp,
     domain: this.domain,
     secure: this.secure,
-    path: this.path
+    path: this.path,
+    sameSite: 'Lax'
   });
 };
 

@@ -61,7 +61,7 @@ const noop = () => { };
 const asObject = (options) => {
   return isObject(options) ? options : {};
 }
-const log = createLogger('RST');
+const log = createLogger('RST/Tracker');
 
 /**
  * Main Tracker class

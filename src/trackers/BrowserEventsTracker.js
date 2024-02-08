@@ -16,7 +16,7 @@ import {
   EVENT_PAGE_LOADED
 } from "../Constants";
 
-const log = createLogger('Aclo::BET');
+const log = createLogger('RST/BrowserEventsTracker');
 
 /**
  * Трекер отслеживающий базовые события браузера, такие, как завершение загруки, выгрузка страницы и тп.

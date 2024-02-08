@@ -29,7 +29,7 @@ const KEY_USER_ID = 'userid';
 const KEY_USER_TRAITS = 'usertr';
 const KEY_USER_PARAMS = 'userpr';
 
-const log = createLogger('ST');
+const log = createLogger('RST/SessionTracker');
 
 function SessionTracker(tracker, options) {
 
