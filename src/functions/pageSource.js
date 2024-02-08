@@ -32,10 +32,13 @@ const ENGINE_DUCKDUCKGO = 'duckduckgo';
 
 const ENGINE_FACEBOOK = 'fb';
 const ENGINE_TWITTER = 'twitter';
+const ENGINE_TIKTOK = 'tiktok';
 const ENGINE_VK = 'vk';
 const ENGINE_OK = 'ok';
 const ENGINE_LINKEDIN = 'linkedin';
 const ENGINE_INSTAGRAM = 'instagram';
+const ENGINE_TELEGRAM = 'telegram';
+const ENGINE_YOUTUBE = 'youtube';
 
 const UTMS = ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term'];
 const PARTNER_IDS = ['pid', 'cid'];
@@ -63,19 +66,29 @@ const RULES = [
   { domain: 'com.google.android.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC }, // app
 
   { domain: 'facebook.com', engine: ENGINE_FACEBOOK, type: SESSION_SOCIAL },
+
+  { domain: 'tiktok.com', engine: ENGINE_TIKTOK, type: SESSION_SOCIAL },
+
   { domain: 'instagram.com', engine: ENGINE_INSTAGRAM, type: SESSION_SOCIAL }, //l.instagram.com
+
+  { domain: 'org.telegram.', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL }, // app
+  { domain: 'telegram.org', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL },
+  { domain: 't.me', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL },
+  
   { domain: 'vk.com', engine: ENGINE_VK, type: SESSION_SOCIAL }, // away.vk.com
   { domain: 'linkedin.com', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
   { domain: 'lnkd.in', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
+  
   { domain: 'ok.ru', engine: ENGINE_OK, type: SESSION_SOCIAL },
+
   { domain: 't.co', engine: ENGINE_TWITTER, type: SESSION_SOCIAL },
 
   { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'googleadservices.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'doubleclick.net', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
-  { domain: 'youtube.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
-
+  
+  { domain: 'youtube.com', engine: ENGINE_YOUTUBE, type: SESSION_SOCIAL },
 ];
 
 
