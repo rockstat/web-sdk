@@ -116,7 +116,7 @@ export default function pageSource(page) {
   let has_yclid = false;
   let has_gclid = false;
   let has_fbclid = false;
-  let has_webview = false;
+  let is_webview = false;
 
   if (page.query) {
     query = qs.parse(page.query);
@@ -153,8 +153,9 @@ export default function pageSource(page) {
 
       // WebView
       if (key === WEBVIEW_PARAM) {
-        source.hasMarks['wv'] = true;
-        has_webview = true;
+        if (cleanQueryParam(query[key]) == 'true' || cleanQueryParam(query[key]) == '1') {
+          is_webview = true;
+        }
       }
 
       // YClid
@@ -200,7 +201,7 @@ export default function pageSource(page) {
       source.type = SESSION_SOCIAL
       source.engine = ENGINE_FACEBOOK
     }
-    if (has_webview){
+    if (is_webview){
       source.type = SESSION_WEBVIEW;
     }
     return source;
@@ -262,7 +263,7 @@ export default function pageSource(page) {
     source.type = SESSION_PARTNER;
   }
 
-  if (has_webview){
+  if (is_webview){
     source.type = SESSION_WEBVIEW;
   }
 

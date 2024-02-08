@@ -233,12 +233,12 @@ Transport.prototype.send = function (msg, options = {}) {
 /**
  * Establish server connection if configured
  */
-// Transport.prototype.connect = function () {
-//   if (this.options.activateWs && hasWSSupport) {
-//     this.startWs();
-//   }
-//   return this;
-// }
+Transport.prototype.connect = function () {
+  // if (this.options.activateWs && hasWSSupport) {
+  //   this.startWs();
+  // }
+  return this;
+}
 
 
 /**
@@ -288,30 +288,30 @@ Transport.prototype.send = function (msg, options = {}) {
 //   }
 // };
 
-Transport.prototype.clearWait = function (id, success, dataOrError) {
-  if (this.waitCallers[id]) {
-    const wait = this.waitCallers[id];
-    delete this.waitCallers[id];
-    clearTimeout(wait.timeout)
-    if (!success && wait.reject) {
-      wait.reject(dataOrError)
-    }
-    else if (success && wait.resolve) {
-      wait.resolve(dataOrError);
-    }
-  }
-}
+// Transport.prototype.clearWait = function (id, success, dataOrError) {
+//   if (this.waitCallers[id]) {
+//     const wait = this.waitCallers[id];
+//     delete this.waitCallers[id];
+//     clearTimeout(wait.timeout)
+//     if (!success && wait.reject) {
+//       wait.reject(dataOrError)
+//     }
+//     else if (success && wait.resolve) {
+//       wait.resolve(dataOrError);
+//     }
+//   }
+// }
 
-Transport.prototype.wsSendMessage = function (msg, callback) {
-  const id = msg.id__ = '_' + this.msgId();
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      this.clearWait(id, false, new Error('WS response Timeout'))
-    }, this.options.responseTimeout);
-    this.waitCallers[id] = { resolve, reject, timeout };
-    this.ws.json(objectAssign(msg, this.creds));
-  })
-}
+// Transport.prototype.wsSendMessage = function (msg, callback) {
+//   const id = msg.id__ = '_' + this.msgId();
+//   return new Promise((resolve, reject) => {
+//     const timeout = setTimeout(() => {
+//       this.clearWait(id, false, new Error('WS response Timeout'))
+//     }, this.options.responseTimeout);
+//     this.waitCallers[id] = { resolve, reject, timeout };
+//     this.ws.json(objectAssign(msg, this.creds));
+//   })
+// }
 
 Transport.prototype.msgId = function () {
   return ++this.msgCounter;
