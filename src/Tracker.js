@@ -381,7 +381,14 @@ Tracker.prototype.logOnServer = function (msg) {
  * @param {Object} options Object contains options
  */
 Tracker.prototype.sendToServer = function (msg, options) {
-  return this.transport.send(msg, options).then(() => { }).catch(e => log.warn(e));
+  return this.transport
+    .send(msg, options)
+    .then(() => { 
+      //none
+    })
+    .catch((e) => {
+      log.warn('sendToServer executed with error');
+    });
 };
 
 /**
