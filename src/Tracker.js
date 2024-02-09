@@ -282,7 +282,7 @@ Tracker.prototype.handle_proxy = function (name, data = {}, options = {}) {
   try {
     return this.handle(name, data, options);
   } catch (err) {
-    log.error('Catched event handle error', e)
+    log.warn('Catched event handle error', err)
     this.logOnServer({
       err: String(err)
     })
@@ -300,7 +300,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
-  log.info(`Handling ${name}`);
+  log.info(`Handling ${name}`, {data});
   this.emit(EVENT, name, data, options);
 
   if (name === EVENT_PAGEVIEW) {
@@ -361,8 +361,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
 
 /**
  * Log remote: send to server log
- * @param {string} level
- * @param {Array} args
+ * @param {Object} msg
  */
 Tracker.prototype.logOnServer = function (msg) {
   if (this.isInitialized()) {
