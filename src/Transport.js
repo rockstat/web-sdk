@@ -166,16 +166,20 @@ Transport.prototype.sendXHR = function (url, data) {
  */
 Transport.prototype.sendIMG = function (url) {
   
-  return new Promise((resolve, reject) => {
+  const p = new Promise((resolve, reject) => {
     const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
+    // img.onload = () => {
+    //   resolve();
+    // };
+    // img.onerror = (err_msg) => {
+    //   reject(err_msg);
+    // }
+    // img.onload = () => console.log('ok');
+    // img.onerror = (err_msg) => console.warn(err_msg);
     img.src = url;
-    img.onload = () => {
-      resolve();
-    };
-    img.onerror = (err_msg) => {
-      reject(err_msg);
-    }        
+    setTimeout(() => resolve(), 50);
   });
+  return p;
 };
 
 
