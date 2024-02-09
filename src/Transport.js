@@ -20,6 +20,7 @@ import {
   EVENT_OPTION_OUTBOUND,
   EVENT_OPTION_TERMINATOR,
   EVENT_OPTION_REQUEST,
+  EVENT_OPTION_TRANSPORT_IMG,
   SERVER_MESSAGE,
   INTERNAL_EVENT,
   SERVICE_TRACK,
@@ -164,18 +165,18 @@ Transport.prototype.sendXHR = function (url, data) {
  * @param url {string}
  */
 Transport.prototype.sendIMG = function (url) {
-  const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
-  img.src = url;
   
-  const p = Promise;
-  img.onload = () => {
-    log.info('img loaded');
-    p.resolve();
-  };
-  img.onerror = () => {
-    p.reject();
-  }
-  return p;
+  return new Promise((resolve, reject) => {
+    const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
+    img.src = url;
+    img.onload = () => {
+      log.info('img loaded');
+      resolve();
+    };
+    img.onerror = () => {
+      reject();
+    }        
+  });
 };
 
 
@@ -205,23 +206,21 @@ Transport.prototype.send = function (msg, options = {}) {
       // }
       // user sendBeacon only for notifications requests
       if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
-        log('sending using beacon');
+        log.info('sending using beacon');
         nav.sendBeacon(this.makeURL(postPath), data);
         return Promise.resolve();
       }
       // regular XMLHttpRequest
       if (this.options.allowXHR && hasAnyXRSupport) {
-        log('sending using XHR/XDR');
+        log.info('sending using XHR/XDR');
         return this.sendXHR(this.makeURL(postPath), data);
       }
       // If reuquired response but not available transport
       if (isRequest) {
-        const exc = new Error('Not available transport for request');
-        log.error(exc)
-        return Promise.reject(exc);
+        return Promise.reject('Requested request transport, but method unavailable');
       }
     } catch (error) {
-      log.warn(error);
+      log.warn('Beacon/XHR failed', error);
     }
   }
 
@@ -229,12 +228,12 @@ Transport.prototype.send = function (msg, options = {}) {
   // Send only part when using gif
   const smallMsg = (msg.service === SERVICE_TRACK)
     ? this.options.msgCropper(msg) : msg;
-  log.info(`sending using IMG:`, smallMsg);
+  log.info(`Trying to send using img`, smallMsg);
 
   try {
     return this.sendIMG(this.makeURL(imgPath, objectAssign(smallMsg, this.creds)));
   } catch (e) {
-    log('Error during sending data using image', e);
+    log.warn('Error during sending data using image', e);
     return Promise.reject(e);
   }
 };
