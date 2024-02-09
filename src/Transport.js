@@ -170,11 +170,10 @@ Transport.prototype.sendIMG = function (url) {
     const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
     img.src = url;
     img.onload = () => {
-      log.info('img loaded');
       resolve();
     };
-    img.onerror = () => {
-      reject();
+    img.onerror = (err_msg) => {
+      reject(err_msg);
     }        
   });
 };
