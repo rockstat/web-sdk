@@ -47,6 +47,8 @@ import {
   SERVER_MESSAGE,
   SERVICE_TRACK,
   EVENT_OPTION_REQUEST,
+  SERVICE_LOG,
+  EVENT_OPTION_TRANSPORT_IMG,
 } from './Constants';
 import {
   win
@@ -243,7 +245,7 @@ Tracker.prototype.initialize = function () {
 
   // Handling queue
   this.queue.map(e => {
-    this.handle.apply(this, e);
+    this.handle_proxy.apply(this, e);
   });
   this.queue = [];
 };
@@ -267,6 +269,26 @@ Tracker.prototype.configure = function (options) {
   this.options = objectAssign(this.options, options);
 };
 
+
+
+
+/**
+ * Proxy for Handling event method
+ * @param {string} name
+ * @param {Object|undefined} data
+ * @param {Object} options - Event properties
+ */
+Tracker.prototype.handle_proxy = function (name, data = {}, options = {}) {
+  try {
+    return this.handle(name, data, options);
+  } catch (err) {
+    log.error('Catched event handle error', e)
+    this.logOnServer({
+      err: String(err)
+    })
+  }
+}
+
 /**
  * Handling event
  * @param {string} name
@@ -278,7 +300,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
-  log(`Handling ${name}`);
+  log.info(`Handling ${name}`);
   this.emit(EVENT, name, data, options);
 
   if (name === EVENT_PAGEVIEW) {
@@ -334,7 +356,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
   }
 
   // Sending to server
-  this.sendToServer(msg, options);
+  return this.sendToServer(msg, options);
 };
 
 /**
@@ -342,13 +364,14 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
  * @param {string} level
  * @param {Array} args
  */
-Tracker.prototype.logOnServer = function (level, args) {
+Tracker.prototype.logOnServer = function (msg) {
   if (this.isInitialized()) {
     this.sendToServer({
-      service: SERVICE_TRACK,
+      service: SERVICE_LOG,
       name: 'log',
-      lvl: level,
-      args: args
+      msg: msg
+    }, {
+      [EVENT_OPTION_TRANSPORT_IMG]: true
     });
   }
 };
@@ -383,7 +406,7 @@ Tracker.prototype.unload = function () {
  * @param options
  */
 Tracker.prototype.event = function (name, data, options) {
-  this.handle(name, data, options);
+  this.handle_proxy(name, data, options);
 };
 
 /**
@@ -422,7 +445,7 @@ Tracker.prototype.notify = function (service, name, data = {}) {
  * Track page load
  */
 Tracker.prototype.page = function (data, options) {
-  this.handle(EVENT_PAGEVIEW, data, options);
+  this.handle_proxy(EVENT_PAGEVIEW, data, options);
 };
 
 /**
@@ -447,7 +470,7 @@ Tracker.prototype.identify = function (userId, userTraits) {
     userTraits = userId;
     userId = undefined;
   }
-  this.handle(EVENT_IDENTIFY, {
+  this.handle_proxy(EVENT_IDENTIFY, {
     userId,
     userTraits
   });

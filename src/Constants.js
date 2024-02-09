@@ -1,4 +1,5 @@
 export const SERVICE_TRACK = 'track';
+export const SERVICE_LOG = 'log';
 
 
 export const EVENT = 'event';
@@ -41,7 +42,6 @@ export const EVENTS_ADD_SCROLL = [
 ];
 
 // ######
-export const SERVICE_LOG = 'log';
 export const EVENT_LOG = 'page_unload';
 
 // ######
@@ -52,6 +52,7 @@ export const INTERNAL_EVENT = 'internal_event';
 export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
 export const EVENT_OPTION_REQUEST = 'request';
+export const EVENT_OPTION_TRANSPORT_IMG = 'transport_img';
 
 // ######
 export const SESSION_INTERNAL = 'internal';

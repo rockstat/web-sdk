@@ -164,12 +164,18 @@ Transport.prototype.sendXHR = function (url, data) {
  * @param url {string}
  */
 Transport.prototype.sendIMG = function (url) {
-  // Img load test
   const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
   img.src = url;
+  
+  const p = Promise;
   img.onload = () => {
-    log('img loaded');
+    log.info('img loaded');
+    p.resolve();
   };
+  img.onerror = () => {
+    p.reject();
+  }
+  return p;
 };
 
 
@@ -182,44 +188,48 @@ Transport.prototype.sendIMG = function (url) {
 Transport.prototype.send = function (msg, options = {}) {
   const data = JSON.stringify(msg);
   const isRequest = !!options[EVENT_OPTION_REQUEST];
-  const useSafe = !!options[EVENT_OPTION_TERMINATOR]
-    || !!options[EVENT_OPTION_OUTBOUND];
+  const useTransportImg = !!options[EVENT_OPTION_TERMINATOR]
+    || !!options[EVENT_OPTION_OUTBOUND] || !!options[EVENT_OPTION_TRANSPORT_IMG];
   const _service = this.servicesMap[msg.service] || msg.service;
   const postPath = `/${this.urlMark}/${_service}.json`;
   const imgPath = `/${this.urlMark}/${_service}.gif`;
 
-  try {
-    // if websocket activated
 
-    // if (this.wsConnected) {
-    //   log('sending using WS');
-    //   return this.wsSendMessage(msg);
-    // }
-    // user sendBeacon only for notifications requests
-    if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
-      log('sending using beacon');
-      nav.sendBeacon(this.makeURL(postPath), data);
-      return Promise.resolve();
+  if (!useTransportImg){
+    try {
+      // if websocket activated
+
+      // if (this.wsConnected) {
+      //   log('sending using WS');
+      //   return this.wsSendMessage(msg);
+      // }
+      // user sendBeacon only for notifications requests
+      if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
+        log('sending using beacon');
+        nav.sendBeacon(this.makeURL(postPath), data);
+        return Promise.resolve();
+      }
+      // regular XMLHttpRequest
+      if (this.options.allowXHR && hasAnyXRSupport) {
+        log('sending using XHR/XDR');
+        return this.sendXHR(this.makeURL(postPath), data);
+      }
+      // If reuquired response but not available transport
+      if (isRequest) {
+        const exc = new Error('Not available transport for request');
+        log.error(exc)
+        return Promise.reject(exc);
+      }
+    } catch (error) {
+      log.warn(error);
     }
-    // regular XMLHttpRequest
-    if (this.options.allowXHR && hasAnyXRSupport) {
-      log('sending using XHR/XDR');
-      return this.sendXHR(this.makeURL(postPath), data);
-    }
-    // If reuquired response but not available transport
-    if (isRequest) {
-      const exc = new Error('Not available transport for request');
-      log.error(exc)
-      return Promise.reject(exc);
-    }
-  } catch (error) {
-    log.warn(error);
   }
+
   // Use extra transport - img
   // Send only part when using gif
   const smallMsg = (msg.service === SERVICE_TRACK)
     ? this.options.msgCropper(msg) : msg;
-  log(`sending using IMG. useSafe: ${useSafe}`, smallMsg);
+  log.info(`sending using IMG:`, smallMsg);
 
   try {
     return this.sendIMG(this.makeURL(imgPath, objectAssign(smallMsg, this.creds)));
