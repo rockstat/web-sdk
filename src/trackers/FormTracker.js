@@ -140,7 +140,7 @@ FormTracker.prototype.formEventHandler = function (ev) {
         ...extractFormData(form)
       },
       options: {
-        [EVENT_OPTION_TERMINATOR]: (type === 'submit')
+        // [EVENT_OPTION_TERMINATOR]: (type === 'submit')
       }
     };
 

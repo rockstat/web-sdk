@@ -62,7 +62,7 @@ ClickTracker.prototype.mutateToLinkClick = function (draft, link) {
     outbound: outbound
   }
   const linkOptions = {
-    [EVENT_OPTION_TERMINATOR]: true,
+    // [EVENT_OPTION_TERMINATOR]: true,
     [EVENT_OPTION_OUTBOUND]: outbound
   }
 
