@@ -1,6 +1,6 @@
-import { win, doc, body, html } from "../Browser";
+import { nav, win, body, html } from "../Browser";
 import objectAssing from '../functions/objectAssing';
-import { nav } from '../Browser';
+import each  from '../functions/each';
 
 const not_present = 'not present'
 
@@ -66,9 +66,26 @@ function sr() {
   } catch (e) { }
 }
 
+const he_values = ['architecture', 'bitness', 'brands', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion', 'fullVersionList', 'wow64'];
+const storedUAData = {};
+
+export function prepareUAData(){
+  if (nav['userAgentData'] && nav.userAgentData['getHighEntropyValues']){
+    nav.userAgentData.getHighEntropyValues(he_values).then(ua => { 
+      each(ua || {}, (k, v) => {
+        storedUAData[k] = v;
+      })
+     }).catch((e) => {
+      storedUAData['err'] = String(e);
+     });
+  }
+}
+
+
 export default function () {
   return objectAssing({
     if1: if1(),
     if2: if2(),
+    uad: storedUAData,
   }, wh(), sr(), binfo())
 }

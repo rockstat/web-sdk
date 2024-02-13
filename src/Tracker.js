@@ -11,7 +11,7 @@ import {
   hashCode
 } from './functions/stringHash';
 import autoDomain from './functions/autoDomain';
-import browserData from './data/browserData';
+import browserData, {prepareUAData} from './data/browserData';
 import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
@@ -248,6 +248,9 @@ Tracker.prototype.initialize = function () {
     this.handle_proxy.apply(this, e);
   });
   this.queue = [];
+
+  // Preparing User Agent Data - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData
+  prepareUAData();
 };
 
 /**
