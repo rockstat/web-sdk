@@ -25,6 +25,6 @@ export default function (condition, fn, interval, attemps) {
     if (!condition()) return;
     nextTick(fn);
     clearInterval(ref);
-  }, interval || 25);
+  }, interval || 100);
 }
 
