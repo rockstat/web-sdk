@@ -73,7 +73,9 @@ export function prepareUAData(){
   if (nav['userAgentData'] && nav.userAgentData['getHighEntropyValues']){
     nav.userAgentData.getHighEntropyValues(he_values).then(ua => { 
       each(ua || {}, (k, v) => {
-        storedUAData[k] = v;
+        if (he_values.includes(k)){
+          storedUAData[k] = v;
+        }
       })
      }).catch((e) => {
       storedUAData['err'] = String(e);
