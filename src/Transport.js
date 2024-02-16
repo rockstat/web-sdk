@@ -27,6 +27,7 @@ import {
 } from './Constants';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
+import nextTick from './functions/nextTick'
 // import { isObject } from './functions/type';
 
 const HTTPS = 'https';
@@ -104,27 +105,20 @@ Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
  */
 Transport.prototype.createXHR = function (url) {
   return new Promise(function (resolve, reject) {
-    if (hasXHRWithCreds || !hasXDRSupport && hasXHRSupport) {
+    if (hasXHRSupport) {
       /** @type {XMLHttpRequest} */
       const xhr = new win.XMLHttpRequest();
       xhr.open('POST', url, true);
-      if (hasXHRWithCreds) {
-        xhr.withCredentials = true;
-      }
+      // if (hasXHRWithCreds) {
+        // xhr.withCredentials = true;
+      // }
       // not used to prevent options requests
       // xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
       xhr.setRequestHeader("Content-Type", "application/json");
       resolve(xhr);
-    } else if (hasXDRSupport) {
-      // hack to prevent IE 'aborted' bug
-      setTimeout(() => {
-        xhr = new win.XDomainRequest();
-        xhr.ontimeout = noop();
-        xhr.onprogress = noop();
-        xhr.open('POST', url, true);
-        resolve(xhr);
-      }, 0);
-    }
+    } else {
+      return reject('XHR not supported')
+    } 
   })
 }
 
@@ -136,26 +130,22 @@ Transport.prototype.createXHR = function (url) {
  */
 Transport.prototype.sendXHR = function (url, data) {
   return new Promise((resolve, reject) => {
-    const handler = (xhr) => {
-      if (xhr.status === 200) {
-        try {
-          return resolve(JSON.parse(xhr.responseText));
-        } catch (exc) {
-          log.error(exc)
-          return reject(exc);
-        }
-      } else {
-        return reject(new Error('XHR request error'))
-      }
-    };
-
     this.createXHR(url)
       .then(xhr => {
-        xhr.onload = () => handler(xhr);
-        xhr.onerror = () => handler(xhr);
+        xhr.onload = () => {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch (e) {
+            log.warn(e)
+            reject(e);
+          }
+        };
+        xhr.onerror = () => {
+          return reject(`XHR status !== 200: ${xhr.status}`)
+        };
         xhr.send(data);
       })
-      .catch(exc => reject(exc))
+      .catch(e => reject(e))
   });
 };
 
@@ -177,7 +167,7 @@ Transport.prototype.sendIMG = function (url) {
     // img.onload = () => console.log('ok');
     // img.onerror = (err_msg) => console.warn(err_msg);
     img.src = url;
-    setTimeout(() => resolve(), 50);
+    nextTick(() => resolve())
   });
   return p;
 };
@@ -198,7 +188,6 @@ Transport.prototype.send = function (msg, options = {}) {
   const postPath = `/${this.urlMark}/${_service}.json`;
   const imgPath = `/${this.urlMark}/${_service}.gif`;
 
-
   if (!useTransportImg){
     try {
       // if websocket activated
@@ -214,7 +203,7 @@ Transport.prototype.send = function (msg, options = {}) {
         return Promise.resolve();
       }
       // regular XMLHttpRequest
-      if (this.options.allowXHR && hasAnyXRSupport) {
+      if (this.options.allowXHR && hasXHRSupport) {
         log.info('sending using XHR/XDR');
         return this.sendXHR(this.makeURL(postPath), data);
       }
