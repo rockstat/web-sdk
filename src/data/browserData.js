@@ -66,7 +66,7 @@ function sr() {
   } catch (e) { }
 }
 
-const he_values = ['architecture', 'bitness', 'brands', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion', 'fullVersionList', 'wow64'];
+const he_values = ['architecture', 'bitness', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion'];
 const storedUAData = {};
 
 export function prepareUAData(){
