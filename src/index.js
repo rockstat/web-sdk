@@ -28,7 +28,8 @@ if (win[wk]) {
       const method = args.shift();
       return tracker[method] ?
         tracker[method].apply(tracker, args) :
-        new Error('Undefined method');
+        // TODO: log errors to sentry if available
+        console && console.warn && console.warn('called rockstat undefined method');
     };
 
     holder._q.map(doCall);
@@ -39,6 +40,6 @@ if (win[wk]) {
       tracker.initialize();
     });
   } else {
-    console && console.error && console.error('rockstat already loaded');
+    console && console.warn && console.warn('rockstat already loaded');
   }
 }
