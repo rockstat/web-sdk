@@ -246,11 +246,11 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
       session: true
     });
   }
-  else {
-    this.storage.inc(KEY_EVENTS_COUNTER, {
-      session: true
-    });
-  }
+  
+  this.storage.inc(KEY_EVENTS_COUNTER, {
+    session: true
+  });
+  
 
   // Emitting session event
   if (shouldRestart) {
