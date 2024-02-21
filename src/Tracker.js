@@ -11,7 +11,7 @@ import {
   hashCode
 } from './functions/stringHash';
 import autoDomain from './functions/autoDomain';
-import browserData, {prepareUAData} from './data/browserData';
+import browserData, {prepareUAData, prepareNavConnection} from './data/browserData';
 import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
@@ -73,6 +73,8 @@ const log = createLogger('RST/Tracker');
 function Tracker() {
 
   log('starting RST Tracker');
+
+  this.startTime = (new Date()).getTime();
 
   const pd = pageDefaults();
   const [domain, domainHash] = this.buildProjectId(pd.domain);
@@ -251,6 +253,8 @@ Tracker.prototype.initialize = function () {
 
   // Preparing User Agent Data - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData
   prepareUAData();
+  prepareNavConnection();
+
 };
 
 /**
@@ -564,7 +568,8 @@ Tracker.prototype.getLibInfo = function () {
   return {
     id: LIBRARY,
     v: LIBVER,
-    sv: this.options.snippet
+    sv: this.options.snippet,
+    st: this.startTime
   }
 };
 

@@ -69,6 +69,34 @@ function sr() {
 const he_values = ['architecture', 'bitness', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion'];
 const storedUAData = {};
 
+const navConData = {};
+const navConKeys = ['type', 'effectiveType', 'downlinkMax'];
+
+
+/*
+
+Get connection type data
+
+TODO: Support changing connection type \
+using listener \
+navigator.connection.addEventListener('change', listener)
+
+
+*/
+export function prepareNavConnection(){
+  if (nav['connection']){
+    each(navConKeys, (k) => {  
+      if (nav.connection[k]){
+        navConData[k] = nav.connection[k];
+      }
+    });
+  }
+}
+
+/*
+Get Client HINT data
+
+*/
 export function prepareUAData(){
   if (nav['userAgentData'] && nav.userAgentData['getHighEntropyValues']){
     nav.userAgentData.getHighEntropyValues(he_values).then(ua => { 
@@ -89,5 +117,6 @@ export default function () {
     if1: if1(),
     if2: if2(),
     uad: storedUAData,
+    nc: navConData
   }, wh(), sr(), binfo())
 }
