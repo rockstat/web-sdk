@@ -215,7 +215,6 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   }
 
   const lastEventTS = this.storage.get(KEY_LAST_EVENT_TS);
-  const pastSession = this.storage.get(KEY_LAST_SESSION);
 
   // Setting last event
   const now = (new Date()).getTime();
@@ -231,7 +230,7 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   if (sessionTimedOut || simulation || name === EVENT_PAGEVIEW) {
     source = pageSource(page);
-    sourceRestart = this.sourceRestart(pastSession, source);
+    sourceRestart = this.sourceRestart(source);
   }
 
   const shouldRestart = sessionTimedOut || sourceRestart || simulation;
@@ -258,14 +257,49 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   }
 };
 
-SessionTracker.prototype.sourceRestart = function (pastSession, source) {
+SessionTracker.prototype.sourceRestart = function (source) {
+  
+  let byRef = false;
+  const pastSession = this.storage.get(KEY_LAST_SESSION);
+  
+  let pastSessionMarksHash = ''
+  
+  if(pastSession){
+    if(pastSession.marksHash){
+      pastSessionMarksHash = pastSession.marksHash;
+    }
+    byRef = pastSession.refHash !== source.refHash;
+  }
 
-  // Override session if got organic or campaign
-  const bySource = source.type === SESSION_PARTNER || source.type === SESSION_ORGANIC || source.type === SESSION_CAMPAIGN || source.type === SESSION_SOCIAL;
+  if (source.type === SESSION_PARTNER ){
+    if(source.marksHash !== pastSessionMarksHash){
+      return true;
+    }
+  }
+  
+  if(source.type === SESSION_CAMPAIGN){
+    if(source.marksHash !== pastSessionMarksHash){
+      return true;
+    }
+    return byRef;
+  }
 
-  // Prevent restarting by refresh enter page
-  const byRef = pastSession && (pastSession.refHash !== source.refHash);
-  return bySource && byRef;
+  if(source.type === SESSION_ORGANIC || source.type === SESSION_SOCIAL){
+    return byRef;
+  }
+
+  return false;
+
+  // // Override session if got organic or campaign
+  // const bySource = 
+  //   source.type === SESSION_PARTNER || 
+  //   source.type === SESSION_ORGANIC || 
+  //   source.type === SESSION_CAMPAIGN || 
+  //   source.type === SESSION_SOCIAL;
+
+  // // Prevent restarting by refresh enter page
+  
+  // return bySource && byRef;
 
 };
 

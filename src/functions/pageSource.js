@@ -116,7 +116,11 @@ export default function pageSource(page) {
   const source = {
     type: SESSION_DIRECT,
     marks: {},
-    hasMarks: false
+    marksHash: '',
+    hasMarks: false,
+    refHash: '',
+    engine: undefined,
+    refhost: ''
   };
 
   log.info(page)
@@ -131,38 +135,51 @@ export default function pageSource(page) {
   let has_fbclid = false;
   let is_webview = false;
 
+  let marksCampaignString = ''
+  let marksPartnerString = ''
+
   if (page.query) {
     query = qs.parse(page.query);
     queryKeys = objectKeys(query);
 
+    let queryParamVal = ''
     // Processing marks
     for (let i = 0; i < queryKeys.length; i++) {
       const key = queryKeys[i];
       // UTM
       for (let j = 0; j < UTMS.length; j++) {
         if (key === UTMS[j]) {
-          source.marks[key] = cleanQueryParam(query[key])
+          queryParamVal = cleanQueryParam(query[key]);
+          source.marks[key] = queryParamVal;
+          marksCampaignString += queryParamVal  + '|';
           source.hasMarks = true;
           has_utm = true;
-
         }
       }
+      queryParamVal = '';
+
       // OpenStat
       if (key === OS) {
         const os = getOsMarks(query[key]);
+        marksCampaignString += query[key] + '|';
         source.marks = objectAssign(source.marks, os);
         source.hasMarks = true;
         has_os = true;
       }
 
+      
+      
       // Partner
       for (let j = 0; j < PARTNER_IDS.length; j++) {
         if (key === PARTNER_IDS[j]) {
-          source.marks[key] = cleanQueryParam(query[key])
+          queryParamVal = cleanQueryParam(query[key]);
+          marksPartnerString += queryParamVal + '|'
+          source.marks[key] = queryParamVal;
           source.hasMarks = true;
           has_partner_ids = true;
         }
       }
+      queryParamVal = '';
 
       // WebView
       if (key === WEBVIEW_PARAM) {
@@ -170,12 +187,14 @@ export default function pageSource(page) {
           is_webview = true;
         }
       }
+      
 
       // YClid
       if (key === YCLID) {
         source.hasMarks = true;
         source.marks['has_' + key] = 1;
         source.marks[key] = query[key];
+        marksCampaignString += query[key] + '|';
         has_yclid = true;
       }
 
@@ -184,6 +203,7 @@ export default function pageSource(page) {
         source.hasMarks = true;
         source.marks['has_' + key] = 1;
         source.marks[key] = query[key];
+        marksCampaignString += query[key] + '|';
         has_gclid = true;
       }
 
@@ -192,6 +212,7 @@ export default function pageSource(page) {
         source.hasMarks = true;
         source.marks['has_' + key] = 1;
         source.marks[key] = query[key];
+        // marksCampaignString += query[key] + '|';
         has_fbclid = true;
       }
     }
@@ -203,62 +224,75 @@ export default function pageSource(page) {
 
   // Direct with marks -> campaign
   // Direct with fbclid -> facebooj social
-  if (ref === '') {
-    if (has_utm || has_os || has_gclid || has_yclid) {
-      source.type = SESSION_CAMPAIGN;
-    }
-    if (has_partner_ids) {
-      source.type = SESSION_PARTNER;
-    }
-    if(has_fbclid){
-      source.type = SESSION_SOCIAL
-      source.engine = ENGINE_FACEBOOK
-    }
-    if (is_webview){
-      source.type = SESSION_WEBVIEW;
-    }
-    return source;
-  }
+  // if (ref === '') {
+  //   if (has_utm || has_os || has_gclid || has_yclid) {
+  //     source.type = SESSION_CAMPAIGN;
+  //     source.marksHash = simpleHash(marksCampaignString)
+  //   }
+  //   if (has_partner_ids) {
+  //     source.type = SESSION_PARTNER;
+  //     source.marksHash = simpleHash(marksPartnerString)
+  //   }
+  //   if(has_fbclid){
+  //     source.type = SESSION_SOCIAL
+  //     source.engine = ENGINE_FACEBOOK
+  //   }
+  //   if (is_webview){
+  //     source.type = SESSION_WEBVIEW;
+  //   }
+  //   return source;
+  // }
 
-  source.refhost = punycode.toUnicode(removeWww(ref.hostname));
-
-  // Internal
-  if (ref && source.refhost === removeWww(page.domain)) {
-    log('internal detect', ref, source.refhost, removeWww(page.hostname))
-    source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
-    return source;
-  }
 
   // Other types: campaigns, organic, social
+  if (ref !== '') {
 
-  const refDomainParts = source.refhost.split('.').reverse();
+    source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
-  for (let i = 0; i < RULES.length; i++) {
-    const rule = RULES[i];
-    const ruleDomainParts = rule.domain.split('.').reverse();
-    const refDomainPartsClone = refDomainParts.slice();
+    // Internal
+    if (source.refhost === removeWww(page.domain)) {
+      log.info('internal detect', ref, source.refhost, removeWww(page.hostname))
+      // source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
+      source.type = SESSION_INTERNAL;
+      // return source;
+    }
+    
 
-    if (ruleDomainParts[0] === '') {
-      ruleDomainParts.shift();
-      refDomainPartsClone.shift();
+    if(source.type !== SESSION_INTERNAL){    
+      const refDomainParts = source.refhost.split('.').reverse();
+
+      for (let i = 0; i < RULES.length; i++) {
+        const rule = RULES[i];
+        const ruleDomainParts = rule.domain.split('.').reverse();
+        const refDomainPartsClone = refDomainParts.slice();
+
+        if (ruleDomainParts[0] === '') {
+          ruleDomainParts.shift();
+          refDomainPartsClone.shift();
+        }
+
+        if (refDomainPartsClone.slice(0, ruleDomainParts.length).join('.') === ruleDomainParts.join('.')) {
+
+          source.type = rule.type;
+          source.engine = rule.engine;
+
+          if (rule.param && query[rule.param]) {
+            source.keyword = cleanQueryParam(query[rule.param]);
+          }
+
+          break;
+        }
+      }
     }
 
-    if (refDomainPartsClone.slice(0, ruleDomainParts.length).join('.') === ruleDomainParts.join('.')) {
-
-      source.type = rule.type;
-      source.engine = rule.engine;
-
-      if (rule.param && query[rule.param]) {
-        source.keyword = cleanQueryParam(query[rule.param]);
-      }
-
-      break;
+    // Referral
+    if (!source.engine) {
+      source.type = SESSION_REFERRAL;
     }
   }
 
-  // Referral
-  if (!source.engine) {
-    source.type = SESSION_REFERRAL;
+  if (is_webview){
+    source.type = SESSION_WEBVIEW;
   }
 
   // // Forcing campaign type id marks present
@@ -270,10 +304,12 @@ export default function pageSource(page) {
   // we dont use fbclid because Facebook adds that to each outgoing link
   if (has_utm || has_os || has_gclid || has_yclid) {
     source.type = SESSION_CAMPAIGN;
+    source.marksHash = simpleHash(marksCampaignString)
   }
 
   if (has_partner_ids){
     source.type = SESSION_PARTNER;
+    source.marksHash = simpleHash(marksPartnerString)
   }
 
   if (is_webview){
