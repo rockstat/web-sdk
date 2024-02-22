@@ -472,7 +472,7 @@ Tracker.prototype.warn = function (msg) {
  * Emit warn log message. For testing purposes.
  */
 Tracker.prototype.enableLogger = function () {
-  win._rst_logger = true;
+  win._rst4_logger = true;
 };
 
 /**

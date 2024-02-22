@@ -21,13 +21,13 @@ export default function createLogger(name) {
   };
 
   const log = function (...args) {
-    if (!isProd || win._rst_logger) {
+    if (!isProd || win._rst4_logger) {
       logger('info', args, prefix());
     }
   };
 
   log.info = function (...args) {
-    if (!isProd || win._rst_logger) {
+    if (!isProd || win._rst4_logger) {
       logger('info', args, prefix());
     }
   };
