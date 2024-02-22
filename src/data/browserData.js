@@ -86,7 +86,7 @@ navigator.connection.addEventListener('change', listener)
 export function prepareNavConnection(){
   if (nav['connection']){
     each(navConKeys, (k) => {  
-      if (nav.connection[k]){
+      if (nav.connection[k] && nav.connection[k] !== 'null'){
         navConData[k] = nav.connection[k];
       }
     });
