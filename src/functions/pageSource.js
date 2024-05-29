@@ -1,5 +1,5 @@
-import objectAssign from './objectAssing';
-import getOsMarks from './getOpenStatMarks';
+// import objectAssign from './objectAssing';
+// import getOsMarks from './getOpenStatMarks';
 import createLogger from './createLogger';
 import simpleHash from './simpleHash';
 import removeWww from './removeWww';
@@ -74,11 +74,11 @@ const RULES = [
   { domain: 'org.telegram.', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL }, // app
   { domain: 'telegram.org', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL },
   { domain: 't.me', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL },
-  
+
   { domain: 'vk.com', engine: ENGINE_VK, type: SESSION_SOCIAL }, // away.vk.com
   { domain: 'linkedin.com', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
   { domain: 'lnkd.in', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
-  
+
   { domain: 'ok.ru', engine: ENGINE_OK, type: SESSION_SOCIAL },
 
   { domain: 't.co', engine: ENGINE_TWITTER, type: SESSION_SOCIAL },
@@ -113,6 +113,9 @@ const cleanQueryParam = function (val) {
 
 
 export default function pageSource(page) {
+
+  // Initial session type
+
   const source = {
     type: SESSION_DIRECT,
     marks: {},
@@ -138,11 +141,13 @@ export default function pageSource(page) {
   let marksCampaignString = ''
   let marksPartnerString = ''
 
+
+  // Preparing query params
   if (page.query) {
     query = qs.parse(page.query);
     queryKeys = objectKeys(query);
-
-    let queryParamVal = ''
+    let queryParamVal = '';
+    
     // Processing marks
     for (let i = 0; i < queryKeys.length; i++) {
       const key = queryKeys[i];
@@ -151,24 +156,13 @@ export default function pageSource(page) {
         if (key === UTMS[j]) {
           queryParamVal = cleanQueryParam(query[key]);
           source.marks[key] = queryParamVal;
-          marksCampaignString += queryParamVal  + '|';
+          marksCampaignString += queryParamVal + '|';
           source.hasMarks = true;
           has_utm = true;
         }
       }
       queryParamVal = '';
 
-      // OpenStat
-      if (key === OS) {
-        const os = getOsMarks(query[key]);
-        marksCampaignString += query[key] + '|';
-        source.marks = objectAssign(source.marks, os);
-        source.hasMarks = true;
-        has_os = true;
-      }
-
-      
-      
       // Partner
       for (let j = 0; j < PARTNER_IDS.length; j++) {
         if (key === PARTNER_IDS[j]) {
@@ -187,7 +181,7 @@ export default function pageSource(page) {
           is_webview = true;
         }
       }
-      
+
 
       // YClid
       if (key === YCLID) {
@@ -244,21 +238,33 @@ export default function pageSource(page) {
   // }
 
 
-  // Other types: campaigns, organic, social
+  /**
+   * Sessions based on ref
+   */
   if (ref !== '') {
 
     source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
-    // Internal
+    /**
+     * INTERNAL SESSION
+     * 
+     * Fired by current domain
+     * 
+     */
     if (source.refhost === removeWww(page.domain)) {
       log.info('internal detect', ref, source.refhost, removeWww(page.hostname))
       // source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
       source.type = SESSION_INTERNAL;
       // return source;
     }
-    
 
-    if(source.type !== SESSION_INTERNAL){    
+    /**
+     * ORGANIN/SOCIAL/CAMPAIGN(some) SESSION 
+     * 
+     * based on rules list
+     * 
+     */
+    if (source.type !== SESSION_INTERNAL) {
       const refDomainParts = source.refhost.split('.').reverse();
 
       for (let i = 0; i < RULES.length; i++) {
@@ -285,14 +291,15 @@ export default function pageSource(page) {
       }
     }
 
-    // Referral
+    /**
+     * REFERRAL SESSION
+     * 
+     * Any source except rules list
+     * 
+     */
     if (!source.engine) {
       source.type = SESSION_REFERRAL;
     }
-  }
-
-  if (is_webview){
-    source.type = SESSION_WEBVIEW;
   }
 
   // // Forcing campaign type id marks present
@@ -302,17 +309,37 @@ export default function pageSource(page) {
 
   // Forcing campaign type id marks present
   // we dont use fbclid because Facebook adds that to each outgoing link
+
+  /**
+   * CAMPAIGN SESSION
+   * 
+   * forced if campaign marks present
+   * 
+   */
   if (has_utm || has_os || has_gclid || has_yclid) {
     source.type = SESSION_CAMPAIGN;
     source.marksHash = simpleHash(marksCampaignString)
   }
 
-  if (has_partner_ids){
+  /**
+   * PARTNER SESSION
+   * 
+   * forced if partner marks present
+   * 
+   */
+  if (has_partner_ids) {
     source.type = SESSION_PARTNER;
     source.marksHash = simpleHash(marksPartnerString)
   }
 
-  if (is_webview){
+
+  /**
+   * WEBVIEW SESSION
+   * 
+   * Forced if webview parameter present
+   * 
+   */
+  if (is_webview) {
     source.type = SESSION_WEBVIEW;
   }
 

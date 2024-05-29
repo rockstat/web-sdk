@@ -21,11 +21,12 @@ travis-trigger:
 		-d '{ "request": { "branch":"$(br)" }}' \
 		https://api.travis-ci.com/repo/$(subst $(DEL),$(PERCENT)2F,$(repo))/requests
 
+# common
+
 build:
 	docker build -t web-sdk .
 
-tag-ng:
-	docker tag web-sdk rockstat/web-sdk:ng
+# latest
 
 tag-latest:
 	docker tag web-sdk rockstat/web-sdk:latest
@@ -33,7 +34,28 @@ tag-latest:
 push-latest:
 	docker push rockstat/web-sdk:latest
 
+
+# ng
+
+tag-ng:
+	docker tag web-sdk rockstat/web-sdk:ng
+
 push-ng:
 	docker push rockstat/web-sdk:ng
 
 all-ng: build tag-ng push-ng
+
+
+#ng-dev
+
+build-ng-dev:
+	docker build -t web-sdk:ng-dev .
+
+tag-ng-dev:
+	docker tag web-sdk rockstat/web-sdk:ng-dev
+
+push-ng-dev:
+	docker push rockstat/web-sdk:ng-dev
+
+all-ng-dev: build-ng-dev tag-ng-dev push-ng-dev
+

@@ -28,6 +28,7 @@ import {
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import nextTick from './functions/nextTick'
+import simpleHash from './functions/simpleHash';
 // import { isObject } from './functions/type';
 
 const HTTPS = 'https';
@@ -103,24 +104,24 @@ Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
  * Creates XHR / XDR object
  * @param {string} url
  */
-Transport.prototype.createXHR = function (url) {
-  return new Promise(function (resolve, reject) {
-    if (hasXHRSupport) {
-      /** @type {XMLHttpRequest} */
-      const xhr = new win.XMLHttpRequest();
-      xhr.open('POST', url, true);
-      // if (hasXHRWithCreds) {
-        // xhr.withCredentials = true;
-      // }
-      // not used to prevent options requests
-      // xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
-      xhr.setRequestHeader("Content-Type", "application/json");
-      resolve(xhr);
-    } else {
-      return reject('XHR not supported')
-    } 
-  })
-}
+// Transport.prototype.createXHR = function (url) {
+//   return new Promise(function (resolve, reject) {
+//     if (hasXHRSupport) {
+//       /** @type {XMLHttpRequest} */
+//       const xhr = new win.XMLHttpRequest();
+//       xhr.open('POST', url, true);
+//       // if (hasXHRWithCreds) {
+//         // xhr.withCredentials = true;
+//       // }
+//       // not used to prevent options requests
+//       // xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+//       xhr.setRequestHeader("Content-Type", "application/json");
+//       resolve(xhr);
+//     } else {
+//       return reject('XHR not supported')
+//     } 
+//   })
+// }
 
 
 /**
@@ -128,26 +129,26 @@ Transport.prototype.createXHR = function (url) {
  * @param url
  * @param data
  */
-Transport.prototype.sendXHR = function (url, data) {
-  return new Promise((resolve, reject) => {
-    this.createXHR(url)
-      .then(xhr => {
-        xhr.onload = () => {
-          try {
-            resolve(JSON.parse(xhr.responseText));
-          } catch (e) {
-            log.warn(e)
-            reject(e);
-          }
-        };
-        xhr.onerror = () => {
-          return reject(`XHR status !== 200: ${xhr.status}`)
-        };
-        xhr.send(data);
-      })
-      .catch(e => reject(e))
-  });
-};
+// Transport.prototype.sendXHR = function (url, data) {
+//   return new Promise((resolve, reject) => {
+//     this.createXHR(url)
+//       .then(xhr => {
+//         xhr.onload = () => {
+//           try {
+//             resolve(JSON.parse(xhr.responseText));
+//           } catch (e) {
+//             log.warn(e)
+//             reject(e);
+//           }
+//         };
+//         xhr.onerror = () => {
+//           return reject(`XHR status !== 200: ${xhr.status}`)
+//         };
+//         xhr.send(data);
+//       })
+//       .catch(e => reject(e))
+//   });
+// };
 
 
 /**
@@ -181,9 +182,9 @@ Transport.prototype.sendIMG = function (url) {
  */
 Transport.prototype.send = function (msg, options = {}) {
   const data = JSON.stringify(msg);
+  const dig = simpleHash(data);
   const isRequest = !!options[EVENT_OPTION_REQUEST];
-  const useTransportImg = !!options[EVENT_OPTION_TERMINATOR]
-    || !!options[EVENT_OPTION_OUTBOUND] || !!options[EVENT_OPTION_TRANSPORT_IMG];
+  const useTransportImg = /* !!options[EVENT_OPTION_TERMINATOR] || */ /*  !!options[EVENT_OPTION_OUTBOUND] || */ !!options[EVENT_OPTION_TRANSPORT_IMG];
   const _service = this.servicesMap[msg.service] || msg.service;
   const postPath = `/${this.urlMark}/${_service}.json`;
   const imgPath = `/${this.urlMark}/${_service}.gif`;
@@ -199,14 +200,14 @@ Transport.prototype.send = function (msg, options = {}) {
       // user sendBeacon only for notifications requests
       if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
         log.info('sending using beacon');
-        nav.sendBeacon(this.makeURL(postPath), data);
+        nav.sendBeacon(this.makeURL(postPath, {"dig": dig}), data);
         return Promise.resolve();
       }
       // regular XMLHttpRequest
-      if (this.options.allowXHR && hasXHRSupport) {
-        log.info('sending using XHR/XDR');
-        return this.sendXHR(this.makeURL(postPath), data);
-      }
+      // if (this.options.allowXHR && hasXHRSupport) {
+      //   log.info('sending using XHR/XDR');
+      //   return this.sendXHR(this.makeURL(postPath), data);
+      // }
       // If reuquired response but not available transport
       if (isRequest) {
         return Promise.reject('Requested request transport, but method unavailable');

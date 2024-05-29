@@ -3,16 +3,17 @@ FROM node:18-alpine as builder
 WORKDIR /build
 
 COPY package.json .
-COPY yarn.lock .
+COPY package-lock.json .
+# COPY yarn.lock .
 
-RUN yarn install \
-  && yarn cache clean
+# RUN yarn install && yarn cache clean
+RUN npm ci && npm cache clean --force
 
 COPY . .
 ENV NODE_ENV production
 
-RUN yarn build && rm -rf node_modules
-
+# RUN yarn build && rm -rf node_modules
+RUN npm run build  && rm -rf node_modules
 
 # Working image
 FROM alpine:3.18
