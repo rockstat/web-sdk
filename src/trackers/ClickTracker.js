@@ -54,7 +54,7 @@ ClickTracker.prototype.eventHandler = function (e) {
 ClickTracker.prototype.mutateToLinkClick = function (draft, link) {
 
   const loc = win.location;
-  const outbound = link.hostname !== loc.hostname || link.port !== loc.port || link.protocol !== loc.protocol;
+  const outbound = (link.hostname !== loc.hostname) && ((link.hostname !== '') || (link.onclick === null));
 
   const linkData = {
     href: link.href,

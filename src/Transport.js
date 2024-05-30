@@ -184,7 +184,7 @@ Transport.prototype.send = function (msg, options = {}) {
   const data = JSON.stringify(msg);
   const dig = simpleHash(data);
   const isRequest = !!options[EVENT_OPTION_REQUEST];
-  const useTransportImg = /* !!options[EVENT_OPTION_TERMINATOR] || */ /*  !!options[EVENT_OPTION_OUTBOUND] || */ !!options[EVENT_OPTION_TRANSPORT_IMG];
+  const useTransportImg = !!options[EVENT_OPTION_TERMINATOR] || !!options[EVENT_OPTION_OUTBOUND] || !!options[EVENT_OPTION_TRANSPORT_IMG];
   const _service = this.servicesMap[msg.service] || msg.service;
   const postPath = `/${this.urlMark}/${_service}.json`;
   const imgPath = `/${this.urlMark}/${_service}.gif`;

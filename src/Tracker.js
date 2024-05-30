@@ -57,7 +57,7 @@ import { packSemVer } from './functions/packSemVer';
 
 
 const LIBRARY = 'web-sdk';
-const LIBVER = packSemVer('4.4.0');
+const LIBVER = packSemVer('5.0.1');
 
 const noop = () => { };
 const asObject = (options) => {
@@ -288,11 +288,9 @@ Tracker.prototype.configure = function (options) {
 Tracker.prototype.handle_proxy = function (name, data = {}, options = {}) {
   try {
     return this.handle(name, data, options);
-  } catch (err) {
-    log.warn('Catched event handle error', err)
-    this.logOnServer({
-      err: String(err)
-    })
+  } catch (e) {
+    log.warn('Catched event handle error', e)
+    this.logError(e);
   }
 }
 
@@ -345,9 +343,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
     user: this.sessionTracker.userData(),
-    page: pageDefaults({
-      short: true
-    }),
+    page: pageDefaults(),
     sess: this.sessionTracker.sessionData(),
     char: browserCharacts,
     browser: browserData(),
@@ -380,6 +376,34 @@ Tracker.prototype.logOnServer = function (msg) {
       [EVENT_OPTION_TRANSPORT_IMG]: true
     });
   }
+};
+
+
+/**
+ * Log remote: send to server log
+ * @param {Error} e
+ */
+Tracker.prototype.logError = function (e, errStack) {
+  if (this.isInitialized()) {
+    try {
+      errStack = e.stack;
+    } catch (e) {
+      errStack = 'Stack not available';
+    }
+    try {
+      this.sendToServer({
+        service: SERVICE_LOG,
+        name: 'log',
+        msg: String(e),
+        stack: errStack
+      }, {
+        [EVENT_OPTION_TRANSPORT_IMG]: true
+      });
+    } catch (e){
+      log.warn('sendToServer (logError) executed with error');
+    }
+  }
+  
 };
 
 /**
