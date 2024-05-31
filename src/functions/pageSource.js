@@ -246,19 +246,6 @@ export default function pageSource(page) {
     source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
     /**
-     * INTERNAL SESSION
-     * 
-     * Fired by current domain
-     * 
-     */
-    if (source.refhost === removeWww(page.domain)) {
-      log.info('internal detect', ref, source.refhost, removeWww(page.hostname))
-      // source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
-      source.type = SESSION_INTERNAL;
-      // return source;
-    }
-
-    /**
      * ORGANIN/SOCIAL/CAMPAIGN(some) SESSION 
      * 
      * based on rules list
@@ -299,6 +286,19 @@ export default function pageSource(page) {
      */
     if (!source.engine) {
       source.type = SESSION_REFERRAL;
+    }
+    
+    /**
+     * INTERNAL SESSION
+     * 
+     * Fired by current domain
+     * 
+     */
+    if (source.refhost === removeWww(page.domain)) {
+      log.info('internal detect', ref, source.refhost, removeWww(page.hostname))
+      // source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
+      source.type = SESSION_INTERNAL;
+      // return source;
     }
   }
 

@@ -6,10 +6,13 @@ COPY package.json .
 COPY package-lock.json .
 # COPY yarn.lock .
 
+COPY .npmrc .
+
 # RUN yarn install && yarn cache clean
-RUN npm ci && npm cache clean --force
+RUN npm ci   --loglevel http --platform=linux && npm cache clean --force
 
 COPY . .
+RUN rm -f .npmrc
 ENV NODE_ENV production
 
 # RUN yarn build && rm -rf node_modules
