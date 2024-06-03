@@ -290,7 +290,7 @@ Tracker.prototype.handle_proxy = function (name, data = {}, options = {}) {
     return this.handle(name, data, options);
   } catch (e) {
     log.warn('Catched event handle error', e)
-    this.logError(e);
+    this.logOnServer(e);
   }
 }
 
@@ -383,28 +383,28 @@ Tracker.prototype.logOnServer = function (msg) {
  * Log remote: send to server log
  * @param {Error} e
  */
-Tracker.prototype.logError = function (e, errStack) {
-  if (this.isInitialized()) {
-    try {
-      errStack = e.stack;
-    } catch (e) {
-      errStack = 'Stack not available';
-    }
-    try {
-      this.sendToServer({
-        service: SERVICE_LOG,
-        name: 'log',
-        msg: String(e),
-        stack: errStack
-      }, {
-        [EVENT_OPTION_TRANSPORT_IMG]: true
-      });
-    } catch (e){
-      log.warn('sendToServer (logError) executed with error');
-    }
-  }
+// Tracker.prototype.logError = function (e, errStack) {
+//   if (this.isInitialized()) {
+//     try {
+//       errStack = e.stack;
+//     } catch (e) {
+//       errStack = 'Stack not available';
+//     }
+//     try {
+//       this.sendToServer({
+//         service: SERVICE_LOG,
+//         name: 'log',
+//         msg: String(e),
+//         stack: errStack
+//       }, {
+//         [EVENT_OPTION_TRANSPORT_IMG]: true
+//       });
+//     } catch (e){
+//       log.warn('sendToServer (logError) executed with error');
+//     }
+//   }
   
-};
+// };
 
 /**
  *

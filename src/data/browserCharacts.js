@@ -32,8 +32,14 @@ export const hasWebPushSupport = (function () {
 })();
 
 export const hasBeaconSupport = (function () {
-  return 'sendBeacon' in nav;
+  return nav && ('sendBeacon' in nav);
 })();
+
+export const hasFetchSupport = (function () {
+  return !!fetch;
+})();
+
+
 
 export const hasBlobSupport = (function () {
   return 'Blob' in win;

@@ -10,6 +10,7 @@ import {
 } from './Browser';
 import {
   hasBeaconSupport,
+  hasFetchSupport,
   hasXHRWithCreds,
   hasXHRSupport,
   hasXDRSupport,
@@ -156,7 +157,7 @@ Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
  * @param url {string}
  */
 Transport.prototype.sendIMG = function (url) {
-  
+
   const p = new Promise((resolve, reject) => {
     const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
     // img.onload = () => {
@@ -179,7 +180,7 @@ Transport.prototype.sendIMG = function (url) {
  * @param msg {Object}
  * @param query {Array}
  * @param options {Object}
- * 
+ * @returns {Promise}
  * 
  * TODO: Use sendBeacon when unloading instead of img
  * 
@@ -194,8 +195,41 @@ Transport.prototype.send = function (msg, options = {}) {
   const postPath = `/${this.urlMark}/${_service}.json`;
   const imgPath = `/${this.urlMark}/${_service}.gif`;
 
-  if (!useTransportImg){
+  if (!useTransportImg) {
+
     try {
+
+      const postUrl = this.makeURL(postPath, { "dig": dig });
+
+      if (hasFetchSupport) {
+        fetch(postUrl, {
+          method: 'POST',
+          body: data,
+          keepalive: true
+        }).then((response) => {
+          return response.text()
+            .then(([responseText]) => {
+              // const res = {
+              //   statusCode: response.status,
+              //   text: responseText,
+              // }
+              if (response.status === 200) {
+                try {
+                  return Promise.resolve(JSON.parse(responseText));
+                } catch (e) {
+                  log.error(e)
+                  return Promise.reject(e);
+                }
+              }
+            });
+        }).catch((error) => {
+          log.warn('Fetch failed', error);
+          // logger.error(error)
+          // options.callback?.({ statusCode: 0, text: error })
+        });
+      }
+
+
       // if websocket activated
 
       // if (this.wsConnected) {
@@ -205,7 +239,7 @@ Transport.prototype.send = function (msg, options = {}) {
       // user sendBeacon only for notifications requests
       if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
         log.info('sending using beacon');
-        nav.sendBeacon(this.makeURL(postPath, {"dig": dig}), data);
+        nav.sendBeacon(postUrl, data);
         return Promise.resolve();
       }
       // regular XMLHttpRequest
@@ -220,6 +254,7 @@ Transport.prototype.send = function (msg, options = {}) {
     } catch (error) {
       log.warn('Beacon/XHR failed', error);
     }
+    // return Promise.resolve({});
   }
 
   // Use extra transport - img
