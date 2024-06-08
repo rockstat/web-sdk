@@ -24,7 +24,7 @@ travis-trigger:
 # common
 
 build:
-	docker build -t web-sdk .
+	docker build --build-arg NPM_CONFIG_REGISTRY_ARG=http://host.docker.internal:4873/ --platform linux/amd64  -t web-sdk .
 
 # latest
 

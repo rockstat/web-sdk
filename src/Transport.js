@@ -15,7 +15,6 @@ import {
   hasXHRSupport,
   hasXDRSupport,
   hasAnyXRSupport,
-  hasWSSupport
 } from './data/browserCharacts';
 import {
   EVENT_OPTION_OUTBOUND,
@@ -33,7 +32,6 @@ import simpleHash from './functions/simpleHash';
 // import { isObject } from './functions/type';
 
 const HTTPS = 'https';
-const WSS = 'wss';
 
 const log = createLogger('RST/Transport');
 const noop = () => { };
@@ -43,7 +41,6 @@ const noop = () => { };
  * Transport class containing general connecting methods
  * @param {Object} options transport options
  * @constructor
- * @property {boolean} wsConnected
  * @property {Object} creds
  * @class
  *
@@ -57,10 +54,7 @@ export function Transport(options) {
   );
   this.pathPrefix = options.pathPrefix;
   this.server = this.options.server;
-  // this.wsServer = this.options.wsServer || this.options.server;
-  // this.wsPath = this.options.wsPath || '/wss';
   this.urlMark = this.options.urlMark;
-  // this.wsConnected = false;
   this.servicesMap = {
     'track': 't4k'
   }
@@ -94,63 +88,6 @@ Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
   const query = queryStringify(data);
   return `${proto}://${this.server}${this.pathPrefix}${path}?${query}`;
 }
-
-// Transport.prototype.makeWsURL = function (data = {}) {
-//   const query = queryStringify(data);
-//   return `${WSS}://${this.wsServer}${this.wsPath}?${query}`;
-// }
-
-
-/**
- * Creates XHR / XDR object
- * @param {string} url
- */
-// Transport.prototype.createXHR = function (url) {
-//   return new Promise(function (resolve, reject) {
-//     if (hasXHRSupport) {
-//       /** @type {XMLHttpRequest} */
-//       const xhr = new win.XMLHttpRequest();
-//       xhr.open('POST', url, true);
-//       // if (hasXHRWithCreds) {
-//         // xhr.withCredentials = true;
-//       // }
-//       // not used to prevent options requests
-//       // xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
-//       xhr.setRequestHeader("Content-Type", "application/json");
-//       resolve(xhr);
-//     } else {
-//       return reject('XHR not supported')
-//     } 
-//   })
-// }
-
-
-/**
- * Old good friend XHR
- * @param url
- * @param data
- */
-// Transport.prototype.sendXHR = function (url, data) {
-//   return new Promise((resolve, reject) => {
-//     this.createXHR(url)
-//       .then(xhr => {
-//         xhr.onload = () => {
-//           try {
-//             resolve(JSON.parse(xhr.responseText));
-//           } catch (e) {
-//             log.warn(e)
-//             reject(e);
-//           }
-//         };
-//         xhr.onerror = () => {
-//           return reject(`XHR status !== 200: ${xhr.status}`)
-//         };
-//         xhr.send(data);
-//       })
-//       .catch(e => reject(e))
-//   });
-// };
-
 
 /**
  *
@@ -196,23 +133,17 @@ Transport.prototype.send = function (msg, options = {}) {
   const imgPath = `/${this.urlMark}/${_service}.gif`;
 
   if (!useTransportImg) {
-
     try {
-
       const postUrl = this.makeURL(postPath, { "dig": dig });
-
       if (hasFetchSupport) {
-        fetch(postUrl, {
+        return fetch(postUrl, {
           method: 'POST',
           body: data,
           keepalive: true
         }).then((response) => {
           return response.text()
-            .then(([responseText]) => {
-              // const res = {
-              //   statusCode: response.status,
-              //   text: responseText,
-              // }
+            .then((responseText) => {
+              console.log('resp text', responseText, response.status, response.status === 200);
               if (response.status === 200) {
                 try {
                   return Promise.resolve(JSON.parse(responseText));
@@ -224,37 +155,19 @@ Transport.prototype.send = function (msg, options = {}) {
             });
         }).catch((error) => {
           log.warn('Fetch failed', error);
-          // logger.error(error)
-          // options.callback?.({ statusCode: 0, text: error })
         });
       }
-
-
-      // if websocket activated
-
-      // if (this.wsConnected) {
-      //   log('sending using WS');
-      //   return this.wsSendMessage(msg);
-      // }
-      // user sendBeacon only for notifications requests
       if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
         log.info('sending using beacon');
         nav.sendBeacon(postUrl, data);
         return Promise.resolve();
       }
-      // regular XMLHttpRequest
-      // if (this.options.allowXHR && hasXHRSupport) {
-      //   log.info('sending using XHR/XDR');
-      //   return this.sendXHR(this.makeURL(postPath), data);
-      // }
-      // If reuquired response but not available transport
       if (isRequest) {
         return Promise.reject('Requested request transport, but method unavailable');
       }
     } catch (error) {
       log.warn('Beacon/XHR failed', error);
     }
-    // return Promise.resolve({});
   }
 
   // Use extra transport - img
@@ -270,91 +183,3 @@ Transport.prototype.send = function (msg, options = {}) {
     return Promise.reject(e);
   }
 };
-
-
-/**
- * Establish server connection if configured
- */
-Transport.prototype.connect = function () {
-  // if (this.options.activateWs && hasWSSupport) {
-  //   this.startWs();
-  // }
-  return this;
-}
-
-
-/**
- * Start WebSocket connection
- * @param server
- */
-// Transport.prototype.startWs = function () {
-//   const pinger = setInterval(_ => {
-//     this.wsConnected && this.wsSendMessage({ "service": "track", "name": "ping" });
-//   }, 1e4);
-//   try {
-//     const endpoint = this.makeWsURL(this.creds);
-//     log(`ws endpoing: ${endpoint}`);
-//     // this.ws = new Sockette(endpoint, {
-//       // timeout: 5e3,
-//       // maxAttempts: 10,
-//       // onopen: (e) => {
-//         // this.wsConnected = true;
-//         // log('WS connected');
-//         // this.wsSendMessage({ "service": "track", "name": "hello" });
-//       // },
-//       onmessage: (e) => {
-//         if (e.data) {
-//           try {
-//             const data = JSON.parse(e.data);
-//             if (isObject(data) && data.id__) {
-//               this.clearWait(data.id__, true, data);
-//             } else {
-//               this.emit(INTERNAL_EVENT, SERVER_MESSAGE, data);
-//             }
-//           } catch (err) {
-//             log.warn(err);
-//           }
-//         }
-//       },
-//       onreconnect: (e) => { },
-//       onmaximum: (e) => log.warn('Stop Attempting!', e),
-//       onclose: (e) => {
-//         this.wsConnected = false;
-//         clearInterval(pinger);
-//       },
-//       onerror: e => log('Error:', e)
-//     });
-
-//   } catch (e) {
-//     log.error('ws error', e);
-//   }
-// };
-
-// Transport.prototype.clearWait = function (id, success, dataOrError) {
-//   if (this.waitCallers[id]) {
-//     const wait = this.waitCallers[id];
-//     delete this.waitCallers[id];
-//     clearTimeout(wait.timeout)
-//     if (!success && wait.reject) {
-//       wait.reject(dataOrError)
-//     }
-//     else if (success && wait.resolve) {
-//       wait.resolve(dataOrError);
-//     }
-//   }
-// }
-
-// Transport.prototype.wsSendMessage = function (msg, callback) {
-//   const id = msg.id__ = '_' + this.msgId();
-//   return new Promise((resolve, reject) => {
-//     const timeout = setTimeout(() => {
-//       this.clearWait(id, false, new Error('WS response Timeout'))
-//     }, this.options.responseTimeout);
-//     this.waitCallers[id] = { resolve, reject, timeout };
-//     this.ws.json(objectAssign(msg, this.creds));
-//   })
-// }
-
-Transport.prototype.msgId = function () {
-  return ++this.msgCounter;
-}
