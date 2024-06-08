@@ -11,7 +11,7 @@ import {
   hashCode
 } from './functions/stringHash';
 import autoDomain from './functions/autoDomain';
-import browserData, {prepareUAData, prepareNavConnection} from './data/browserData';
+import browserData, { prepareUAData, prepareNavConnection } from './data/browserData';
 import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
@@ -75,6 +75,7 @@ function Tracker() {
   log('starting RST Tracker');
 
   this.startTime = (new Date()).getTime();
+  this.timeDelta = 0;
 
   const pd = pageDefaults();
   const [domain, domainHash] = this.buildProjectId(pd.domain);
@@ -305,7 +306,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
-  log.info(`Handling ${name}`, {data});
+  log.info(`Handling ${name}`, { data });
   this.emit(EVENT, name, data, options);
 
   if (name === EVENT_PAGEVIEW) {
@@ -403,7 +404,7 @@ Tracker.prototype.logOnServer = function (msg) {
 //       log.warn('sendToServer (logError) executed with error');
 //     }
 //   }
-  
+
 // };
 
 /**
@@ -414,7 +415,7 @@ Tracker.prototype.logOnServer = function (msg) {
 Tracker.prototype.sendToServer = function (msg, options) {
   return this.transport
     .send(msg, options)
-    .then(() => { 
+    .then(() => {
       //none
     })
     .catch((e) => {
@@ -598,5 +599,8 @@ Tracker.prototype.getLibInfo = function () {
 };
 
 
+Tracker.prototype.setTimeDelta = function (d) {
+  this.timeDelta = d;
+};
 
 export default Tracker;
