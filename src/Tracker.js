@@ -57,7 +57,7 @@ import { packSemVer } from './functions/packSemVer';
 
 
 const LIBRARY = 'web-sdk';
-const LIBVER = packSemVer('5.0.1');
+const LIBVER = packSemVer('5.1.0');
 
 const noop = () => { };
 const asObject = (options) => {
@@ -177,8 +177,9 @@ Tracker.prototype.initialize = function () {
 
   // Interract with server
   this.transport = new Transport(this.options)
-    .setCreds(this.sessionTracker.creds())
-    .connect();
+    .setCreds(this.sessionTracker.creds());
+  // For WS
+  // .connect();
 
 
   // Main tracker
@@ -343,7 +344,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     data: data,
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
-    user: this.sessionTracker.userData(),
+    user: { td: this.timeDelta, ...this.sessionTracker.userData() },
     page: pageDefaults(),
     sess: this.sessionTracker.sessionData(),
     char: browserCharacts,
