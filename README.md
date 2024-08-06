@@ -15,9 +15,29 @@ a new server deployment system.
 ![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png?3)
 
 
+## Useful links
+
+- https://github.com/pierrec/js-cuint
+- https://github.com/bryc/code
+
+
+- https://www.typescriptlang.org/docs/handbook/migrating-from-javascript.html
+
+
+Reliability Problem
+
+The above methods all suffer from reliability problems, stemming from one core issue: There is not an ideal time in a page’s lifecycle to make the JavaScript call to send out the beacon.
+
+- unload and beforeunload are unreliable, and outright ignored by several major browsers.
+- pagehide and visibilitychange have issues on mobile platforms.
+
+https://github.com/WICG/pending-beacon
+
+
 ## Thanks
 
 - [BrowserStack](https://www.browserstack.com): great tool for manual and automated testing in browser
+
 
 ## License
 

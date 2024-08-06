@@ -2,6 +2,7 @@
 // import getOsMarks from './getOpenStatMarks';
 import createLogger from './createLogger';
 import simpleHash from './simpleHash';
+
 import removeWww from './removeWww';
 import objectKeys from './objectKeys';
 import { isArray } from './type';
@@ -41,12 +42,12 @@ const ENGINE_TELEGRAM = 'telegram';
 const ENGINE_YOUTUBE = 'youtube';
 
 const UTMS = ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term'];
-const PARTNER_IDS = ['pid', 'cid'];
-const OS = '_openstat';
+const PARTNER_IDS = ['pid', 'cid', 'sub1', 'sub2', 'sub3', 'sub4', 'sub5'];
 const YCLID = 'yclid';
 const GCLID = 'gclid';
 const FBCLID = 'fbclid';
 const WEBVIEW_PARAM = 'inWebView';
+const UID_PARAM = 'uid';
 
 const RULES = [
 
@@ -123,7 +124,8 @@ export default function pageSource(page) {
     hasMarks: false,
     refHash: '',
     engine: undefined,
-    refhost: ''
+    refhost: '',
+    uid: undefined
   };
 
   log.info(page)
@@ -147,7 +149,7 @@ export default function pageSource(page) {
     query = qs.parse(page.query);
     queryKeys = objectKeys(query);
     let queryParamVal = '';
-    
+
     // Processing marks
     for (let i = 0; i < queryKeys.length; i++) {
       const key = queryKeys[i];
@@ -208,6 +210,10 @@ export default function pageSource(page) {
         source.marks[key] = query[key];
         // marksCampaignString += query[key] + '|';
         has_fbclid = true;
+      }
+
+      if (key === UID_PARAM) {
+        source.uid = query[key];
       }
     }
   }
@@ -287,7 +293,7 @@ export default function pageSource(page) {
     if (!source.engine) {
       source.type = SESSION_REFERRAL;
     }
-    
+
     /**
      * INTERNAL SESSION
      * 
