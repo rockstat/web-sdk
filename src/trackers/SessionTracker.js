@@ -25,6 +25,7 @@ const KEY_SESSION_COUNTER = 'csess';
 const KEY_PAGES_COUNTER = 'scpages';
 const KEY_EVENTS_COUNTER = 'scevs';
 const KEY_UID = 'uid';
+const KEY_SESS_START = 'sstart';
 const KEY_USER_ID = 'userid';
 const KEY_USER_TRAITS = 'usertr';
 const KEY_USER_PARAMS = 'userpr';
@@ -153,7 +154,6 @@ SessionTracker.prototype.sessionData = function () {
       refHash: undefined
     }
   );
-
 };
 
 SessionTracker.prototype.getUserParams = function () {
@@ -245,11 +245,11 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
       session: true
     });
   }
-  
+
   this.storage.inc(KEY_EVENTS_COUNTER, {
     session: true
   });
-  
+
 
   // Emitting session event
   if (shouldRestart) {
@@ -258,35 +258,39 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 };
 
 SessionTracker.prototype.sourceRestart = function (source) {
-  
+
   let byRef = false;
   const pastSession = this.storage.get(KEY_LAST_SESSION);
-  
+
   let pastSessionMarksHash = ''
-  
-  if(pastSession){
-    if(pastSession.marksHash){
+
+  if (pastSession) {
+    if (pastSession.marksHash) {
       pastSessionMarksHash = pastSession.marksHash;
     }
     byRef = pastSession.refHash !== source.refHash;
   }
 
-  if (source.type === SESSION_PARTNER ){
-    if(source.marksHash !== pastSessionMarksHash){
+  if (source.type === SESSION_PARTNER) {
+    if (source.marksHash !== pastSessionMarksHash) {
       return true;
     }
   }
-  
-  if(source.type === SESSION_CAMPAIGN){
-    if(source.marksHash !== pastSessionMarksHash){
+
+  if (source.type === SESSION_CAMPAIGN) {
+    if (source.marksHash !== pastSessionMarksHash) {
       return true;
     }
     return byRef;
   }
 
-  if(source.type === SESSION_ORGANIC || source.type === SESSION_SOCIAL){
+  if (source.type === SESSION_ORGANIC) {
     return byRef;
   }
+  
+  // if (source.type === SESSION_SOCIAL) {
+  //   return byRef;
+  // }
 
   return false;
 
@@ -298,7 +302,7 @@ SessionTracker.prototype.sourceRestart = function (source) {
   //   source.type === SESSION_SOCIAL;
 
   // // Prevent restarting by refresh enter page
-  
+
   // return bySource && byRef;
 
 };
@@ -325,6 +329,11 @@ SessionTracker.prototype.restart = function (source, now) {
     session: true
   });
   this.storage.set(KEY_EVENTS_COUNTER, 0, {
+    session: true
+  });
+
+  // Set cookie with session start time (need for generating session id at app backend)
+  this.cookieStorage.set(KEY_SESS_START, source.start, {
     session: true
   });
 

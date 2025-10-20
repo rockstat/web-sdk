@@ -25,7 +25,9 @@ const log = createLogger('RST/BrowserEventsTracker');
  */
 const BrowserEventsTracker = function (options) {
 
-  this.options = objectAssing({}, options);
+  this.options = objectAssing({
+    unloadHandlers: true
+  }, options);
 
   // Обработчик завершения загрузки страницы
   this.loadedHandler = once(() => {
@@ -40,18 +42,14 @@ const BrowserEventsTracker = function (options) {
 
   // Обработчик beforeunload, который вызывается перед непосредственной выгрузкой страницы
   this.beforeUnloadHandler = () => {
-
     this.emit(INTERNAL_EVENT, DOM_BEFORE_UNLOAD);
     removeHandler(win, 'beforeunload', this.beforeUnloadHandler);
-
   };
 
   // Обработчик unload
   this.unloadHandler = () => {
-
     this.emit(INTERNAL_EVENT, DOM_UNLOAD);
     removeHandler(win, 'unload', this.unloadHandler);
-
   };
 };
 
@@ -60,8 +58,10 @@ Emitter(BrowserEventsTracker.prototype);
 BrowserEventsTracker.prototype.initialize = function () {
 
   addHandler(win, 'load', this.loadedHandler);
-  addHandler(win, 'beforeunload', this.beforeUnloadHandler);
-  addHandler(win, 'unload', this.unloadHandler);
+  if (this.options.unloadHandlers) {
+    addHandler(win, 'beforeunload', this.beforeUnloadHandler);
+    addHandler(win, 'unload', this.unloadHandler);
+  }
 };
 
 export default BrowserEventsTracker;

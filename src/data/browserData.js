@@ -1,6 +1,6 @@
 import { nav, win, body, html } from "../Browser";
 import objectAssing from '../functions/objectAssing';
-import each  from '../functions/each';
+import each from '../functions/each';
 
 const not_present = 'not present'
 
@@ -66,11 +66,11 @@ function sr() {
   } catch (e) { }
 }
 
-const he_values = ['architecture', 'bitness', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion'];
-const storedUAData = {};
+
+
 
 const navConData = {};
-const navConKeys = ['type', 'effectiveType', 'downlinkMax'];
+const navConKeys = ['type', 'effectiveType', 'downlinkMax', 'rtt'];
 
 
 /*
@@ -83,31 +83,76 @@ navigator.connection.addEventListener('change', listener)
 
 
 */
-export function prepareNavConnection(){
-  if (nav['connection']){
-    each(navConKeys, (k) => {  
-      if (nav.connection[k] && nav.connection[k] !== 'null'){
+export function prepareNavConnection() {
+  if (nav['connection']) {
+    each(navConKeys, (k) => {
+      if (nav.connection[k] && nav.connection[k] !== 'null') {
         navConData[k] = nav.connection[k];
       }
     });
   }
 }
 
+
+/**
+ * Navigator extra
+ * 
+ */
+
+const navExtraData = {};
+
+export function prepareNavExtra() {
+  if (nav['hardwareConcurrency']) {
+    navExtraData['hc'] = nav['hardwareConcurrency'];
+  }
+  if (nav['deviceMemory']) {
+    navExtraData['dm'] = nav['deviceMemory'];
+  }
+}
+
+
+/**
+ * Battery
+ */
+
+const navBatData = {}
+
+
+export function prepareBatData() {
+  if (nav['getBattery']) {
+    nav.getBattery().then(b => {
+      navBatData['a'] = 1;
+      navBatData['ch'] = Math.round(Number(b['charging']));
+      navBatData['l'] = Math.round(Number(b['level']) * 100);
+    }).catch((e) => {
+      navBatData['err'] = String(e);
+    });
+  }
+}
+
+
+
 /*
 Get Client HINT data
 
 */
-export function prepareUAData(){
-  if (nav['userAgentData'] && nav.userAgentData['getHighEntropyValues']){
-    nav.userAgentData.getHighEntropyValues(he_values).then(ua => { 
+
+
+const he_values = ['architecture', 'bitness', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion'];
+const storedUAData = {};
+
+
+export function prepareUAData() {
+  if (nav['userAgentData'] && nav.userAgentData['getHighEntropyValues']) {
+    nav.userAgentData.getHighEntropyValues(he_values).then(ua => {
       each(ua || {}, (k, v) => {
-        if (he_values.indexOf(k) >= 0){
+        if (he_values.indexOf(k) >= 0) {
           storedUAData[k] = v;
         }
       })
-     }).catch((e) => {
+    }).catch((e) => {
       storedUAData['err'] = String(e);
-     });
+    });
   }
 }
 
@@ -117,6 +162,8 @@ export default function () {
     if1: if1(),
     if2: if2(),
     uad: storedUAData,
-    nc: navConData
+    nc: navConData,
+    ne: navExtraData,
+    nb: navBatData
   }, wh(), sr(), binfo())
 }

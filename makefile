@@ -22,9 +22,11 @@ travis-trigger:
 		https://api.travis-ci.com/repo/$(subst $(DEL),$(PERCENT)2F,$(repo))/requests
 
 # common
+# --build-arg NPM_CONFIG_REGISTRY_ARG=http://host.docker.internal:4873/ 
 
 build:
-	docker build --build-arg NPM_CONFIG_REGISTRY_ARG=http://host.docker.internal:4873/ --platform linux/amd64  -t web-sdk .
+
+	docker build --platform linux/amd64  -t web-sdk .
 
 # latest
 

@@ -11,7 +11,7 @@ import {
   hashCode
 } from './functions/stringHash';
 import autoDomain from './functions/autoDomain';
-import browserData, { prepareUAData, prepareNavConnection } from './data/browserData';
+import browserData, { prepareUAData, prepareNavConnection, prepareNavExtra, prepareBatData } from './data/browserData';
 import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
@@ -84,6 +84,7 @@ function Tracker() {
   this.configured = false;
   this.valuableFields = undefined;
   this.queue = [];
+  this.registry = {};
 
   this.options = {
     projectId: domainHash,
@@ -108,7 +109,10 @@ function Tracker() {
     trackClicks: {
       allClicks: false
     },
-    trackForms: true,
+    browserEvents: {
+      unloadHandlers: true
+    },
+    trackForms: {},
     trackPages: false,
     allowHTTP: false,
     allowSendBeacon: true,
@@ -167,7 +171,7 @@ Tracker.prototype.initialize = function () {
   log(this.options);
 
   // Handling browser events
-  this.browserEventsTracker = new BrowserEventsTracker();
+  this.browserEventsTracker = new BrowserEventsTracker(this.options.browserEvents);
   this.browserEventsTracker.initialize();
 
   // Session tracker
@@ -256,6 +260,14 @@ Tracker.prototype.initialize = function () {
   // Preparing User Agent Data - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData
   prepareUAData();
   prepareNavConnection();
+  setInterval(function () {
+    prepareNavConnection();
+  }, 5000)
+  prepareNavExtra();
+  prepareBatData();
+  setInterval(function () {
+    prepareBatData();
+  }, 5000)
 
 };
 
@@ -555,7 +567,9 @@ Tracker.prototype.onServerMessage = function (cb) {
  * @return {String}
  */
 Tracker.prototype.getUid = function () {
-  return this.sessionTracker.getUid();
+  if (this.isInitialized()) {
+    return this.sessionTracker.getUid();
+  }
 };
 
 /**
@@ -599,6 +613,15 @@ Tracker.prototype.getLibInfo = function () {
   }
 };
 
+
+/**
+ * Setter for the objects registry
+ * @param {*} name 
+ * @param {*} obj 
+ */
+Tracker.prototype.set = function (name, obj) {
+  this.registry[name] = obj;
+};
 
 Tracker.prototype.setTimeDelta = function (d) {
   this.timeDelta = d;
