@@ -17,6 +17,7 @@ import {
   addHandler
 } from '../functions/domEvents';
 import { closest } from '../lib/dom-utils';
+import Encryptor from '../Encryptor';
 
 
 const log = createLogger('RST/FormTracker');
@@ -143,9 +144,16 @@ const FormTracker = function (options) {
 
 
   this.options = objectAssing({
-    trackValues: false
+    trackValues: false,
+    encryptionKey: null
   }, options);
   this.initialized = false;
+
+  // Providing a public key implies collecting values (encrypted only)
+  this.encryptor = this.options.encryptionKey
+    ? new Encryptor(this.options.encryptionKey)
+    : null;
+  this.collectValues = !!(this.options.trackValues || this.encryptor);
 
   this.formEventHandler = this.formEventHandler.bind(this);
   this.elementEventHandler = this.elementEventHandler.bind(this);
@@ -224,15 +232,32 @@ FormTracker.prototype.elementEventHandler = function (ev) {
 
     if (element) {
 
+      const data = {
+        ...prepareType(type),
+        ...extractElementData(element, this.collectValues),
+        ...extractFormData(form)
+      };
       const event = {
         name: `field_${type}`,
-        data: {
-          ...prepareType(type),
-          ...extractElementData(element, this.options.trackValues),
-          ...extractFormData(form)
-        }
+        data
       };
-      this.emit(EVENT, event);
+
+      if (this.encryptor && data.evalue) {
+        // Plaintext never leaves the browser: if encryption is
+        // unavailable or fails, the value is dropped
+        const value = data.evalue;
+        data.evalue = '';
+        this.encryptor.encrypt(value)
+          .then((encrypted) => {
+            if (encrypted) {
+              data.evalue = encrypted;
+              data.eenc = 1;
+            }
+            this.emit(EVENT, event);
+          });
+      } else {
+        this.emit(EVENT, event);
+      }
     }
 
   } catch (e) {
