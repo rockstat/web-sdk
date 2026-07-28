@@ -207,9 +207,9 @@ Tracker.prototype.initialize = function () {
     this.formTracker = new FormTracker(asObject(this.options.trackForms));
     this.trackers.push(this.formTracker);
   }
-  this.formTracker = new FormTracker(asObject(this.options.trackForms));
+  // this.formTracker = new FormTracker(asObject(this.options.trackForms));
   // Interract with server
-  this.trackers.push(this.formTracker);
+  // this.trackers.push(this.formTracker);
 
   if (this.options.trackPages) {
     this.pageTracker = new PageTracker(asObject(this.options.trackPages));
@@ -246,10 +246,11 @@ Tracker.prototype.initialize = function () {
   });
 
   // Fire ready
+  this.initialized = true;
+
   this.emit(READY);
   this.on(DOM_BEFORE_UNLOAD, this.unload);
 
-  this.initialized = true;
 
   // Handling queue
   this.queue.map(e => {
@@ -569,7 +570,8 @@ Tracker.prototype.onServerMessage = function (cb) {
 Tracker.prototype.getUid = function () {
   if (this.isInitialized()) {
     return this.sessionTracker.getUid();
-  }
+  } 
+  log.warn('Called getUid; not initialized')
 };
 
 /**

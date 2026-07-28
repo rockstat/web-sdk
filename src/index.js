@@ -24,6 +24,7 @@ if (win[wk]) {
     });
     // Attaching method to page
     const doCall = function (args) {
+      // console.log('doс', args);
       args = args.slice(0);
       const method = args.shift();
       return tracker[method] ?
@@ -31,6 +32,8 @@ if (win[wk]) {
         // TODO: log errors to sentry if available
         console && console.warn && console.warn('called rockstat undefined method');
     };
+
+
 
     holder._q.map(doCall);
     holder.doCall = doCall;
