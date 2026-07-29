@@ -45,6 +45,7 @@ import {
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
   SERVER_MESSAGE,
+  OUTGOING_MESSAGE,
   SERVICE_TRACK,
   EVENT_OPTION_REQUEST,
   SERVICE_LOG,
@@ -373,6 +374,8 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     msg.scroll = this.activityTracker.getPositionData();
   }
 
+  this.emit(OUTGOING_MESSAGE, msg);
+
   // Sending to server
   return this.sendToServer(msg, options);
 };
@@ -552,6 +555,14 @@ Tracker.prototype.onEvent = function (cb) {
  */
 Tracker.prototype.onInternalEvent = function (cb) {
   this.on(INTERNAL_EVENT, cb);
+};
+
+/**
+ * Add callback for complete outgoing messages (as sent to server)
+ * @param cb
+ */
+Tracker.prototype.onMessage = function (cb) {
+  this.on(OUTGOING_MESSAGE, cb);
 };
 
 

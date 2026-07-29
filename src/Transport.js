@@ -57,6 +57,9 @@ export function Transport(options) {
   this.pathPrefix = options.pathPrefix;
   this.server = this.options.server;
   this.urlMark = this.options.urlMark;
+  this.proto = (this.options.allowHTTP && win.location.protocol === 'http:')
+    ? 'http'
+    : HTTPS;
   this.servicesMap = {
     'track': 't4k'
   }
@@ -86,9 +89,9 @@ Transport.prototype.setCreds = function (creds) {
  * @param {Object} data
  * @returns {Transport}
  */
-Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
+Transport.prototype.makeURL = function (path, data = {}, proto) {
   const query = queryStringify(data);
-  return `${proto}://${this.server}${this.pathPrefix}${path}?${query}`;
+  return `${proto || this.proto}://${this.server}${this.pathPrefix}${path}?${query}`;
 }
 
 

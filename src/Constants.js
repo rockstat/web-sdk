@@ -47,6 +47,7 @@ export const EVENT_LOG = 'page_unload';
 // ######
 export const SERVER_MESSAGE = 'server_message';
 export const INTERNAL_EVENT = 'internal_event';
+export const OUTGOING_MESSAGE = 'outgoing_message';
 
 // ######
 export const EVENT_OPTION_TERMINATOR = 'terminator';
