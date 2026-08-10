@@ -1,8 +1,4 @@
-// import Sockette from 'sockette';
 import Emitter from 'component-emitter';
-import queryStringify from 'qs/lib/stringify';
-// import Promise from 'promise-polyfill';
-
 import {
   win,
   doc,
@@ -11,33 +7,23 @@ import {
 import {
   hasBeaconSupport,
   hasFetchSupport,
-  hasXHRWithCreds,
-  hasXHRSupport,
-  hasXDRSupport,
-  hasAnyXRSupport,
 } from './data/browserCharacts';
 import {
-  EVENT_OPTION_OUTBOUND,
-  EVENT_OPTION_TERMINATOR,
   EVENT_OPTION_REQUEST,
   EVENT_OPTION_TRANSPORT_IMG,
-  SERVER_MESSAGE,
-  INTERNAL_EVENT,
   SERVICE_TRACK,
 } from './Constants';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
-import nextTick from './functions/nextTick'
-// import simpleHash from './functions/simpleHash';
+import queryStringify from 'qs/lib/stringify';
 import { cyrb53 } from './functions/cyrb53';
-// import { isObject } from './functions/type';
 
 const HTTPS = 'https';
 
 const log = createLogger('RST/Transport');
-const noop = () => { };
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// Паузы перед повторами отправки события при сетевых сбоях (мс)
+const RETRY_DELAYS = [1000, 5000];
 
 /**
  * Transport class containing general connecting methods
@@ -63,12 +49,10 @@ export function Transport(options) {
   this.servicesMap = {
     'track': 't4k'
   }
-  this.msgCounter = new Date() - 1514764800000;
-  this.waitCallers = {};
 };
 
-
-// Extending Emitter
+// Tracker подписывается на события каждого плагина, включая transport
+// (канал для будущих server messages) — миксин нужен, даже пока emit не зовётся
 Emitter(Transport.prototype);
 
 
@@ -87,7 +71,7 @@ Transport.prototype.setCreds = function (creds) {
  * Transform path to query url
  * @param {string} path
  * @param {Object} data
- * @returns {Transport}
+ * @returns {string}
  */
 Transport.prototype.makeURL = function (path, data = {}, proto) {
   const query = queryStringify(data);
@@ -95,177 +79,178 @@ Transport.prototype.makeURL = function (path, data = {}, proto) {
 }
 
 
-/*
-if (false && hasFetchSupport) {
-  return fetch(postUrl, {
+/**
+ * Service endpoint path
+ * @param {string} service
+ * @param {string} ext json|gif
+ * @returns {string}
+ */
+Transport.prototype.servicePath = function (service, ext) {
+  const _service = this.servicesMap[service] || service;
+  return `/${this.urlMark}/${_service}.${ext}`;
+}
+
+
+/**
+ * POST via fetch with timeout. Resolves with parsed JSON response
+ * (null for empty body), rejects on non-2xx or network error.
+ * @param {string} url
+ * @param {string} data serialized message
+ * @returns {Promise}
+ */
+Transport.prototype.sendFetch = function (url, data) {
+  if (!hasFetchSupport) {
+    return Promise.reject(new Error('No transport available'));
+  }
+
+  const fetchOptions = {
     method: 'POST',
     body: data,
     keepalive: true
-  }).then((response) => {
-    return response.text()
-      .then((responseText) => {
-        console.log('resp text', responseText, response.status, response.status === 200);
-        if (response.status === 200) {
-          try {
-            return Promise.resolve(JSON.parse(responseText));
-          } catch (e) {
-            log.error(e)
-            return Promise.reject(e);
-          }
+  };
+
+  let timer = null;
+  if (win.AbortController) {
+    const abortCtl = new win.AbortController();
+    fetchOptions.signal = abortCtl.signal;
+    timer = setTimeout(() => abortCtl.abort(), this.options.responseTimeout);
+  }
+  const clearTimer = () => timer && clearTimeout(timer);
+
+  return fetch(url, fetchOptions)
+    .then((response) => {
+      clearTimer();
+      return response.text().then((text) => {
+        if (!response.ok) {
+          const err = new Error(`Server responded with ${response.status}`);
+          err.status = response.status;
+          throw err;
+        }
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return null;
         }
       });
-  }).catch((error) => {
-    log.warn('Fetch failed', error);
-  });
+    }, (e) => {
+      clearTimer();
+      throw e;
+    });
 }
-*/
+
 
 /**
- *
- * @param msg {Object}
- * @param query {Array}
- * @param options {Object}
+ * Fetch with retries on transient failures.
+ * 4xx are permanent — not retried; 5xx, timeouts and network errors are.
+ * @param {string} url
+ * @param {string} data
+ * @param {Array<number>} delays remaining retry delays, ms
  * @returns {Promise}
- * 
- * TODO: Use sendBeacon when unloading instead of img
- * 
  */
-Transport.prototype.send = function (msg, options = {}) {
+Transport.prototype.fetchWithRetry = function (url, data, delays) {
+  return this.sendFetch(url, data).catch((e) => {
+    const permanent = (e && e.status >= 400 && e.status < 500) || !hasFetchSupport;
+    if (permanent || !delays.length) {
+      throw e;
+    }
+    const delay = delays[0];
+    log.warn(`Send failed, retrying in ${delay}ms`, e);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        this.fetchWithRetry(url, data, delays.slice(1)).then(resolve, reject);
+      }, delay);
+    });
+  });
+}
+
+
+/**
+ * Deliver an event message. Delivery matters, response doesn't:
+ * beacon first, then fetch with retries.
+ * @param {Object} msg
+ * @returns {Promise}
+ */
+Transport.prototype.sendEvent = function (msg) {
   const data = JSON.stringify(msg);
   const dig = cyrb53(data);
-  const isRequest = !!options[EVENT_OPTION_REQUEST];
-  // !options[EVENT_OPTION_TERMINATOR] || !!options[EVENT_OPTION_OUTBOUND] || 
-  const useTransportImg = !!options[EVENT_OPTION_TRANSPORT_IMG];
-  const _service = this.servicesMap[msg.service] || msg.service;
-  const postPath = `/${this.urlMark}/${_service}.json`;
-  const imgPath = `/${this.urlMark}/${_service}.gif`;
+  const path = this.servicePath(msg.service, 'json');
 
-  const postUrlBeacon = this.makeURL(postPath, { "dig": dig, "td_trans": "b"});
-  const postUrlFetch = this.makeURL(postPath, { "dig": dig, "td_trans": "f" });
-  // Use extra transport - img
-  // Send only part when using gif
-  return new Promise((resolve, reject) => {
-    if (useTransportImg) {
-      try {
-        const smallMsg = (msg.service === SERVICE_TRACK)
-          ? this.options.msgCropper(msg) : msg;
-        log.info(`Trying with img transport`, smallMsg);
-
-        const imgUrl = this.makeURL(imgPath, objectAssign(smallMsg, this.creds));
-
-        const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
-        img.src = imgUrl;
-        return nextTick(() => resolve());
-      } catch (e) {
-        return nextTick(() => reject(e));
-      }
-    }
-
+  if (this.options.allowSendBeacon && hasBeaconSupport) {
     try {
-
-      let beaconResult = false;
-
-      if (this.options.allowSendBeacon && hasBeaconSupport) {
-        log.info('Sending using beacon');
-        beaconResult = nav.sendBeacon(postUrlBeacon, data);
-      }
-
-      if (beaconResult) {
-        return nextTick(() => resolve());
-      }
-
-      if (hasFetchSupport) {
-        log.info('Sending using fetch');
-        fetch(postUrlFetch, {
-          method: 'POST',
-          body: data,
-          keepalive: true
-        }).then((response) => {
-          return response.then((responseText) => {
-            if (response.status === 200) {
-              try {
-                return JSON.parse(responseText);
-              } catch (e) {
-                return Promise.reject(e)
-              }
-            }
-          });
-        }).then((data) => {
-          return resolve(data)
-        }).catch((e) => {
-          return reject(e)
-        });
+      if (nav.sendBeacon(this.makeURL(path, { dig, td_trans: 'b' }), data)) {
+        return Promise.resolve(null);
       }
     } catch (e) {
-      log.warn('Fetch err', e);
+      // очередь beacon переполнена или URL отвергнут — уходим в fetch
     }
-    return reject(e)
+    log.info('Beacon refused, falling back to fetch');
+  }
+
+  return this.fetchWithRetry(
+    this.makeURL(path, { dig, td_trans: 'f' }),
+    data,
+    RETRY_DELAYS
+  );
+}
+
+
+/**
+ * Request-response call. Always fetch (beacon can't read replies),
+ * no retries: server side effects must not be duplicated.
+ * @param {Object} msg
+ * @returns {Promise} parsed server response
+ */
+Transport.prototype.sendRequest = function (msg) {
+  const data = JSON.stringify(msg);
+  const dig = cyrb53(data);
+  return this.sendFetch(
+    this.makeURL(this.servicePath(msg.service, 'json'), { dig, td_trans: 'f' }),
+    data
+  );
+}
+
+
+/**
+ * GET-pixel fallback channel (server-side logging).
+ * Payload is cropped and passed in the query string.
+ * @param {Object} msg
+ * @returns {Promise}
+ */
+Transport.prototype.sendImg = function (msg) {
+  const smallMsg = (msg.service === SERVICE_TRACK && this.options.msgCropper)
+    ? this.options.msgCropper(msg)
+    : msg;
+  const url = this.makeURL(
+    this.servicePath(msg.service, 'gif'),
+    objectAssign({}, smallMsg, this.creds)
+  );
+
+  return new Promise((resolve, reject) => {
+    const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
+    // держим ссылку, чтобы GC не собрал изображение до завершения запроса
+    this.lastImg = img;
+    img.onload = () => resolve(null);
+    img.onerror = () => reject(new Error('Img transport failed'));
+    img.src = url;
   });
+}
 
 
-  // => response.text()
-  // .then((responseText) => {
-  //   console.log('resp text', responseText, response.status, response.status === 200);
-  //   if (response.status === 200) {
-  //     try {
-  //       resolve(JSON.parse(responseText));
-  //     } catch (e) {
-  //       log.error(e)
-  //       return reject(e);
-  //     }
-  //   }
-  // }
-
-
-
-  // return new Promise((resolve, reject) => {
-
-  //   const doSendBeacon = (attempt) => {
-  //     log.warn(`Sending beacon. Attempt ${attempt}`);
-  //     let res = nav.sendBeacon(postUrl, data);
-  //     if (res === true) {
-  //       return resolve();
-  //     }
-  //     if (attempt > 0) {
-  //       setTimeout(doSendBeacon(attempt - 1), 200);
-  //     } else {
-  //       nextTick(() => doSendImg());
-  //     }
-  //   }
-
-  //   const doFetch = () => {
-
-
-
-  //   }
-
-  //   // if (false && hasFetchSupport) {
-  //   // }
-
-  //   if (isRequest) {
-  //     return doFetch();
-  //     // return reject('Requested request transport, but method unavailable');
-  //   }
-
-  //   if (useTransportImg) {
-  //     return doSendImg();
-  //   }
-  // } catch (error) {
-  //   log.warn('Beacon/XHR failed', error);
-  //   return reject(error);
-  // }
-
-  // try {
-  //   return this.sendIMG(this.makeURL(imgPath, objectAssign(smallMsg, this.creds)));
-  // } catch (e) {
-  //   log.warn('Error during sending data using image', e);
-  //   return Promise.reject(e);
-  // }
-
-  // });
-
-
-
-
-
+/**
+ * Send message to server using transport chosen by options
+ * @param {Object} msg
+ * @param {Object} options
+ * @returns {Promise}
+ */
+Transport.prototype.send = function (msg, options = {}) {
+  if (options[EVENT_OPTION_TRANSPORT_IMG]) {
+    return this.sendImg(msg);
+  }
+  if (options[EVENT_OPTION_REQUEST]) {
+    return this.sendRequest(msg);
+  }
+  return this.sendEvent(msg);
 };

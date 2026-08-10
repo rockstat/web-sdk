@@ -430,14 +430,13 @@ Tracker.prototype.logOnServer = function (msg) {
  * @param {Object} options Object contains options
  */
 Tracker.prototype.sendToServer = function (msg, options) {
-  return this.transport
-    .send(msg, options)
-    .then(() => {
-      //none
-    })
-    .catch((e) => {
-      log.warn('sendToServer executed with error');
-    });
+  const result = this.transport.send(msg, options);
+  // Логируем сбой, не подменяя результат: request() должен получать
+  // и ответ сервера, и реальную ошибку
+  result.catch((e) => {
+    log.warn('sendToServer executed with error', e);
+  });
+  return result;
 };
 
 /**
