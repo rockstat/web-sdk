@@ -1,15 +1,15 @@
-FROM node:20.14-alpine as builder
+FROM node:20.14-alpine AS builder
 
 WORKDIR /build
 
 ARG NPM_CONFIG_REGISTRY_ARG=https://registry.npmjs.org
 ENV NPM_CONFIG_REGISTRY=$NPM_CONFIG_REGISTRY_ARG   
 
-COPY package.json .
-RUN npm i --loglevel http --platform=linux && npm cache clean --force
+COPY package.json package-lock.json ./
+RUN npm ci --loglevel http && npm cache clean --force
 
 COPY . .
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN npm run build  && rm -rf node_modules
 

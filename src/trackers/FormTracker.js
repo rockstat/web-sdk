@@ -256,6 +256,8 @@ FormTracker.prototype.elementEventHandler = function (ev) {
             this.emit(EVENT, event);
           });
       } else {
+        data.evalue = '';
+        data.eenc = 0;
         this.emit(EVENT, event);
       }
     }
