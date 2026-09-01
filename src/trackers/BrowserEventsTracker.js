@@ -10,7 +10,6 @@ import { win, doc } from "../Browser";
 import {
   DOM_COMPLETE,
   DOM_BEFORE_UNLOAD,
-  DOM_UNLOAD,
   INTERNAL_EVENT,
   EVENT,
   EVENT_PAGE_LOADED
@@ -45,12 +44,6 @@ const BrowserEventsTracker = function (options) {
     this.emit(INTERNAL_EVENT, DOM_BEFORE_UNLOAD);
     removeHandler(win, 'beforeunload', this.beforeUnloadHandler);
   };
-
-  // Обработчик unload
-  this.unloadHandler = () => {
-    this.emit(INTERNAL_EVENT, DOM_UNLOAD);
-    removeHandler(win, 'unload', this.unloadHandler);
-  };
 };
 
 Emitter(BrowserEventsTracker.prototype);
@@ -60,7 +53,6 @@ BrowserEventsTracker.prototype.initialize = function () {
   addHandler(win, 'load', this.loadedHandler);
   if (this.options.unloadHandlers) {
     addHandler(win, 'beforeunload', this.beforeUnloadHandler);
-    addHandler(win, 'unload', this.unloadHandler);
   }
 };
 
