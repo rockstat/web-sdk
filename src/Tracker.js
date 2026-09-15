@@ -116,7 +116,9 @@ function Tracker() {
     },
     trackForms: {},
     trackPages: false,
-    trackRecord: false,
+    trackRecord: {
+      autostart: false // true — запись стартует при инициализации, иначе только по rstat('record')
+    },
     allowHTTP: false,
     allowSendBeacon: true,
     allowXHR: true,
@@ -129,6 +131,7 @@ function Tracker() {
   this.syncs = [];
   this.trackers = [];
   this.transport = null;
+  this.pendingRecord = null;
 }
 
 Emitter(Tracker.prototype);
@@ -219,10 +222,11 @@ Tracker.prototype.initialize = function () {
     this.trackers.push(this.pageTracker);
   }
 
-  // Запись сессии: rrweb дозагружается отдельным бандлом только при включённой опции
-  if (this.options.trackRecord) {
-    this.recordTracker = new RecordTracker(asObject(this.options.trackRecord), this.options);
-    this.trackers.push(this.recordTracker);
+  // Запись сессии: при trackRecord.autostart стартует сразу, иначе — только по rstat('record').
+  // Вызов record() до initialize отложен в pendingRecord и запускается здесь
+  if (this.pendingRecord || asObject(this.options.trackRecord).autostart) {
+    this.startRecord(this.pendingRecord);
+    this.pendingRecord = null;
   }
 
 
@@ -240,19 +244,7 @@ Tracker.prototype.initialize = function () {
   // }
 
   const plugins = [this.transport].concat(this.syncs, this.trackers)
-  each(plugins, (plugin) => {
-    // Listening events
-    plugin.on(EVENT, ({ name, data, options }) => {
-      log(`plugin event:${name}`);
-      this.handle(name, data, options);
-    });
-    // Listening internal events
-    plugin.on(INTERNAL_EVENT, (name, data) => {
-      log(`plugin internal event:${name}`);
-      this.emit(name, data);
-      this.emit(INTERNAL_EVENT, name, data);
-    });
-  });
+  each(plugins, (plugin) => this.attachPlugin(plugin));
 
   // Fire ready
   this.initialized = true;
@@ -279,6 +271,29 @@ Tracker.prototype.initialize = function () {
     prepareBatData();
   }, 5000)
 
+};
+
+/**
+ * Подписка на события плагина (трекера, синка, транспорта).
+ * Вынесена отдельно: трекер записи может подключаться уже после initialize
+ * @param {Object} plugin Emitter
+ */
+Tracker.prototype.attachPlugin = function (plugin) {
+  if (plugin._attached) {
+    return;
+  }
+  plugin._attached = true;
+  // Listening events
+  plugin.on(EVENT, ({ name, data, options }) => {
+    log(`plugin event:${name}`);
+    this.handle(name, data, options);
+  });
+  // Listening internal events
+  plugin.on(INTERNAL_EVENT, (name, data) => {
+    log(`plugin internal event:${name}`);
+    this.emit(name, data);
+    this.emit(INTERNAL_EVENT, name, data);
+  });
 };
 
 /**
@@ -536,6 +551,57 @@ Tracker.prototype.identify = function (userId, userTraits) {
     userId,
     userTraits
   });
+};
+
+/**
+ * Start session recording (rrweb): rstat('record', {...options}).
+ * Опция trackRecord задаёт настройки по умолчанию; без trackRecord.autostart
+ * запись запускается только этим методом. Вызов до initialize откладывается
+ * @param {Object|boolean} [options] RecordTracker options поверх trackRecord; false — остановить
+ */
+Tracker.prototype.record = function (options) {
+  if (options === false) {
+    return this.stopRecord();
+  }
+  if (!this.initialized) {
+    this.pendingRecord = asObject(options);
+    return;
+  }
+  this.startRecord(options);
+};
+
+/**
+ * Stop session recording: rstat('stopRecord') или rstat('record', false)
+ */
+Tracker.prototype.stopRecord = function () {
+  if (!this.initialized) {
+    this.pendingRecord = null;
+    return;
+  }
+  if (!this.recordTracker) {
+    return;
+  }
+  this.recordTracker.stop();
+  const idx = this.trackers.indexOf(this.recordTracker);
+  if (idx >= 0) {
+    this.trackers.splice(idx, 1);
+  }
+  this.recordTracker = null;
+};
+
+/**
+ * Create and attach RecordTracker. Повторный вызов при активной записи — no-op
+ * @param {Object|boolean} options настройки вызова поверх options.trackRecord
+ */
+Tracker.prototype.startRecord = function (options) {
+  if (this.recordTracker) {
+    return log('recording already active');
+  }
+  const recordOptions = objectAssign({}, asObject(this.options.trackRecord), asObject(options));
+  delete recordOptions.autostart;
+  this.recordTracker = new RecordTracker(recordOptions, this.options);
+  this.trackers.push(this.recordTracker);
+  this.attachPlugin(this.recordTracker);
 };
 
 /**

@@ -18,8 +18,9 @@ const SCRIPT_FILE = '/public/rrweb-record.js';
 /**
  * Session recording tracker (rrweb).
  * rrweb не входит в основной бандл: скрипт дозагружается с сервера
- * трекера только когда запись включена опцией trackRecord.
- * @param {Object} options trackRecord options
+ * трекера только когда запись запущена: вызовом rstat('record')
+ * или при инициализации, если trackRecord.autostart = true.
+ * @param {Object} options trackRecord options + options вызова record()
  * @param {Object} trackerOptions main tracker options (server, pathPrefix, allowHTTP)
  * @constructor
  */
@@ -77,6 +78,11 @@ RecordTracker.prototype.load = function () {
   if (!win.MutationObserver) {
     return log.warn('MutationObserver not supported, recording disabled');
   }
+  // Бандл уже на странице (повторный старт после stop) — скрипт не перезагружаем
+  if (win.rrwebRecord) {
+    this.loading = true;
+    return this.startRecording();
+  }
   const src = this.scriptUrl();
   if (!src) {
     return log.warn('No server configured, recording disabled');
@@ -94,6 +100,10 @@ RecordTracker.prototype.load = function () {
 };
 
 RecordTracker.prototype.startRecording = function () {
+  // stop() сбрасывает loading: запись остановили, пока бандл ещё грузился
+  if (!this.loading || this.stopFn) {
+    return;
+  }
   const rrweb = win.rrwebRecord;
   if (!rrweb || !rrweb.record) {
     return log.warn('rrwebRecord global not found');
@@ -176,9 +186,10 @@ RecordTracker.prototype.flush = function () {
 };
 
 /**
- * Unload handler
+ * Stop recording: остановить rrweb, отправить остаток буфера
  */
-RecordTracker.prototype.unload = function () {
+RecordTracker.prototype.stop = function () {
+  this.loading = false;
   if (this.flushTimer) {
     clearInterval(this.flushTimer);
     this.flushTimer = null;
@@ -192,6 +203,14 @@ RecordTracker.prototype.unload = function () {
     this.stopFn = null;
   }
   this.flush();
+  log('recording stopped');
+};
+
+/**
+ * Unload handler
+ */
+RecordTracker.prototype.unload = function () {
+  this.stop();
 };
 
 export default RecordTracker;

@@ -23,7 +23,8 @@
       allowHTTP: true, // демо крутится на http://localhost (secure context для WebCrypto)
       trackPages: true,
       trackClicks: {},
-      trackRecord: {}, // запись экрана: rrweb дозагрузится отдельным бандлом
+      // запись экрана: autostart=false — старт по кнопке в панели (rstat4('record'))
+      trackRecord: { autostart: false },
 
       trackForms: {
         // Публичный ключ (keys/public.pem): значения полей шифруются на клиенте,

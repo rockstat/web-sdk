@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { subscribeEvents } from './tracker';
+import { rstat, subscribeEvents } from './tracker';
 
 // Живая лента событий SDK — видно, что уходит трекеру,
 // включая зашифрованные значения полей (evalue + eenc)
@@ -13,8 +13,16 @@ const truncate = (key, value) =>
 export default function TrackerPanel() {
   const [events, setEvents] = useState([]);
   const [open, setOpen] = useState(true);
+  const [recording, setRecording] = useState(false);
 
   useEffect(() => subscribeEvents(setEvents), []);
+
+  // Запись экрана стартует по требованию: rrweb дозагрузится отдельным бандлом
+  const toggleRecord = (e) => {
+    e.stopPropagation();
+    rstat(recording ? 'stopRecord' : 'record');
+    setRecording(!recording);
+  };
 
   // rst-block: панель исключена из записи экрана, иначе rrweb фиксирует
   // вывод собственных батчей и запись зацикливается
@@ -22,7 +30,12 @@ export default function TrackerPanel() {
     <aside className={`tracker-panel rst-block ${open ? '' : 'collapsed'}`}>
       <div className="tracker-panel-head" onClick={() => setOpen(!open)}>
         <span>📡 События трекера ({events.length})</span>
-        <span>{open ? '▼' : '▲'}</span>
+        <span>
+          <button type="button" className="tracker-rec" onClick={toggleRecord}>
+            {recording ? '⏹ стоп записи' : '⏺ запись'}
+          </button>
+          {open ? '▼' : '▲'}
+        </span>
       </div>
       {open && (
         <div className="tracker-panel-body">
