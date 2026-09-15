@@ -13,7 +13,8 @@ import {
   SESSION_PARTNER,
   EVENT_USER_PARAMS,
   EVENT,
-  EVENT_SIMULATE_SESSION
+  EVENT_SIMULATE_SESSION,
+  EVENT_REC_BATCH
 } from '../Constants';
 import { tstz } from '../data/browserData';
 
@@ -210,7 +211,9 @@ SessionTracker.prototype.setUserData = function (data) {
 SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   // Skipping own events
-  if (name === EVENT_SESSION) {
+  // rec_batch — технический поток записи экрана: он идёт по таймеру
+  // (мутации DOM без участия пользователя) и не должен продлевать сессию
+  if (name === EVENT_SESSION || name === EVENT_REC_BATCH) {
     return null;
   }
 

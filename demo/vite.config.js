@@ -28,6 +28,16 @@ const trackerBackend = () => ({
         return fs.createReadStream(libPath).pipe(res);
       }
 
+      if (url === '/public/rrweb-record.js') {
+        const rrwebPath = path.resolve(__dirname, '../dist', 'rrweb-record.js');
+        if (!fs.existsSync(rrwebPath)) {
+          res.statusCode = 404;
+          return res.end('// Build the SDK first: npm run build:dev (in repo root)');
+        }
+        res.setHeader('Content-Type', 'application/javascript');
+        return fs.createReadStream(rrwebPath).pipe(res);
+      }
+
       if (url.startsWith('/band/')) {
         let body = '';
         req.on('data', (chunk) => (body += chunk));
@@ -35,8 +45,9 @@ const trackerBackend = () => ({
           if (body) {
             try {
               const msg = JSON.parse(body);
+              // rec_batch несёт десятки KB данных rrweb — в лог только начало
               console.log(`[track] ${msg.name || msg.service || url}`,
-                JSON.stringify(msg.data || {}));
+                JSON.stringify(msg.data || {}).slice(0, 200));
             } catch (e) {
               console.log('[track] raw', body.slice(0, 200));
             }

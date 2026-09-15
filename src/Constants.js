@@ -19,6 +19,8 @@ export const EVENT_USER_PARAMS = 'user_params';
 export const EVENT_LINK_CLICK = 'link_click';
 export const EVENT_ELEMENT_CLICK = 'element_click';
 export const EVENT_PAGE_UNLOAD = 'page_unload';
+export const EVENT_REC_START = 'rec_start';
+export const EVENT_REC_BATCH = 'rec_batch';
 
 
 export const EVENTS_ADD_PERF = [EVENT_PAGEVIEW, EVENT_PAGE_LOADED];
@@ -28,7 +30,9 @@ export const EVENTS_NO_SCROLL = [
   EVENT_PAGEVIEW,
   EVENT_PAGE_LOADED,
   EVENT_USER_PARAMS,
-  EVENT_IDENTIFY
+  EVENT_IDENTIFY,
+  EVENT_REC_START,
+  EVENT_REC_BATCH
 ];
 
 export const EVENTS_ADD_SCROLL = [

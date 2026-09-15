@@ -20,6 +20,7 @@ import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
 import PageTracker from './trackers/PageTracker';
+import RecordTracker from './trackers/RecordTracker';
 import GoogleAnalytics from './syncs/GoogleAnalytics';
 import YandexMetrika from './syncs/YandexMetrika';
 // import { PixelSync } from './syncs/PixelSync';
@@ -115,6 +116,7 @@ function Tracker() {
     },
     trackForms: {},
     trackPages: false,
+    trackRecord: false,
     allowHTTP: false,
     allowSendBeacon: true,
     allowXHR: true,
@@ -215,6 +217,12 @@ Tracker.prototype.initialize = function () {
   if (this.options.trackPages) {
     this.pageTracker = new PageTracker(asObject(this.options.trackPages));
     this.trackers.push(this.pageTracker);
+  }
+
+  // Запись сессии: rrweb дозагружается отдельным бандлом только при включённой опции
+  if (this.options.trackRecord) {
+    this.recordTracker = new RecordTracker(asObject(this.options.trackRecord), this.options);
+    this.trackers.push(this.recordTracker);
   }
 
 

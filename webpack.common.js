@@ -3,11 +3,17 @@ const path = require('path');
 const isProduction = (process.env.NODE_ENV === 'production');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: {
+    lib: './src/index.js',
+    // бандл записи экрана: дозагружается RecordTracker'ом при trackRecord
+    'rrweb-record': './src/rrwebEntry.js'
+  },
   target: 'web',
   output: {
     path: __dirname + '/dist',
-    filename: isProduction ? 'lib.js' : 'lib-dev.js'
+    filename: (pathData) => pathData.chunk.name === 'rrweb-record'
+      ? 'rrweb-record.js'
+      : (isProduction ? 'lib.js' : 'lib-dev.js')
   },
   module: {
     rules: [
