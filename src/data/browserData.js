@@ -117,6 +117,12 @@ export function prepareNavExtra() {
 
 const navBatData = {}
 
+// chargingTime/dischargingTime — секунды; Infinity (оценка недоступна) шлём как -1,
+// иначе JSON.stringify превратит её в null
+const batSeconds = (v) => {
+  const n = Number(v);
+  return isFinite(n) ? Math.round(n) : -1;
+};
 
 export function prepareBatData() {
   if (nav['getBattery']) {
@@ -124,6 +130,8 @@ export function prepareBatData() {
       navBatData['a'] = 1;
       navBatData['ch'] = Math.round(Number(b['charging']));
       navBatData['l'] = Math.round(Number(b['level']) * 100);
+      navBatData['ct'] = batSeconds(b['chargingTime']);    // до полной зарядки
+      navBatData['dt'] = batSeconds(b['dischargingTime']); // до полной разрядки
     }).catch((e) => {
       navBatData['err'] = String(e);
     });

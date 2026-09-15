@@ -19,6 +19,7 @@ export const EVENT_USER_PARAMS = 'user_params';
 export const EVENT_LINK_CLICK = 'link_click';
 export const EVENT_ELEMENT_CLICK = 'element_click';
 export const EVENT_PAGE_UNLOAD = 'page_unload';
+export const EVENT_PAGE_VISIBILITY = 'page_visibility';
 export const EVENT_REC_START = 'rec_start';
 export const EVENT_REC_BATCH = 'rec_batch';
 
@@ -74,6 +75,7 @@ export const DOM_INTERACTIVE = 'dom_interactive';
 export const DOM_COMPLETE = 'dom_loaded';
 export const DOM_BEFORE_UNLOAD = 'before_unload';
 export const DOM_UNLOAD = 'unload';
+export const DOM_VISIBILITY_CHANGE = 'visibility_change';
 
 export const READY = 'ready';
 

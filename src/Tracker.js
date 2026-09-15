@@ -602,6 +602,7 @@ Tracker.prototype.startRecord = function (options) {
   this.recordTracker = new RecordTracker(recordOptions, this.options);
   this.trackers.push(this.recordTracker);
   this.attachPlugin(this.recordTracker);
+  this.recordTracker.load();
 };
 
 /**

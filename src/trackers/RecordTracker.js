@@ -46,8 +46,8 @@ const RecordTracker = function (options, trackerOptions) {
   this.stopFn = null;
   this.flushTimer = null;
   this.loading = false;
-
-  this.load();
+  // load() вызывает Tracker после подписки на события: если бандл уже на странице,
+  // запись стартует синхронно и rec_start иначе ушёл бы до подписки
 };
 
 Emitter(RecordTracker.prototype);
