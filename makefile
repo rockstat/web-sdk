@@ -1,9 +1,13 @@
 BR := $(shell git branch | grep \* | cut -d ' ' -f2-)
+# bump2version — поддерживаемый форк bumpversion с тем же CLI и .bumpversion.cfg.
+# Запускается через uvx, глобальная установка не нужна (brew install uv)
+BUMP := uvx --from bump2version bumpversion
+
 bump-patch:
-	bumpversion patch
+	$(BUMP) patch
 
 bump-minor:
-	bumpversion minor
+	$(BUMP) minor
 
 to_master:
 	@echo $(BR)
