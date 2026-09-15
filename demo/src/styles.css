@@ -164,6 +164,7 @@ label.checkbox input { width: auto; margin: 0; }
 }
 .tracker-panel-body { overflow-y: auto; padding: 0 10px 10px; }
 .tracker-rec { margin-right: 8px; font: inherit; font-size: 12px; cursor: pointer; }
+.tracker-lib { margin-left: 8px; font-weight: 400; font-size: 11px; color: var(--muted); opacity: .8; }
 .tracker-empty { color: var(--muted); padding: 10px; }
 .tracker-event {
   background: var(--panel-2);

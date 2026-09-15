@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { rstat, subscribeEvents } from './tracker';
+import { rstat, subscribeEvents, subscribeLibVersion } from './tracker';
 
 // Живая лента событий SDK — видно, что уходит трекеру,
 // включая зашифрованные значения полей (evalue + eenc)
@@ -14,8 +14,10 @@ export default function TrackerPanel() {
   const [events, setEvents] = useState([]);
   const [open, setOpen] = useState(true);
   const [recording, setRecording] = useState(false);
+  const [libVersion, setLibVersion] = useState(null);
 
   useEffect(() => subscribeEvents(setEvents), []);
+  useEffect(() => subscribeLibVersion(setLibVersion), []);
 
   // Запись экрана стартует по требованию: rrweb дозагрузится отдельным бандлом
   const toggleRecord = (e) => {
@@ -29,7 +31,13 @@ export default function TrackerPanel() {
   return (
     <aside className={`tracker-panel rst-block ${open ? '' : 'collapsed'}`}>
       <div className="tracker-panel-head" onClick={() => setOpen(!open)}>
-        <span>📡 События трекера ({events.length})</span>
+        <span>
+          📡 События трекера ({events.length})
+          {/* __DEMO_LIB__ подставляет vite: lib.js или lib-dev.js */}
+          <span className="tracker-lib" title="Версия загруженного SDK">
+            {__DEMO_LIB__} {libVersion ? `v${libVersion}` : '…'}
+          </span>
+        </span>
         <span>
           <button type="button" className="tracker-rec" onClick={toggleRecord}>
             {recording ? '⏹ стоп записи' : '⏺ запись'}

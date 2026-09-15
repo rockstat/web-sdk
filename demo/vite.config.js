@@ -70,6 +70,8 @@ const trackerBackend = () => ({
 
 export default defineConfig({
   plugins: [react(), trackerBackend()],
+  // имя сборки SDK для показа в панели событий
+  define: { __DEMO_LIB__: JSON.stringify(libFile) },
   server: {
     port: 5173,
   },
