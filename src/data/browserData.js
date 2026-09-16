@@ -108,6 +108,23 @@ export function prepareNavExtra() {
   if (nav['deviceMemory']) {
     navExtraData['dm'] = nav['deviceMemory'];
   }
+  // Storage API: квота и занятый объём origin в байтах (асинхронно, подставится
+  // в следующие сообщения). Chrome отдаёт квоту как долю свободного места на диске,
+  // в приватном режиме она заметно меньше
+  if (nav['storage'] && nav.storage['estimate']) {
+    try {
+      nav.storage.estimate().then((est) => {
+        if (est && est.quota !== undefined) {
+          navExtraData['sq'] = Math.round(est.quota);
+        }
+        if (est && est.usage !== undefined) {
+          navExtraData['su'] = Math.round(est.usage);
+        }
+      }).catch(() => {});
+    } catch (e) {
+      // estimate может бросить синхронно в старых реализациях
+    }
+  }
 }
 
 

@@ -296,7 +296,7 @@ with a JSON body:
   "page": { "title": "Rockstat", "path": "/", "ref": "https://google.com/", "url": "https://example.com/?utm_source=g", "query": { "utm_source": "g" }, "domain": "example.com", "scheme": "https" },
   "sess": { "pageNum": 3, "eventNum": 17, "num": 2, "type": "campaign", "engine": "google", "refhost": "google.com", "marks": { "utm_source": "g" }, "hasMarks": true, "marksHash": 123456, "start": 1757960000000 },
   "char": { "ls": true, "ae": true, "pr": true, "sb": true, "ab": true, "wp": true },
-  "browser": { "ts": 1757960000000, "tzOffset": -180, "w": 1440, "h": 415, "tw": 1440, "th": 900, "aw": 1440, "ah": 836, "if1": 0, "if2": 0, "nb": { "a": 1, "ch": 1, "l": 100, "ct": 0, "dt": -1 } },
+  "browser": { "ts": 1757960000000, "tzOffset": -180, "w": 1440, "h": 415, "tw": 1440, "th": 900, "aw": 1440, "ah": 836, "if1": 0, "if2": 0, "nb": { "a": 1, "ch": 1, "l": 100, "ct": 0, "dt": -1 }, "ne": { "hc": 8, "dm": 8, "sq": 296630877388, "su": 12345 } },
   "perf": { "cs": 0, "ce": 0, "scs": -1, "rqs": 211, "rss": 1549, "rse": 1560, "dl": 1581, "di": 1812, "dc": -1 },
   "scroll": { "dh": 1148, "ch": 326, "to": 479, "cs": 100, "ms": 100 },
   "lib": { "id": "web-sdk", "v": 5002001, "sv": 5002001, "st": 1757960000000 }
@@ -310,11 +310,12 @@ with a JSON body:
 | `page` | `url`, `path`, `query` (parsed query string including UTM, `gclid`, `yclid`), `ref`, `title`, `domain`, `scheme` |
 | `sess` | Session, see below |
 | `char` | Browser capabilities: `ls` localStorage, `ae` addEventListener, `pr` Promise, `sb` sendBeacon, `ab` atob, `wp` web push |
-| `browser` | `w`/`h` — viewport, `tw`/`th` — screen, `aw`/`ah` — available area, `if1`/`if2` — iframe flags, orientation, platform, `nb` — battery, `ts`/`tzOffset` — client time. Plus Client Hints, network and memory data when available |
+| `browser` | `w`/`h` — viewport, `tw`/`th` — screen, `aw`/`ah` — available area, `if1`/`if2` — iframe flags, orientation, platform, `nb` — battery, `ne` — hardware and storage, `ts`/`tzOffset` — client time. Plus Client Hints and network data when available |
 | `perf` | Navigation Timing (`cs` connectStart, `ce` connectEnd, `scs` secureConnectionStart, `rqs` requestStart, `rss`/`rse` responseStart/End, `dl` domLoading, `di` domInteractive, `dc` domComplete). Only for `page` and `page_loaded` |
 | `scroll` | `dh` — document height, `ch` — viewport height, `to` — top offset, `cs` — current scroll percentage, `ms` — max scroll percentage on the page |
 | `lib` | `id`, `v` — library version as a number `major * 1e6 + minor * 1e3 + patch`, `sv` — snippet version, `st` — library start time |
 | `browser.nb` | Battery: `a` — API available, `ch` — charging, `l` — level in percent, `ct` / `dt` — seconds until fully charged / discharged, `-1` when no estimate is available |
+| `browser.ne` | `hc` — CPU cores (`hardwareConcurrency`), `dm` — RAM in GB (`deviceMemory`), `sq` / `su` — storage quota and usage of the origin in bytes (`navigator.storage.estimate()`) |
 
 The request query string carries `dig` — the body hash (cyrb53) and `td_trans` — the transport
 used (`b` — beacon, `f` — fetch).
