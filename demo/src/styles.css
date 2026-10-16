@@ -1,0 +1,197 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1220;
+  --panel: #181c30;
+  --panel-2: #202541;
+  --text: #e8eaf6;
+  --muted: #9aa0c3;
+  --accent: #7c5cff;
+  --accent-2: #ff5c8a;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Header */
+.header {
+  display: flex; align-items: center; gap: 24px;
+  padding: 14px 28px;
+  background: var(--panel);
+  border-bottom: 1px solid #262b4a;
+  position: sticky; top: 0; z-index: 10;
+}
+.logo { font-size: 20px; font-weight: 700; color: var(--text); text-decoration: none; }
+.header nav a { color: var(--muted); text-decoration: none; margin-right: 16px; }
+.header nav a.active, .header nav a:hover { color: var(--text); }
+.header-user { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.username { color: var(--muted); }
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid #333a63;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s;
+}
+.btn:hover { background: #2a3052; }
+.btn-primary { background: var(--accent); border-color: var(--accent); }
+.btn-primary:hover { background: #6a4be0; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn-ghost:hover { color: var(--text); background: transparent; }
+
+/* Layout */
+.main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 32px 28px 120px; }
+h1 { font-size: 28px; margin-bottom: 6px; }
+h2 { font-size: 20px; margin-bottom: 12px; }
+.subtitle { color: var(--muted); margin-bottom: 28px; }
+
+/* Cards grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid #262b4a;
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform .15s, border-color .15s;
+}
+.card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.cover { height: 120px; display: flex; align-items: center; justify-content: center; }
+.cover-emoji { font-size: 52px; }
+.card-body { padding: 14px 16px; }
+.card-body h3 { font-size: 16px; margin-bottom: 8px; }
+.meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.badge {
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.rating { color: #ffcf5c; font-weight: 600; font-size: 14px; margin-left: auto; }
+.rating.big { font-size: 18px; margin-left: 0; }
+
+/* Game page */
+.back { color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 18px; }
+.back:hover { color: var(--text); }
+.game-hero {
+  display: flex; align-items: center; gap: 24px;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 22px;
+}
+.game-hero-emoji { font-size: 72px; }
+.game-hero h1 { margin-bottom: 10px; }
+.description { color: var(--text); max-width: 720px; margin-bottom: 36px; }
+
+/* Forms */
+form label { display: block; margin-bottom: 16px; color: var(--muted); font-size: 14px; }
+form input[type="text"], form input[type="email"], form input[type="password"],
+form textarea, form select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  background: var(--panel-2);
+  border: 1px solid #333a63;
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+form input:focus, form textarea:focus, form select:focus {
+  outline: none; border-color: var(--accent);
+}
+form select { width: 120px; }
+label.checkbox { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+label.checkbox input { width: auto; margin: 0; }
+
+.review { max-width: 520px; background: var(--panel); border: 1px solid #262b4a; border-radius: 14px; padding: 24px; }
+.success { color: #6fdc8c; }
+.error { color: var(--accent-2); margin-bottom: 12px; }
+
+/* Login */
+.login-wrap { display: flex; justify-content: center; padding-top: 40px; }
+.login-form {
+  width: 380px;
+  background: var(--panel);
+  border: 1px solid #262b4a;
+  border-radius: 16px;
+  padding: 32px;
+}
+.login-form h1 { font-size: 22px; }
+.login-form .btn { width: 100%; margin-top: 6px; }
+
+/* Tracker panel */
+.tracker-panel {
+  position: fixed;
+  right: 16px; bottom: 16px;
+  width: 440px;
+  max-height: 70vh;
+  background: var(--panel);
+  border: 1px solid #333a63;
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0,0,0,.45);
+  z-index: 50;
+  font-size: 13px;
+}
+.tracker-panel-head {
+  padding: 10px 14px;
+  display: flex; justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  color: var(--muted);
+  font-weight: 600;
+}
+.tracker-panel-body { overflow-y: auto; padding: 0 10px 10px; }
+.tracker-rec { margin-right: 8px; font: inherit; font-size: 12px; cursor: pointer; }
+.tracker-lib { margin-left: 8px; font-weight: 400; font-size: 11px; color: var(--muted); opacity: .8; }
+.tracker-empty { color: var(--muted); padding: 10px; }
+.tracker-event {
+  background: var(--panel-2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  padding: 6px 10px;
+}
+.tracker-event-head {
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+.tracker-event-head::-webkit-details-marker { display: none; }
+.tracker-event-head::before {
+  content: '▸';
+  color: var(--muted);
+  margin-right: 8px;
+}
+details[open] > .tracker-event-head::before { content: '▾'; }
+.tracker-event code { margin-right: auto; }
+.tracker-event code { color: var(--accent); }
+.tracker-ts { color: var(--muted); font-size: 11px; }
+.tracker-event pre {
+  margin-top: 6px;
+  overflow-x: auto;
+  color: #b6f0c1;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

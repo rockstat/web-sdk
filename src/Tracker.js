@@ -1,4 +1,4 @@
-import Promise from 'promise-polyfill';
+// import Promise from 'promise-polyfill';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
 import LocalStorageAdapter from './LocalStorageAdapter';
@@ -11,7 +11,7 @@ import {
   hashCode
 } from './functions/stringHash';
 import autoDomain from './functions/autoDomain';
-import browserData from './data/browserData';
+import browserData, { prepareUAData, prepareNavConnection, prepareNavExtra, prepareBatData } from './data/browserData';
 import browserCharacts from './data/browserCharacts';
 import performanceData from './data/performance';
 import BrowserEventsTracker from './trackers/BrowserEventsTracker';
@@ -20,9 +20,10 @@ import SessionTracker from './trackers/SessionTracker';
 import ClickTracker from './trackers/ClickTracker';
 import FormTracker from './trackers/FormTracker';
 import PageTracker from './trackers/PageTracker';
+import RecordTracker from './trackers/RecordTracker';
 import GoogleAnalytics from './syncs/GoogleAnalytics';
 import YandexMetrika from './syncs/YandexMetrika';
-import { PixelSync } from './syncs/PixelSync';
+// import { PixelSync } from './syncs/PixelSync';
 import {
   isObject
 } from './functions/type';
@@ -45,8 +46,11 @@ import {
   EVENTS_NO_SCROLL,
   INTERNAL_EVENT,
   SERVER_MESSAGE,
+  OUTGOING_MESSAGE,
   SERVICE_TRACK,
   EVENT_OPTION_REQUEST,
+  SERVICE_LOG,
+  EVENT_OPTION_TRANSPORT_IMG,
 } from './Constants';
 import {
   win
@@ -55,13 +59,13 @@ import { packSemVer } from './functions/packSemVer';
 
 
 const LIBRARY = 'web-sdk';
-const LIBVER = packSemVer('4.1.0');
+const LIBVER = packSemVer('5.2.1');
 
 const noop = () => { };
 const asObject = (options) => {
   return isObject(options) ? options : {};
 }
-const log = createLogger('RST');
+const log = createLogger('RST/Tracker');
 
 /**
  * Main Tracker class
@@ -72,6 +76,9 @@ function Tracker() {
 
   log('starting RST Tracker');
 
+  this.startTime = (new Date()).getTime();
+  this.timeDelta = 0;
+
   const pd = pageDefaults();
   const [domain, domainHash] = this.buildProjectId(pd.domain);
 
@@ -79,6 +86,7 @@ function Tracker() {
   this.configured = false;
   this.valuableFields = undefined;
   this.queue = [];
+  this.registry = {};
 
   this.options = {
     projectId: domainHash,
@@ -88,8 +96,8 @@ function Tracker() {
     cookieDomain: domain,
     cookiePath: '/',
     // prefix for cookie stored at target website
-    cookiePrefix: 'rst-',
-    loctorPrefix: 'rst:',
+    cookiePrefix: 'rst4-',
+    lcPrefix: 'rst4:',
     pathPrefix: '',
     urlMark: 'band',
     server: null,
@@ -103,8 +111,14 @@ function Tracker() {
     trackClicks: {
       allClicks: false
     },
-    trackForms: true,
+    browserEvents: {
+      unloadHandlers: true
+    },
+    trackForms: {},
     trackPages: false,
+    trackRecord: {
+      autostart: false // true — запись стартует при инициализации, иначе только по rstat('record')
+    },
     allowHTTP: false,
     allowSendBeacon: true,
     allowXHR: true,
@@ -117,6 +131,7 @@ function Tracker() {
   this.syncs = [];
   this.trackers = [];
   this.transport = null;
+  this.pendingRecord = null;
 }
 
 Emitter(Tracker.prototype);
@@ -133,7 +148,7 @@ Tracker.prototype.initialize = function () {
 
   // Check is HTTPS
   if (!isHttps() && !this.options.allowHTTP) {
-    return log.warn('Works only on https');
+    return log.warn('Works only over https');
   }
 
   log('Initializing...');
@@ -145,7 +160,7 @@ Tracker.prototype.initialize = function () {
 
   // Constructing storage adapters (should be before any other actions)
   this.localStorage = new LocalStorageAdapter({
-    prefix: this.options.loctorPrefix
+    prefix: this.options.lcPrefix
   });
   this.cookieStorage = new CookieStorageAdapter({
     cookieDomain: this.options.cookieDomain,
@@ -162,7 +177,7 @@ Tracker.prototype.initialize = function () {
   log(this.options);
 
   // Handling browser events
-  this.browserEventsTracker = new BrowserEventsTracker();
+  this.browserEventsTracker = new BrowserEventsTracker(this.options.browserEvents);
   this.browserEventsTracker.initialize();
 
   // Session tracker
@@ -172,8 +187,9 @@ Tracker.prototype.initialize = function () {
 
   // Interract with server
   this.transport = new Transport(this.options)
-    .setCreds(this.sessionTracker.creds())
-    .connect();
+    .setCreds(this.sessionTracker.creds());
+  // For WS
+  // .connect();
 
 
   // Main tracker
@@ -197,13 +213,20 @@ Tracker.prototype.initialize = function () {
     this.formTracker = new FormTracker(asObject(this.options.trackForms));
     this.trackers.push(this.formTracker);
   }
-  this.formTracker = new FormTracker(asObject(this.options.trackForms));
+  // this.formTracker = new FormTracker(asObject(this.options.trackForms));
   // Interract with server
-  this.trackers.push(this.formTracker);
+  // this.trackers.push(this.formTracker);
 
   if (this.options.trackPages) {
     this.pageTracker = new PageTracker(asObject(this.options.trackPages));
     this.trackers.push(this.pageTracker);
+  }
+
+  // Запись сессии: при trackRecord.autostart стартует сразу, иначе — только по rstat('record').
+  // Вызов record() до initialize отложен в pendingRecord и запускается здесь
+  if (this.pendingRecord || asObject(this.options.trackRecord).autostart) {
+    this.startRecord(this.pendingRecord);
+    this.pendingRecord = null;
   }
 
 
@@ -216,36 +239,61 @@ Tracker.prototype.initialize = function () {
     new GoogleAnalytics(),
     new YandexMetrika()
   );
-  if (this.options.pixelSync) {
-    this.syncs.push(new PixelSync(asObject(this.options.pixelSync)));
-  }
+  // if (this.options.pixelSync) {
+  //   this.syncs.push(new PixelSync(asObject(this.options.pixelSync)));
+  // }
 
   const plugins = [this.transport].concat(this.syncs, this.trackers)
-  each(plugins, (plugin) => {
-    // Listening events
-    plugin.on(EVENT, ({ name, data, options }) => {
-      log(`plugin event:${name}`);
-      this.handle(name, data, options);
-    });
-    // Listening internal events
-    plugin.on(INTERNAL_EVENT, (name, data) => {
-      log(`plugin internal event:${name}`);
-      this.emit(name, data);
-      this.emit(INTERNAL_EVENT, name, data);
-    });
-  });
+  each(plugins, (plugin) => this.attachPlugin(plugin));
 
   // Fire ready
+  this.initialized = true;
+
   this.emit(READY);
   this.on(DOM_BEFORE_UNLOAD, this.unload);
 
-  this.initialized = true;
 
   // Handling queue
   this.queue.map(e => {
-    this.handle.apply(this, e);
+    this.handle_proxy.apply(this, e);
   });
   this.queue = [];
+
+  // Preparing User Agent Data - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData
+  prepareUAData();
+  prepareNavConnection();
+  setInterval(function () {
+    prepareNavConnection();
+  }, 5000)
+  prepareNavExtra();
+  prepareBatData();
+  setInterval(function () {
+    prepareBatData();
+  }, 5000)
+
+};
+
+/**
+ * Подписка на события плагина (трекера, синка, транспорта).
+ * Вынесена отдельно: трекер записи может подключаться уже после initialize
+ * @param {Object} plugin Emitter
+ */
+Tracker.prototype.attachPlugin = function (plugin) {
+  if (plugin._attached) {
+    return;
+  }
+  plugin._attached = true;
+  // Listening events
+  plugin.on(EVENT, ({ name, data, options }) => {
+    log(`plugin event:${name}`);
+    this.handle(name, data, options);
+  });
+  // Listening internal events
+  plugin.on(INTERNAL_EVENT, (name, data) => {
+    log(`plugin internal event:${name}`);
+    this.emit(name, data);
+    this.emit(INTERNAL_EVENT, name, data);
+  });
 };
 
 /**
@@ -267,6 +315,24 @@ Tracker.prototype.configure = function (options) {
   this.options = objectAssign(this.options, options);
 };
 
+
+
+
+/**
+ * Proxy for Handling event method
+ * @param {string} name
+ * @param {Object|undefined} data
+ * @param {Object} options - Event properties
+ */
+Tracker.prototype.handle_proxy = function (name, data = {}, options = {}) {
+  try {
+    return this.handle(name, data, options);
+  } catch (e) {
+    log.warn('Catched event handle error', e)
+    this.logOnServer(e);
+  }
+}
+
 /**
  * Handling event
  * @param {string} name
@@ -278,7 +344,7 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     return this.queue.push([name, data]);
   }
 
-  log(`Handling ${name}`);
+  log.info(`Handling ${name}`, { data });
   this.emit(EVENT, name, data, options);
 
   if (name === EVENT_PAGEVIEW) {
@@ -315,10 +381,8 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     data: data,
     projectId: this.options.projectId,
     uid: this.sessionTracker.getUid(),
-    user: this.sessionTracker.userData(),
-    page: pageDefaults({
-      short: true
-    }),
+    user: { td: this.timeDelta, ...this.sessionTracker.userData() },
+    page: pageDefaults(),
     sess: this.sessionTracker.sessionData(),
     char: browserCharacts,
     browser: browserData(),
@@ -333,25 +397,55 @@ Tracker.prototype.handle = function (name, data = {}, options = {}) {
     msg.scroll = this.activityTracker.getPositionData();
   }
 
+  this.emit(OUTGOING_MESSAGE, msg);
+
   // Sending to server
-  this.sendToServer(msg, options);
+  return this.sendToServer(msg, options);
 };
 
 /**
  * Log remote: send to server log
- * @param {string} level
- * @param {Array} args
+ * @param {Object} msg
  */
-Tracker.prototype.logOnServer = function (level, args) {
+Tracker.prototype.logOnServer = function (msg) {
   if (this.isInitialized()) {
     this.sendToServer({
-      service: SERVICE_TRACK,
+      service: SERVICE_LOG,
       name: 'log',
-      lvl: level,
-      args: args
+      msg: msg
+    }, {
+      [EVENT_OPTION_TRANSPORT_IMG]: true
     });
   }
 };
+
+
+/**
+ * Log remote: send to server log
+ * @param {Error} e
+ */
+// Tracker.prototype.logError = function (e, errStack) {
+//   if (this.isInitialized()) {
+//     try {
+//       errStack = e.stack;
+//     } catch (e) {
+//       errStack = 'Stack not available';
+//     }
+//     try {
+//       this.sendToServer({
+//         service: SERVICE_LOG,
+//         name: 'log',
+//         msg: String(e),
+//         stack: errStack
+//       }, {
+//         [EVENT_OPTION_TRANSPORT_IMG]: true
+//       });
+//     } catch (e){
+//       log.warn('sendToServer (logError) executed with error');
+//     }
+//   }
+
+// };
 
 /**
  *
@@ -359,7 +453,13 @@ Tracker.prototype.logOnServer = function (level, args) {
  * @param {Object} options Object contains options
  */
 Tracker.prototype.sendToServer = function (msg, options) {
-  return this.transport.send(msg, options).then(() => { }).catch(e => log.warn(e));
+  const result = this.transport.send(msg, options);
+  // Логируем сбой, не подменяя результат: request() должен получать
+  // и ответ сервера, и реальную ошибку
+  result.catch((e) => {
+    log.warn('sendToServer executed with error', e);
+  });
+  return result;
 };
 
 /**
@@ -383,7 +483,7 @@ Tracker.prototype.unload = function () {
  * @param options
  */
 Tracker.prototype.event = function (name, data, options) {
-  this.handle(name, data, options);
+  this.handle_proxy(name, data, options);
 };
 
 /**
@@ -422,7 +522,7 @@ Tracker.prototype.notify = function (service, name, data = {}) {
  * Track page load
  */
 Tracker.prototype.page = function (data, options) {
-  this.handle(EVENT_PAGEVIEW, data, options);
+  this.handle_proxy(EVENT_PAGEVIEW, data, options);
 };
 
 /**
@@ -436,7 +536,7 @@ Tracker.prototype.warn = function (msg) {
  * Emit warn log message. For testing purposes.
  */
 Tracker.prototype.enableLogger = function () {
-  win._rst_logger = true;
+  win._rst4_logger = true;
 };
 
 /**
@@ -447,10 +547,62 @@ Tracker.prototype.identify = function (userId, userTraits) {
     userTraits = userId;
     userId = undefined;
   }
-  this.handle(EVENT_IDENTIFY, {
+  this.handle_proxy(EVENT_IDENTIFY, {
     userId,
     userTraits
   });
+};
+
+/**
+ * Start session recording (rrweb): rstat('record', {...options}).
+ * Опция trackRecord задаёт настройки по умолчанию; без trackRecord.autostart
+ * запись запускается только этим методом. Вызов до initialize откладывается
+ * @param {Object|boolean} [options] RecordTracker options поверх trackRecord; false — остановить
+ */
+Tracker.prototype.record = function (options) {
+  if (options === false) {
+    return this.stopRecord();
+  }
+  if (!this.initialized) {
+    this.pendingRecord = asObject(options);
+    return;
+  }
+  this.startRecord(options);
+};
+
+/**
+ * Stop session recording: rstat('stopRecord') или rstat('record', false)
+ */
+Tracker.prototype.stopRecord = function () {
+  if (!this.initialized) {
+    this.pendingRecord = null;
+    return;
+  }
+  if (!this.recordTracker) {
+    return;
+  }
+  this.recordTracker.stop();
+  const idx = this.trackers.indexOf(this.recordTracker);
+  if (idx >= 0) {
+    this.trackers.splice(idx, 1);
+  }
+  this.recordTracker = null;
+};
+
+/**
+ * Create and attach RecordTracker. Повторный вызов при активной записи — no-op
+ * @param {Object|boolean} options настройки вызова поверх options.trackRecord
+ */
+Tracker.prototype.startRecord = function (options) {
+  if (this.recordTracker) {
+    return log('recording already active');
+  }
+  const recordOptions = objectAssign({}, asObject(this.options.trackRecord), asObject(options));
+  delete recordOptions.autostart;
+  this.recordTracker = new RecordTracker(recordOptions, this.options);
+  this.trackers.push(this.recordTracker);
+  this.attachPlugin(this.recordTracker);
+  this.recordTracker.load();
 };
 
 /**
@@ -479,6 +631,14 @@ Tracker.prototype.onInternalEvent = function (cb) {
   this.on(INTERNAL_EVENT, cb);
 };
 
+/**
+ * Add callback for complete outgoing messages (as sent to server)
+ * @param cb
+ */
+Tracker.prototype.onMessage = function (cb) {
+  this.on(OUTGOING_MESSAGE, cb);
+};
+
 
 /**
  * Add external event callback
@@ -493,7 +653,18 @@ Tracker.prototype.onServerMessage = function (cb) {
  * @return {String}
  */
 Tracker.prototype.getUid = function () {
-  return this.sessionTracker.getUid();
+  if (this.isInitialized()) {
+    return this.sessionTracker.getUid();
+  } 
+  log.warn('Called getUid; not initialized')
+};
+
+/**
+ * Session number
+ * @return {Number}
+ */
+Tracker.prototype.getSessNum = function () {
+  return this.sessionTracker.getSessNum();
 };
 
 
@@ -524,10 +695,23 @@ Tracker.prototype.getLibInfo = function () {
   return {
     id: LIBRARY,
     v: LIBVER,
-    sv: this.options.snippet
+    sv: this.options.snippet,
+    st: this.startTime
   }
 };
 
 
+/**
+ * Setter for the objects registry
+ * @param {*} name 
+ * @param {*} obj 
+ */
+Tracker.prototype.set = function (name, obj) {
+  this.registry[name] = obj;
+};
+
+Tracker.prototype.setTimeDelta = function (d) {
+  this.timeDelta = d;
+};
 
 export default Tracker;

@@ -1,21 +1,22 @@
-FROM node:12-alpine as builder
+FROM node:20.14-alpine AS builder
 
 WORKDIR /build
 
-COPY package.json .
-COPY yarn.lock .
+ARG NPM_CONFIG_REGISTRY_ARG=https://registry.npmjs.org
+ENV NPM_CONFIG_REGISTRY=$NPM_CONFIG_REGISTRY_ARG   
 
-RUN yarn install \
-  && yarn cache clean
+COPY package.json package-lock.json ./
+RUN npm ci --loglevel http && npm cache clean --force
 
 COPY . .
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
-RUN yarn build && rm -rf node_modules
+RUN npm run build  && rm -rf node_modules
 
+FROM alpine:3.18
 
-# Working image
-FROM alpine:3.7
+ARG NPM_CONFIG_REGISTRY_ARG=https://registry.npmjs.org
+ENV NPM_CONFIG_REGISTRY=$NPM_CONFIG_REGISTRY_ARG   
 
 VOLUME  /usr/share/web-sdk
 WORKDIR /usr/share/web-sdk

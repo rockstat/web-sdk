@@ -1,25 +1,25 @@
 import {doc, win} from '../Browser';
 import createLogger from './createLogger';
 
-const log = createLogger('DomEvents');
-const checkPassiveSupport = () => {
-  let result = false;
-  try {
-    const options = Object.defineProperty({}, 'passive', {
-      get: function () {
-        result = true;
-      }
-    });
+const log = createLogger('RSP/DomEvents');
+// const checkPassiveSupport = () => {
+//   let result = false;
+//   try {
+//     const options = Object.defineProperty({}, 'passive', {
+//       get: function () {
+//         result = true;
+//       }
+//     });
 
-    window.addEventListener('test', null, options);
-  } catch (err) {
-  }
-  return result;
-};
+//     window.addEventListener('test', null, options);
+//   } catch (err) {
+//   }
+//   return result;
+// };
 
 
 export const hasAddEL = !!win.addEventListener;
-const passiveSupport = checkPassiveSupport();
+// const passiveSupport = checkPassiveSupport();
 
 /**
  * @return {boolean}
@@ -76,6 +76,7 @@ export function documentReady(cb) {
 
   if (stateIsInteractive() || stateIsComplete()) {
     cb();
+    return;
   }
 
   function loadedHandler() {

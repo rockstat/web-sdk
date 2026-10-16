@@ -1,15 +1,13 @@
 import objectAssing from '../functions/objectAssing';
 import { win, doc } from "../Browser";
 import Emitter from 'component-emitter';
-import {lo} from '../Logger'
 import {
   EVENT,
   EVENT_PAGEVIEW
 } from '../Constants';
 import createLogger from '../functions/createLogger';
 
-
-const log = createLogger('PAGETRACK');
+const log = createLogger('RST/PageTracker');
 
 const nn = (val) => val || '';
 
@@ -24,10 +22,6 @@ const PageTracker = function (options) {
   this.initialized = false;
   this.eventHandler = this.eventHandler.bind(this);
   this.initialize();
-
-  log.info('OLA! Blia!')
-
-
 };
 Emitter(PageTracker.prototype);
 
@@ -36,26 +30,23 @@ PageTracker.prototype.eventHandler = function (e) {
     name: EVENT_PAGEVIEW,
   };
   this.emit(EVENT, event);
-
-
 };
 
 
 
 PageTracker.prototype.initialize = function () {
-
-  if (!win.addEventListener) return;
-  win.addEventListener('hashchange', this.eventHandler, true);
+  // if (!win.addEventListener) return;
+  // win.addEventListener('hashchange', this.eventHandler, true);
   this.initialized = true;
 };
 
 PageTracker.prototype.unload = function () {
-  win.removeEventListener('hashchange', this.eventHandler, true);
+  // if (!win.addEventListener) return;
+  // win.removeEventListener('hashchange', this.eventHandler, true);
+  this.initialized = false;
 };
 
 export default PageTracker;
-
-
 
 
 // class Hist {
@@ -87,3 +78,5 @@ export default PageTracker;
 
 // window.onpopstate = h.urlChangeHandler
 
+
+// window.onpopstate = ev => 

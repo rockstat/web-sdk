@@ -33,7 +33,7 @@ const activityEvents = [
  */
 const getDocumentHeight = function () {
 
-  return Math.max(html.offsetHeight, html.scrollHeight, body.offsetHeight, body.scrollHeight, body.clientHeight);
+  return Math.max(0, html.offsetHeight, html.scrollHeight, body.offsetHeight, body.scrollHeight, body.clientHeight);
 
 };
 
@@ -42,8 +42,8 @@ const getDocumentHeight = function () {
  * @return {number|*}
  */
 const getTopOffset = function () {
-  const value = win.pageYOffset || html.scrollTop;
-  return value >= 0 ? Math.round(value) : value;
+  const value = win.scrollY || html.scrollTop;
+  return value > 0 ? Math.round(value) : 0;
 };
 
 
@@ -52,7 +52,7 @@ const getTopOffset = function () {
  * @return {number}
  */
 const getClientHeight = function () {
-  return win.innerHeight || html.clientHeight;
+  return Math.max(0, win.innerHeight || html.clientHeight);
 };
 
 /**

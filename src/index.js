@@ -13,7 +13,7 @@ import {
 import Tracker from './Tracker';
 import { packSemVer } from './functions/packSemVer';
 
-const wk = 'rstat';
+const wk = 'rstat4';
 
 if (win[wk]) {
   const holder = win[wk];
@@ -24,12 +24,16 @@ if (win[wk]) {
     });
     // Attaching method to page
     const doCall = function (args) {
+      // console.log('doс', args);
       args = args.slice(0);
       const method = args.shift();
       return tracker[method] ?
         tracker[method].apply(tracker, args) :
-        new Error('Undefined method');
+        // TODO: log errors to sentry if available
+        console && console.warn && console.warn('called rockstat undefined method');
     };
+
+
 
     holder._q.map(doCall);
     holder.doCall = doCall;
@@ -39,6 +43,6 @@ if (win[wk]) {
       tracker.initialize();
     });
   } else {
-    console && console.error && console.error('rockstat already loaded');
+    console && console.warn && console.warn('rockstat already loaded');
   }
 }

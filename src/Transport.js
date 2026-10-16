@@ -1,8 +1,4 @@
-import Sockette from 'sockette';
 import Emitter from 'component-emitter';
-import queryStringify from 'qs/lib/stringify';
-import Promise from 'promise-polyfill';
-
 import {
   win,
   doc,
@@ -10,36 +6,29 @@ import {
 } from './Browser';
 import {
   hasBeaconSupport,
-  hasXHRWithCreds,
-  hasXHRSupport,
-  hasXDRSupport,
-  hasAnyXRSupport,
-  hasWSSupport
+  hasFetchSupport,
 } from './data/browserCharacts';
 import {
-  EVENT_OPTION_OUTBOUND,
-  EVENT_OPTION_TERMINATOR,
   EVENT_OPTION_REQUEST,
-  SERVER_MESSAGE,
-  INTERNAL_EVENT,
+  EVENT_OPTION_TRANSPORT_IMG,
   SERVICE_TRACK,
 } from './Constants';
 import objectAssign from './functions/objectAssing';
 import createLogger from './functions/createLogger';
-import { isObject } from './functions/type';
+import queryStringify from 'qs/lib/stringify';
+import { cyrb53 } from './functions/cyrb53';
 
 const HTTPS = 'https';
-const WSS = 'wss';
 
-const log = createLogger('RST-TR');
-const noop = () => { };
+const log = createLogger('RST/Transport');
 
+// Паузы перед повторами отправки события при сетевых сбоях (мс)
+const RETRY_DELAYS = [1000, 5000];
 
 /**
  * Transport class containing general connecting methods
  * @param {Object} options transport options
  * @constructor
- * @property {boolean} wsConnected
  * @property {Object} creds
  * @class
  *
@@ -53,19 +42,17 @@ export function Transport(options) {
   );
   this.pathPrefix = options.pathPrefix;
   this.server = this.options.server;
-  this.wsServer = this.options.wsServer || this.options.server;
-  this.wsPath = this.options.wsPath || '/wss';
   this.urlMark = this.options.urlMark;
-  this.wsConnected = false;
+  this.proto = (this.options.allowHTTP && win.location.protocol === 'http:')
+    ? 'http'
+    : HTTPS;
   this.servicesMap = {
     'track': 't4k'
   }
-  this.msgCounter = new Date() - 1514764800000;
-  this.waitCallers = {};
 };
 
-
-// Extending Emitter
+// Tracker подписывается на события каждого плагина, включая transport
+// (канал для будущих server messages) — миксин нужен, даже пока emit не зовётся
 Emitter(Transport.prototype);
 
 
@@ -84,235 +71,186 @@ Transport.prototype.setCreds = function (creds) {
  * Transform path to query url
  * @param {string} path
  * @param {Object} data
- * @returns {Transport}
+ * @returns {string}
  */
-Transport.prototype.makeURL = function (path, data = {}, proto = HTTPS) {
+Transport.prototype.makeURL = function (path, data = {}, proto) {
   const query = queryStringify(data);
-  return `${proto}://${this.server}${this.pathPrefix}${path}?${query}`;
-}
-
-Transport.prototype.makeWsURL = function (data = {}) {
-  const query = queryStringify(data);
-  return `${WSS}://${this.wsServer}${this.wsPath}?${query}`;
+  return `${proto || this.proto}://${this.server}${this.pathPrefix}${path}?${query}`;
 }
 
 
 /**
- * Creates XHR / XDR object
+ * Service endpoint path
+ * @param {string} service
+ * @param {string} ext json|gif
+ * @returns {string}
+ */
+Transport.prototype.servicePath = function (service, ext) {
+  const _service = this.servicesMap[service] || service;
+  return `/${this.urlMark}/${_service}.${ext}`;
+}
+
+
+/**
+ * POST via fetch with timeout. Resolves with parsed JSON response
+ * (null for empty body), rejects on non-2xx or network error.
  * @param {string} url
+ * @param {string} data serialized message
+ * @returns {Promise}
  */
-Transport.prototype.createXHR = function (url) {
-  return new Promise(function (resolve, reject) {
-    if (hasXHRWithCreds || !hasXDRSupport && hasXHRSupport) {
-      /** @type {XMLHttpRequest} */
-      const xhr = new win.XMLHttpRequest();
-      xhr.open('POST', url, true);
-      if (hasXHRWithCreds) {
-        xhr.withCredentials = true;
-      }
-      // not used to prevent options requests
-      // xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
-      xhr.setRequestHeader("Content-Type", "application/json");
-      resolve(xhr);
-    } else if (hasXDRSupport) {
-      // hack to prevent IE 'aborted' bug
-      setTimeout(() => {
-        xhr = new win.XDomainRequest();
-        xhr.ontimeout = noop();
-        xhr.onprogress = noop();
-        xhr.open('POST', url, true);
-        resolve(xhr);
-      }, 0);
-    }
-  })
+Transport.prototype.sendFetch = function (url, data) {
+  if (!hasFetchSupport) {
+    return Promise.reject(new Error('No transport available'));
+  }
+
+  const fetchOptions = {
+    method: 'POST',
+    body: data,
+    keepalive: true
+  };
+
+  let timer = null;
+  if (win.AbortController) {
+    const abortCtl = new win.AbortController();
+    fetchOptions.signal = abortCtl.signal;
+    timer = setTimeout(() => abortCtl.abort(), this.options.responseTimeout);
+  }
+  const clearTimer = () => timer && clearTimeout(timer);
+
+  return fetch(url, fetchOptions)
+    .then((response) => {
+      clearTimer();
+      return response.text().then((text) => {
+        if (!response.ok) {
+          const err = new Error(`Server responded with ${response.status}`);
+          err.status = response.status;
+          throw err;
+        }
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return null;
+        }
+      });
+    }, (e) => {
+      clearTimer();
+      throw e;
+    });
 }
 
 
 /**
- * Old good friend XHR
- * @param url
- * @param data
+ * Fetch with retries on transient failures.
+ * 4xx are permanent — not retried; 5xx, timeouts and network errors are.
+ * @param {string} url
+ * @param {string} data
+ * @param {Array<number>} delays remaining retry delays, ms
+ * @returns {Promise}
  */
-Transport.prototype.sendXHR = function (url, data) {
-  return new Promise((resolve, reject) => {
-    const handler = (xhr) => {
-      if (xhr.status === 200) {
-        try {
-          return resolve(JSON.parse(xhr.responseText));
-        } catch (exc) {
-          log.error(exc)
-          return reject(exc);
-        }
-      } else {
-        return reject(new Error('XHR request error'))
-      }
-    };
-
-    this.createXHR(url)
-      .then(xhr => {
-        xhr.onload = () => handler(xhr);
-        xhr.onerror = () => handler(xhr);
-        xhr.send(data);
-      })
-      .catch(exc => reject(exc))
+Transport.prototype.fetchWithRetry = function (url, data, delays) {
+  return this.sendFetch(url, data).catch((e) => {
+    const permanent = (e && e.status >= 400 && e.status < 500) || !hasFetchSupport;
+    if (permanent || !delays.length) {
+      throw e;
+    }
+    const delay = delays[0];
+    log.warn(`Send failed, retrying in ${delay}ms`, e);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        this.fetchWithRetry(url, data, delays.slice(1)).then(resolve, reject);
+      }, delay);
+    });
   });
-};
+}
 
 
 /**
- *
- * @param url {string}
+ * Deliver an event message. Delivery matters, response doesn't:
+ * beacon first, then fetch with retries.
+ * @param {Object} msg
+ * @returns {Promise}
  */
-Transport.prototype.sendIMG = function (url) {
-  // Img load test
-  const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
-  img.src = url;
-  img.onload = () => {
-    log('img loaded');
-  };
-};
+Transport.prototype.sendEvent = function (msg) {
+  const data = JSON.stringify(msg);
+  const dig = cyrb53(data);
+  const path = this.servicePath(msg.service, 'json');
+
+  if (this.options.allowSendBeacon && hasBeaconSupport) {
+    try {
+      if (nav.sendBeacon(this.makeURL(path, { dig, td_trans: 'b' }), data)) {
+        return Promise.resolve(null);
+      }
+    } catch (e) {
+      // очередь beacon переполнена или URL отвергнут — уходим в fetch
+    }
+    log.info('Beacon refused, falling back to fetch');
+  }
+
+  return this.fetchWithRetry(
+    this.makeURL(path, { dig, td_trans: 'f' }),
+    data,
+    RETRY_DELAYS
+  );
+}
 
 
 /**
- *
- * @param msg {Object}
- * @param query {Array}
- * @param options {Object}
+ * Request-response call. Always fetch (beacon can't read replies),
+ * no retries: server side effects must not be duplicated.
+ * @param {Object} msg
+ * @returns {Promise} parsed server response
+ */
+Transport.prototype.sendRequest = function (msg) {
+  const data = JSON.stringify(msg);
+  const dig = cyrb53(data);
+  return this.sendFetch(
+    this.makeURL(this.servicePath(msg.service, 'json'), { dig, td_trans: 'f' }),
+    data
+  );
+}
+
+
+/**
+ * GET-pixel fallback channel (server-side logging).
+ * Payload is cropped and passed in the query string.
+ * @param {Object} msg
+ * @returns {Promise}
+ */
+Transport.prototype.sendImg = function (msg) {
+  const smallMsg = (msg.service === SERVICE_TRACK && this.options.msgCropper)
+    ? this.options.msgCropper(msg)
+    : msg;
+  const url = this.makeURL(
+    this.servicePath(msg.service, 'gif'),
+    objectAssign({}, smallMsg, this.creds)
+  );
+
+  return new Promise((resolve, reject) => {
+    const img = win.Image ? (new Image(1, 1)) : doc.createElement('img');
+    // держим ссылку, чтобы GC не собрал изображение до завершения запроса
+    this.lastImg = img;
+    img.onload = () => resolve(null);
+    img.onerror = () => reject(new Error('Img transport failed'));
+    img.src = url;
+  });
+}
+
+
+/**
+ * Send message to server using transport chosen by options
+ * @param {Object} msg
+ * @param {Object} options
+ * @returns {Promise}
  */
 Transport.prototype.send = function (msg, options = {}) {
-  const data = JSON.stringify(msg);
-  const isRequest = !!options[EVENT_OPTION_REQUEST];
-  const useSafe = !!options[EVENT_OPTION_TERMINATOR]
-    || !!options[EVENT_OPTION_OUTBOUND];
-  const _service = this.servicesMap[msg.service] || msg.service;
-  const postPath = `/${this.urlMark}/${_service}.json`;
-  const imgPath = `/${this.urlMark}/${_service}.gif`;
-
-  try {
-    // if websocket activated
-
-    if (this.wsConnected) {
-      log('sending using WS');
-      return this.wsSendMessage(msg);
-    }
-    // user sendBeacon only for notifications requests
-    else if (this.options.allowSendBeacon && hasBeaconSupport && !isRequest) {
-      log('sending using beacon');
-      nav.sendBeacon(this.makeURL(postPath), data);
-      return Promise.resolve();
-    }
-    // regular XMLHttpRequest
-    else if (this.options.allowXHR && hasAnyXRSupport) {
-      log('sending using XHR/XDR');
-      return this.sendXHR(this.makeURL(postPath), data);
-    }
-    // If reuquired response but not available transport
-    else if (isRequest) {
-      const exc = new Error('Not available transport for request');
-      log.error(exc)
-      return Promise.reject(exc);
-    }
-  } catch (error) {
-    log.warn(error);
+  if (options[EVENT_OPTION_TRANSPORT_IMG]) {
+    return this.sendImg(msg);
   }
-  // Use extra transport - img
-  // Send only part when using gif
-  const smallMsg = (msg.service === SERVICE_TRACK)
-    ? this.options.msgCropper(msg) : msg;
-  log(`sending using IMG. useSafe: ${useSafe}`, smallMsg);
-
-  try {
-    return this.sendIMG(this.makeURL(imgPath, objectAssign(smallMsg, this.creds)));
-  } catch (e) {
-    log('Error during sending data using image', e);
-    return Promise.reject(e);
+  if (options[EVENT_OPTION_REQUEST]) {
+    return this.sendRequest(msg);
   }
+  return this.sendEvent(msg);
 };
-
-
-/**
- * Establish server connection if configured
- */
-Transport.prototype.connect = function () {
-  if (this.options.activateWs && hasWSSupport) {
-    this.startWs();
-  }
-  return this;
-}
-
-
-/**
- * Start WebSocket connection
- * @param server
- */
-Transport.prototype.startWs = function () {
-  const pinger = setInterval(_ => {
-    this.wsConnected && this.wsSendMessage({ "service": "track", "name": "ping" });
-  }, 1e4);
-  try {
-    const endpoint = this.makeWsURL(this.creds);
-    log(`ws endpoing: ${endpoint}`);
-    this.ws = new Sockette(endpoint, {
-      timeout: 5e3,
-      maxAttempts: 10,
-      onopen: (e) => {
-        this.wsConnected = true;
-        log('WS connected');
-        this.wsSendMessage({ "service": "track", "name": "hello" });
-      },
-      onmessage: (e) => {
-        if (e.data) {
-          try {
-            const data = JSON.parse(e.data);
-            if (isObject(data) && data.id__) {
-              this.clearWait(data.id__, true, data);
-            } else {
-              this.emit(INTERNAL_EVENT, SERVER_MESSAGE, data);
-            }
-          } catch (err) {
-            log.warn(err);
-          }
-        }
-      },
-      onreconnect: (e) => { },
-      onmaximum: (e) => log.warn('Stop Attempting!', e),
-      onclose: (e) => {
-        this.wsConnected = false;
-        clearInterval(pinger);
-      },
-      onerror: e => log('Error:', e)
-    });
-
-  } catch (e) {
-    log.error('ws error', e);
-  }
-};
-
-Transport.prototype.clearWait = function (id, success, dataOrError) {
-  if (this.waitCallers[id]) {
-    const wait = this.waitCallers[id];
-    delete this.waitCallers[id];
-    clearTimeout(wait.timeout)
-    if (!success && wait.reject) {
-      wait.reject(dataOrError)
-    }
-    else if (success && wait.resolve) {
-      wait.resolve(dataOrError);
-    }
-  }
-}
-
-Transport.prototype.wsSendMessage = function (msg, callback) {
-  const id = msg.id__ = '_' + this.msgId();
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      this.clearWait(id, false, new Error('WS response Timeout'))
-    }, this.options.responseTimeout);
-    this.waitCallers[id] = { resolve, reject, timeout };
-    this.ws.json(objectAssign(msg, this.creds));
-  })
-}
-
-Transport.prototype.msgId = function () {
-  return ++this.msgCounter;
-}

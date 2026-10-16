@@ -36,6 +36,9 @@ config.plugins = config.plugins.concat([
 
 config.optimization = {
   minimizer: [new TerserPlugin()],
+  nodeEnv: 'production',
 },
+
+config.mode = 'production'
 
 module.exports = config;

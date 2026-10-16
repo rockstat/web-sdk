@@ -1,7 +1,7 @@
 import objectAssign from '../functions/objectAssing';
 import createLogger from '../functions/createLogger';
 import pageSource from '../functions/pageSource';
-import { isValidUid, cleanUid } from '../functions/isValidUid';
+import { cleanUid } from '../functions/isValidUid';
 import Emitter from 'component-emitter';
 
 import {
@@ -10,9 +10,11 @@ import {
   SESSION_ORGANIC,
   SESSION_CAMPAIGN,
   SESSION_SOCIAL,
+  SESSION_PARTNER,
   EVENT_USER_PARAMS,
   EVENT,
-  EVENT_SIMULATE_SESSION
+  EVENT_SIMULATE_SESSION,
+  EVENT_REC_BATCH
 } from '../Constants';
 import { tstz } from '../data/browserData';
 
@@ -24,11 +26,12 @@ const KEY_SESSION_COUNTER = 'csess';
 const KEY_PAGES_COUNTER = 'scpages';
 const KEY_EVENTS_COUNTER = 'scevs';
 const KEY_UID = 'uid';
+const KEY_SESS_START = 'sstart';
 const KEY_USER_ID = 'userid';
 const KEY_USER_TRAITS = 'usertr';
 const KEY_USER_PARAMS = 'userpr';
 
-const log = createLogger('ST');
+const log = createLogger('RST/SessionTracker');
 
 function SessionTracker(tracker, options) {
 
@@ -127,6 +130,19 @@ SessionTracker.prototype.getEventNum = function () {
 };
 
 
+/**
+ * Get state of sessions counter
+ * @return {Number} current value
+ */
+SessionTracker.prototype.getSessNum = function () {
+  return this.storage.get(KEY_SESSION_COUNTER);
+};
+
+
+/**
+ * Get session data
+ * @return {Object} session data
+ */
 SessionTracker.prototype.sessionData = function () {
 
   return objectAssign(
@@ -139,7 +155,6 @@ SessionTracker.prototype.sessionData = function () {
       refHash: undefined
     }
   );
-
 };
 
 SessionTracker.prototype.getUserParams = function () {
@@ -185,8 +200,10 @@ SessionTracker.prototype.setUserData = function (data) {
   }
 
   if (data.userTraits) {
-    this.storage.set(KEY_USER_TRAITS, data.userTraits);
-    this.userTraits = data.userTraits;
+
+    const traits = this.storage.get(KEY_USER_TRAITS) || {};
+    this.userTraits = objectAssign(traits, data.userTraits);
+    this.storage.set(KEY_USER_TRAITS, this.userTraits);
   }
 };
 
@@ -194,12 +211,13 @@ SessionTracker.prototype.setUserData = function (data) {
 SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   // Skipping own events
-  if (name === EVENT_SESSION) {
+  // rec_batch — технический поток записи экрана: он идёт по таймеру
+  // (мутации DOM без участия пользователя) и не должен продлевать сессию
+  if (name === EVENT_SESSION || name === EVENT_REC_BATCH) {
     return null;
   }
 
   const lastEventTS = this.storage.get(KEY_LAST_EVENT_TS);
-  const pastSession = this.storage.get(KEY_LAST_SESSION);
 
   // Setting last event
   const now = (new Date()).getTime();
@@ -215,7 +233,7 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
 
   if (sessionTimedOut || simulation || name === EVENT_PAGEVIEW) {
     source = pageSource(page);
-    sourceRestart = this.sourceRestart(pastSession, source);
+    sourceRestart = this.sourceRestart(source);
   }
 
   const shouldRestart = sessionTimedOut || sourceRestart || simulation;
@@ -230,11 +248,11 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
       session: true
     });
   }
-  else {
-    this.storage.inc(KEY_EVENTS_COUNTER, {
-      session: true
-    });
-  }
+
+  this.storage.inc(KEY_EVENTS_COUNTER, {
+    session: true
+  });
+
 
   // Emitting session event
   if (shouldRestart) {
@@ -242,14 +260,53 @@ SessionTracker.prototype.handleEvent = function (name, data, page) {
   }
 };
 
-SessionTracker.prototype.sourceRestart = function (pastSession, source) {
+SessionTracker.prototype.sourceRestart = function (source) {
 
-  // Override session if got organic or campaign
-  const bySource = source.type === SESSION_ORGANIC || source.type === SESSION_CAMPAIGN || source.type === SESSION_SOCIAL;
+  let byRef = false;
+  const pastSession = this.storage.get(KEY_LAST_SESSION);
 
-  // Prevent restarting by refresh enter page
-  const byRef = pastSession && (pastSession.refHash !== source.refHash);
-  return bySource && byRef;
+  let pastSessionMarksHash = ''
+
+  if (pastSession) {
+    if (pastSession.marksHash) {
+      pastSessionMarksHash = pastSession.marksHash;
+    }
+    byRef = pastSession.refHash !== source.refHash;
+  }
+
+  if (source.type === SESSION_PARTNER) {
+    if (source.marksHash !== pastSessionMarksHash) {
+      return true;
+    }
+  }
+
+  if (source.type === SESSION_CAMPAIGN) {
+    if (source.marksHash !== pastSessionMarksHash) {
+      return true;
+    }
+    return byRef;
+  }
+
+  if (source.type === SESSION_ORGANIC) {
+    return byRef;
+  }
+  
+  // if (source.type === SESSION_SOCIAL) {
+  //   return byRef;
+  // }
+
+  return false;
+
+  // // Override session if got organic or campaign
+  // const bySource = 
+  //   source.type === SESSION_PARTNER || 
+  //   source.type === SESSION_ORGANIC || 
+  //   source.type === SESSION_CAMPAIGN || 
+  //   source.type === SESSION_SOCIAL;
+
+  // // Prevent restarting by refresh enter page
+
+  // return bySource && byRef;
 
 };
 
@@ -275,6 +332,11 @@ SessionTracker.prototype.restart = function (source, now) {
     session: true
   });
   this.storage.set(KEY_EVENTS_COUNTER, 0, {
+    session: true
+  });
+
+  // Set cookie with session start time (need for generating session id at app backend)
+  this.cookieStorage.set(KEY_SESS_START, source.start, {
     session: true
   });
 

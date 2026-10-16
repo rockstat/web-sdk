@@ -1,11 +1,12 @@
 import objectAssign from './functions/objectAssing';
 import objectKeys from './functions/objectKeys';
 import Cookies from 'js-cookie';
+import { isHttps } from './data/pageDefaults';
 
 function CookieStorageAdapter(options) {
   options = options || {};
   // handle configuration
-  this.secure = options.allowHTTP !== true;
+  this.secure = isHttps() // OLD VAL: options.allowHTTP !== true;
   this.domain = options.cookieDomain;
   // check cookie is enabled
   this.available = this.checkAvailability();
@@ -41,7 +42,8 @@ CookieStorageAdapter.prototype.set = function (key, value, options = {}) {
     expires: exp,
     domain: this.domain,
     secure: this.secure,
-    path: this.path
+    path: this.path,
+    sameSite: 'Lax'
   });
 };
 

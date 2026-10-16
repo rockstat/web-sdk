@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GameHub — демо Rockstat SDK</title>
+  <script>
+    // Загрузчик Rockstat SDK (аналог snippet/snippet.html, но под window.rstat4)
+    (function (w) {
+      if (w.rstat4) return;
+      var rst = w.rstat4 = function () {
+        var a = Array.prototype.slice.call(arguments);
+        return rst.doCall ? rst.doCall.call(rst, a) : (rst._q.push(a) && 0);
+      };
+      rst.push = rst;
+      rst._sv = '5.1.1';
+      rst._q = [];
+    })(window);
+
+    rstat4('configure', {
+      projectId: 1,
+      server: location.host,
+      allowHTTP: true, // демо крутится на http://localhost (secure context для WebCrypto)
+      trackPages: true,
+      trackClicks: {},
+      // запись экрана: autostart=false — старт по кнопке в панели (rstat4('record'))
+      trackRecord: { autostart: false },
+
+      trackForms: {
+        // Публичный ключ (keys/public.pem): значения полей шифруются на клиенте,
+        // расшифровать может только сервер приватным ключом
+        encryptionKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv+SMJvJn9c58bHsvzlEO1nBUHLM7Ig2AtxATnvK7zKVrzmxYZalNnXo2TVDQcHZ/iOIdeTl02Sl5ggrD9t3LwnXGuysikzPvcy3xQsIy8mBEIMxTw2lpmzMdPKGI4vAzOe9glVcqA6MwGQabLiZWoXr8zNDKiyvNv/UVEdmCmLfRTAXTyvJdCtrNh97ncuIktkTzaXwfmMWPu1m8ID2lmfttzy/j9GKAUks9MHIeJG+3mwWqWuF4Jf2LHFeaLfYZA3PU+3ZE90zvP/nKu45j7q6ityjvkRdL8GpA+Nd/WkP29KD6yKOSWpfRr84jezof5HV8LSAh7ROApIlsT94qMwIDAQAB'
+      }
+    });
+    rstat4('enableLogger');
+  </script>
+  <script src="/lib.js" async></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

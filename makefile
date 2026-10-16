@@ -1,9 +1,13 @@
 BR := $(shell git branch | grep \* | cut -d ' ' -f2-)
+# bump2version — поддерживаемый форк bumpversion с тем же CLI и .bumpversion.cfg.
+# Запускается через uvx, глобальная установка не нужна (brew install uv)
+BUMP := uvx --from bump2version bumpversion
+
 bump-patch:
-	bumpversion patch
+	$(BUMP) patch
 
 bump-minor:
-	bumpversion minor
+	$(BUMP) minor
 
 to_master:
 	@echo $(BR)
@@ -20,3 +24,44 @@ travis-trigger:
 		-H "Authorization: token $$TRAVIS_TOKEN" \
 		-d '{ "request": { "branch":"$(br)" }}' \
 		https://api.travis-ci.com/repo/$(subst $(DEL),$(PERCENT)2F,$(repo))/requests
+
+# common
+# --build-arg NPM_CONFIG_REGISTRY_ARG=http://host.docker.internal:4873/ 
+
+build:
+
+	docker build --platform linux/amd64  -t web-sdk .
+
+# latest
+
+tag-latest:
+	docker tag web-sdk rockstat/web-sdk:latest
+
+push-latest:
+	docker push rockstat/web-sdk:latest
+
+
+# ng
+
+tag-ng:
+	docker tag web-sdk rockstat/web-sdk:ng
+
+push-ng:
+	docker push rockstat/web-sdk:ng
+
+all-ng: build tag-ng push-ng
+
+
+#ng-dev
+
+build-ng-dev:
+	docker build -t web-sdk:ng-dev .
+
+tag-ng-dev:
+	docker tag web-sdk rockstat/web-sdk:ng-dev
+
+push-ng-dev:
+	docker push rockstat/web-sdk:ng-dev
+
+all-ng-dev: build-ng-dev tag-ng-dev push-ng-dev
+

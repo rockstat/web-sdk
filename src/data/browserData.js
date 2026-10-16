@@ -1,6 +1,6 @@
-import { win, doc, body, html } from "../Browser";
+import { nav, win, body, html } from "../Browser";
 import objectAssing from '../functions/objectAssing';
-import { nav } from '../Browser';
+import each from '../functions/each';
 
 const not_present = 'not present'
 
@@ -66,9 +66,129 @@ function sr() {
   } catch (e) { }
 }
 
+
+
+
+const navConData = {};
+const navConKeys = ['type', 'effectiveType', 'downlinkMax', 'rtt'];
+
+
+/*
+
+Get connection type data
+
+TODO: Support changing connection type \
+using listener \
+navigator.connection.addEventListener('change', listener)
+
+
+*/
+export function prepareNavConnection() {
+  if (nav['connection']) {
+    each(navConKeys, (k) => {
+      if (nav.connection[k] && nav.connection[k] !== 'null') {
+        navConData[k] = nav.connection[k];
+      }
+    });
+  }
+}
+
+
+/**
+ * Navigator extra
+ * 
+ */
+
+const navExtraData = {};
+
+export function prepareNavExtra() {
+  if (nav['hardwareConcurrency']) {
+    navExtraData['hc'] = nav['hardwareConcurrency'];
+  }
+  if (nav['deviceMemory']) {
+    navExtraData['dm'] = nav['deviceMemory'];
+  }
+  // Storage API: квота и занятый объём origin в байтах (асинхронно, подставится
+  // в следующие сообщения). Chrome отдаёт квоту как долю свободного места на диске,
+  // в приватном режиме она заметно меньше
+  if (nav['storage'] && nav.storage['estimate']) {
+    try {
+      nav.storage.estimate().then((est) => {
+        if (est && est.quota !== undefined) {
+          navExtraData['sq'] = Math.round(est.quota);
+        }
+        if (est && est.usage !== undefined) {
+          navExtraData['su'] = Math.round(est.usage);
+        }
+      }).catch(() => {});
+    } catch (e) {
+      // estimate может бросить синхронно в старых реализациях
+    }
+  }
+}
+
+
+/**
+ * Battery
+ */
+
+const navBatData = {}
+
+// chargingTime/dischargingTime — секунды; Infinity (оценка недоступна) шлём как -1,
+// иначе JSON.stringify превратит её в null
+const batSeconds = (v) => {
+  const n = Number(v);
+  return isFinite(n) ? Math.round(n) : -1;
+};
+
+export function prepareBatData() {
+  if (nav['getBattery']) {
+    nav.getBattery().then(b => {
+      navBatData['a'] = 1;
+      navBatData['ch'] = Math.round(Number(b['charging']));
+      navBatData['l'] = Math.round(Number(b['level']) * 100);
+      navBatData['ct'] = batSeconds(b['chargingTime']);    // до полной зарядки
+      navBatData['dt'] = batSeconds(b['dischargingTime']); // до полной разрядки
+    }).catch((e) => {
+      navBatData['err'] = String(e);
+    });
+  }
+}
+
+
+
+/*
+Get Client HINT data
+
+*/
+
+
+const he_values = ['architecture', 'bitness', 'mobile', 'model', 'platform', 'platformVersion', 'uaFullVersion'];
+const storedUAData = {};
+
+
+export function prepareUAData() {
+  if (nav['userAgentData'] && nav.userAgentData['getHighEntropyValues']) {
+    nav.userAgentData.getHighEntropyValues(he_values).then(ua => {
+      each(ua || {}, (k, v) => {
+        if (he_values.indexOf(k) >= 0) {
+          storedUAData[k] = v;
+        }
+      })
+    }).catch((e) => {
+      storedUAData['err'] = String(e);
+    });
+  }
+}
+
+
 export default function () {
   return objectAssing({
     if1: if1(),
     if2: if2(),
+    uad: storedUAData,
+    nc: navConData,
+    ne: navExtraData,
+    nb: navBatData
   }, wh(), sr(), binfo())
 }

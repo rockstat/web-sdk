@@ -1,4 +1,5 @@
 export const SERVICE_TRACK = 'track';
+export const SERVICE_LOG = 'log';
 
 
 export const EVENT = 'event';
@@ -18,6 +19,9 @@ export const EVENT_USER_PARAMS = 'user_params';
 export const EVENT_LINK_CLICK = 'link_click';
 export const EVENT_ELEMENT_CLICK = 'element_click';
 export const EVENT_PAGE_UNLOAD = 'page_unload';
+export const EVENT_PAGE_VISIBILITY = 'page_visibility';
+export const EVENT_REC_START = 'rec_start';
+export const EVENT_REC_BATCH = 'rec_batch';
 
 
 export const EVENTS_ADD_PERF = [EVENT_PAGEVIEW, EVENT_PAGE_LOADED];
@@ -27,7 +31,9 @@ export const EVENTS_NO_SCROLL = [
   EVENT_PAGEVIEW,
   EVENT_PAGE_LOADED,
   EVENT_USER_PARAMS,
-  EVENT_IDENTIFY
+  EVENT_IDENTIFY,
+  EVENT_REC_START,
+  EVENT_REC_BATCH
 ];
 
 export const EVENTS_ADD_SCROLL = [
@@ -41,17 +47,18 @@ export const EVENTS_ADD_SCROLL = [
 ];
 
 // ######
-export const SERVICE_LOG = 'log';
 export const EVENT_LOG = 'page_unload';
 
 // ######
 export const SERVER_MESSAGE = 'server_message';
 export const INTERNAL_EVENT = 'internal_event';
+export const OUTGOING_MESSAGE = 'outgoing_message';
 
 // ######
 export const EVENT_OPTION_TERMINATOR = 'terminator';
 export const EVENT_OPTION_OUTBOUND = 'outbound';
 export const EVENT_OPTION_REQUEST = 'request';
+export const EVENT_OPTION_TRANSPORT_IMG = 'transport_img';
 
 // ######
 export const SESSION_INTERNAL = 'internal';
@@ -60,12 +67,15 @@ export const SESSION_ORGANIC = 'organic';
 export const SESSION_CAMPAIGN = 'campaign';
 export const SESSION_REFERRAL = 'referral';
 export const SESSION_SOCIAL = 'social';
+export const SESSION_PARTNER = 'partner';
+export const SESSION_WEBVIEW = 'webview';
 export const SESSION_UNKNOWN = 'unknown';
 
 export const DOM_INTERACTIVE = 'dom_interactive';
 export const DOM_COMPLETE = 'dom_loaded';
 export const DOM_BEFORE_UNLOAD = 'before_unload';
 export const DOM_UNLOAD = 'unload';
+export const DOM_VISIBILITY_CHANGE = 'visibility_change';
 
 export const READY = 'ready';
 

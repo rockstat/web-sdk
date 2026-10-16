@@ -1,7 +1,4 @@
 import Emitter from 'component-emitter';
-import {
-  closest
-} from 'dom-utils';
 import objectAssing from '../functions/objectAssing';
 import each from '../functions/each';
 import {
@@ -19,8 +16,11 @@ import {
   removeHandler,
   addHandler
 } from '../functions/domEvents';
+import { closest } from '../lib/dom-utils';
+import Encryptor from '../Encryptor';
 
-const log = createLogger('FormTracker');
+
+const log = createLogger('RST/FormTracker');
 
 const formTag = 'form';
 const elementsTags = ['input', 'checkbox', 'radio', 'textarea', 'select']; // ?option ?button ?submit
@@ -31,6 +31,54 @@ const elementEvents = ['focus', 'blur', 'change', 'invalid'];
 const nn = (val) => val || '';
 
 
+function getElementValue(el) {
+  if (!el) return null;
+
+  const tag = el.tagName.toLowerCase();
+  const type = (el.type || '').toLowerCase();
+
+  // input
+  if (tag === 'input') {
+
+    if (type === 'checkbox') {
+      return '' + el.checked;
+    }
+    if (type === 'password') {
+      return '';
+    }
+    if (type === 'radio') {
+      // ищем выбранный radio с тем же name
+      const checked = document.querySelector(`input[name="${el.name}"]:checked`);
+      return checked ? '' + checked.value : '';
+    }
+    if (type === 'file') {
+      return '';
+    }
+    return el.value;
+  }
+
+  // textarea
+  if (tag === 'textarea') {
+    return el.value;
+  }
+
+  // select
+  if (tag === 'select') {
+    if (el.multiple) {
+      return Array.from(el.selectedOptions).map(option => option.value);
+    }
+    return el.value;
+  }
+
+  // contenteditable
+  // if (el.isContentEditable) {
+  //   return el.innerText;
+  // }
+
+  // fallback
+  // return el.value !== undefined ? el.value : el.textContent;
+  return '';
+}
 
 /**
  * Process event type
@@ -70,7 +118,7 @@ function extractFormData(element) {
  * @param element {Element}
  * @return {object}
  */
-function extractElementData(element) {
+function extractElementData(element, getValue) {
   if (!element) {
     return {
       eerr: 'Input element absent'
@@ -82,7 +130,8 @@ function extractElementData(element) {
     ename: nn(element.getAttribute('name')),
     eph: nn(element.getAttribute('placeholder')),
     ecl: nn(element.className),
-    eid: nn(element.id)
+    eid: nn(element.id),
+    evalue: getValue ? String(getElementValue(element)) : ''
   };
 }
 
@@ -93,8 +142,18 @@ function extractElementData(element) {
  */
 const FormTracker = function (options) {
 
-  this.options = objectAssing({}, options);
+
+  this.options = objectAssing({
+    trackValues: false,
+    encryptionKey: null
+  }, options);
   this.initialized = false;
+
+  // Providing a public key implies collecting values (encrypted only)
+  this.encryptor = this.options.encryptionKey
+    ? new Encryptor(this.options.encryptionKey)
+    : null;
+  this.collectValues = !!(this.options.trackValues || this.encryptor);
 
   this.formEventHandler = this.formEventHandler.bind(this);
   this.elementEventHandler = this.elementEventHandler.bind(this);
@@ -105,8 +164,9 @@ const FormTracker = function (options) {
 
 Emitter(FormTracker.prototype);
 
-
 FormTracker.prototype.initialize = function () {
+
+  log('initing')
 
   if (!useCaptureSupport) {
     return log.warn('addEventListener not supported');
@@ -138,11 +198,11 @@ FormTracker.prototype.formEventHandler = function (ev) {
     const event = {
       name: `form_${type}`,
       data: {
-        ...prepareType(event),
+        ...prepareType(type),
         ...extractFormData(form)
       },
       options: {
-        [EVENT_OPTION_TERMINATOR]: (type === 'submit')
+        // [EVENT_OPTION_TERMINATOR]: (type === 'submit')
       }
     };
 
@@ -150,34 +210,62 @@ FormTracker.prototype.formEventHandler = function (ev) {
   }
 };
 
-
 /**
  * Handler for form inputs events
  * @param ev {Event} Dom event
  */
 FormTracker.prototype.elementEventHandler = function (ev) {
-  const {
-    type,
-    target
-  } = ev;
 
-  if (!target) {
-    return;
-  }
-  const element = closest(target, elementsTags.join(','), true);
-  const form = element && closest(element, formTag);
+  try {
 
-  if (element) {
-    const event = {
-      name: `field_${type}`,
-      data: {
+
+    const {
+      type,
+      target
+    } = ev;
+
+    if (!target) {
+      return;
+    }
+    const element = closest(target, elementsTags.join(','), true);
+    const form = element && closest(element, formTag);
+
+    if (element) {
+
+      const data = {
         ...prepareType(type),
-        ...extractElementData(element),
+        ...extractElementData(element, this.collectValues),
         ...extractFormData(form)
+      };
+      const event = {
+        name: `field_${type}`,
+        data
+      };
+
+      if (this.encryptor && data.evalue) {
+        // Plaintext never leaves the browser: if encryption is
+        // unavailable or fails, the value is dropped
+        const value = data.evalue;
+        data.evalue = '';
+        this.encryptor.encrypt(value)
+          .then((encrypted) => {
+            if (encrypted) {
+              data.evalue = encrypted;
+              data.eenc = 1;
+            }
+            this.emit(EVENT, event);
+          });
+      } else {
+        data.evalue = '';
+        data.eenc = 0;
+        this.emit(EVENT, event);
       }
-    };
-    this.emit(EVENT, event);
+    }
+
+  } catch (e) {
+    log('elementEventHandler err');
   }
+
 };
 
 /**

@@ -1,9 +1,9 @@
 import objectAssing from '../functions/objectAssing';
-import runOnStop from '../functions/runOnStop';
-import objectKeys from '../functions/objectKeys';
-import each from '../functions/each';
+// import runOnStop from '../functions/runOnStop';
+// import objectKeys from '../functions/objectKeys';
+// import each from '../functions/each';
 import { win, doc } from "../Browser";
-import { closest } from 'dom-utils';
+import { closest } from '../lib/dom-utils';
 import Emitter from 'component-emitter';
 import {
   EVENT,
@@ -12,6 +12,10 @@ import {
   EVENT_LINK_CLICK,
   EVENT_ELEMENT_CLICK
 } from '../Constants';
+
+import createLogger from '../functions/createLogger';
+
+const log = createLogger('RST/ClickTracker');
 
 const linkTag = 'a';
 const nn = (val) => val || '';
@@ -24,6 +28,10 @@ const nn = (val) => val || '';
 const ClickTracker = function (options) {
 
   this.options = objectAssing({}, options);
+  this.ignoreClass = 'rst-ignore';
+  if (this.options.ignoreClass) {
+    this.ignoreClass = this.options.ignoreClass;
+  }
   this.initialized = false;
   this.eventHandler = this.eventHandler.bind(this);
   this.initialize();
@@ -35,26 +43,38 @@ ClickTracker.prototype.eventHandler = function (e) {
   const target = e.target || e.srcElement;
   const link = closest(target, linkTag, true);
 
-  if (this.options.allClicks || !!link) {
-
-    const draft = {
-      name: EVENT_ELEMENT_CLICK,
-      // target, link params
-      data: {
-        target: this.getTargetInfo(target)
-      },
-      options: {} // holder for link options
-    }
-
-    const event = !!link ? this.mutateToLinkClick(draft, link) : draft;
-    this.emit(EVENT, event);
+  // Skip nor link nor tracks all clicks 
+  if (!this.options.allClicks && !link) {
+    return;
   }
+
+  const targetInfo = this.getTargetInfo(target);
+
+  // Handle ignore class
+  if (targetInfo.cls && this.ignoreClass) {
+    if (targetInfo.cls.split(' ').indexOf(this.ignoreClass) >= 0) {
+      log('skipping event');
+      return;
+    }
+  }
+
+  const draft = {
+    name: EVENT_ELEMENT_CLICK,
+    // target, link params
+    data: {
+      target: targetInfo
+    },
+    options: {} // holder for link options
+  }
+
+  const event = !!link ? this.mutateToLinkClick(draft, link) : draft;
+  this.emit(EVENT, event);
 };
 
 ClickTracker.prototype.mutateToLinkClick = function (draft, link) {
 
   const loc = win.location;
-  const outbound = link.hostname !== loc.hostname || link.port !== loc.port || link.protocol !== loc.protocol;
+  const outbound = (link.hostname !== loc.hostname) && ((link.hostname !== '') || (link.onclick === null));
 
   const linkData = {
     href: link.href,
@@ -62,7 +82,7 @@ ClickTracker.prototype.mutateToLinkClick = function (draft, link) {
     outbound: outbound
   }
   const linkOptions = {
-    [EVENT_OPTION_TERMINATOR]: true,
+    // [EVENT_OPTION_TERMINATOR]: true,
     [EVENT_OPTION_OUTBOUND]: outbound
   }
 
@@ -83,7 +103,7 @@ ClickTracker.prototype.getTargetInfo = function (target) {
     type: nn(target.getAttribute('type')),
     name: nn(target.getAttribute('name')),
     ph: nn(target.getAttribute('placeholder')),
-    cls: nn(target.className),
+    cls: String(nn(target.className)),
     id: nn(target.id),
     href: nn(target.href),
     text: nn(target.innerText)

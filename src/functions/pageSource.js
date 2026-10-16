@@ -1,7 +1,8 @@
-import objectAssign from './objectAssing';
-import getOsMarks from './getOpenStatMarks';
+// import objectAssign from './objectAssing';
+// import getOsMarks from './getOpenStatMarks';
 import createLogger from './createLogger';
 import simpleHash from './simpleHash';
+
 import removeWww from './removeWww';
 import objectKeys from './objectKeys';
 import { isArray } from './type';
@@ -15,6 +16,8 @@ import {
   SESSION_ORGANIC,
   SESSION_REFERRAL,
   SESSION_SOCIAL,
+  SESSION_PARTNER,
+  SESSION_WEBVIEW,
 } from "../Constants";
 
 const qs = urlParse.qs;
@@ -30,17 +33,21 @@ const ENGINE_DUCKDUCKGO = 'duckduckgo';
 
 const ENGINE_FACEBOOK = 'fb';
 const ENGINE_TWITTER = 'twitter';
+const ENGINE_TIKTOK = 'tiktok';
 const ENGINE_VK = 'vk';
 const ENGINE_OK = 'ok';
 const ENGINE_LINKEDIN = 'linkedin';
 const ENGINE_INSTAGRAM = 'instagram';
+const ENGINE_TELEGRAM = 'telegram';
+const ENGINE_YOUTUBE = 'youtube';
 
 const UTMS = ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term'];
-const OS = '_openstat';
+const PARTNER_IDS = ['pid', 'cid', 'sub1', 'sub2', 'sub3', 'sub4', 'sub5'];
 const YCLID = 'yclid';
 const GCLID = 'gclid';
 const FBCLID = 'fbclid';
-const CLIDS = ['yclid', 'gclid', 'fbclid'];
+const WEBVIEW_PARAM = 'inWebView';
+const UID_PARAM = 'uid';
 
 const RULES = [
 
@@ -60,23 +67,33 @@ const RULES = [
   { domain: 'com.google.android.', engine: ENGINE_GOOGLE, type: SESSION_ORGANIC }, // app
 
   { domain: 'facebook.com', engine: ENGINE_FACEBOOK, type: SESSION_SOCIAL },
+
+  { domain: 'tiktok.com', engine: ENGINE_TIKTOK, type: SESSION_SOCIAL },
+
   { domain: 'instagram.com', engine: ENGINE_INSTAGRAM, type: SESSION_SOCIAL }, //l.instagram.com
+
+  { domain: 'org.telegram.', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL }, // app
+  { domain: 'telegram.org', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL },
+  { domain: 't.me', engine: ENGINE_TELEGRAM, type: SESSION_SOCIAL },
+
   { domain: 'vk.com', engine: ENGINE_VK, type: SESSION_SOCIAL }, // away.vk.com
   { domain: 'linkedin.com', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
   { domain: 'lnkd.in', engine: ENGINE_LINKEDIN, type: SESSION_SOCIAL },
+
   { domain: 'ok.ru', engine: ENGINE_OK, type: SESSION_SOCIAL },
+
   { domain: 't.co', engine: ENGINE_TWITTER, type: SESSION_SOCIAL },
 
   { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'googlesyndication.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'googleadservices.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
   { domain: 'doubleclick.net', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
-  { domain: 'youtube.com', engine: ENGINE_GOOGLE, type: SESSION_CAMPAIGN },
 
+  { domain: 'youtube.com', engine: ENGINE_YOUTUBE, type: SESSION_SOCIAL },
 ];
 
 
-const log = createLogger('PS');
+const log = createLogger('RST/PageSource');
 
 const cleanQueryParam = function (val) {
 
@@ -97,10 +114,18 @@ const cleanQueryParam = function (val) {
 
 
 export default function pageSource(page) {
+
+  // Initial session type
+
   const source = {
     type: SESSION_DIRECT,
     marks: {},
-    hasMarks: false
+    marksHash: '',
+    hasMarks: false,
+    refHash: '',
+    engine: undefined,
+    refhost: '',
+    uid: undefined
   };
 
   log.info(page)
@@ -108,14 +133,22 @@ export default function pageSource(page) {
   let query = {};
   let queryKeys = [];
   let has_utm = false;
+  let has_partner_ids = false;
   let has_os = false;
   let has_yclid = false;
   let has_gclid = false;
   let has_fbclid = false;
+  let is_webview = false;
 
+  let marksCampaignString = ''
+  let marksPartnerString = ''
+
+
+  // Preparing query params
   if (page.query) {
     query = qs.parse(page.query);
     queryKeys = objectKeys(query);
+    let queryParamVal = '';
 
     // Processing marks
     for (let i = 0; i < queryKeys.length; i++) {
@@ -123,49 +156,65 @@ export default function pageSource(page) {
       // UTM
       for (let j = 0; j < UTMS.length; j++) {
         if (key === UTMS[j]) {
-          source.marks[key] = cleanQueryParam(query[key])
+          queryParamVal = cleanQueryParam(query[key]);
+          source.marks[key] = queryParamVal;
+          marksCampaignString += queryParamVal + '|';
           source.hasMarks = true;
           has_utm = true;
-
         }
       }
-      // OpenStat
-      if (key === OS) {
-        const os = getOsMarks(query[key]);
-        source.marks = objectAssign(source.marks, os);
-        source.hasMarks = true;
-        has_os = true;
+      queryParamVal = '';
+
+      // Partner
+      for (let j = 0; j < PARTNER_IDS.length; j++) {
+        if (key === PARTNER_IDS[j]) {
+          queryParamVal = cleanQueryParam(query[key]);
+          marksPartnerString += queryParamVal + '|'
+          source.marks[key] = queryParamVal;
+          source.hasMarks = true;
+          has_partner_ids = true;
+        }
       }
+      queryParamVal = '';
+
+      // WebView
+      if (key === WEBVIEW_PARAM) {
+        if (cleanQueryParam(query[key]) == 'true' || cleanQueryParam(query[key]) == '1') {
+          is_webview = true;
+        }
+      }
+
 
       // YClid
       if (key === YCLID) {
         source.hasMarks = true;
         source.marks['has_' + key] = 1;
         source.marks[key] = query[key];
+        marksCampaignString += query[key] + '|';
         has_yclid = true;
       }
+
       // GClid
       if (key === GCLID) {
         source.hasMarks = true;
         source.marks['has_' + key] = 1;
         source.marks[key] = query[key];
+        marksCampaignString += query[key] + '|';
         has_gclid = true;
       }
+
       // FBClid
       if (key === FBCLID) {
         source.hasMarks = true;
         source.marks['has_' + key] = 1;
         source.marks[key] = query[key];
+        // marksCampaignString += query[key] + '|';
         has_fbclid = true;
       }
-      // *clid
-      // for (let j = 0; j < CLIDS.length; j++) {
-      //   if (key === CLIDS[j]) {
-      //     source.marks['has_' + key] = 1;
-      //     source.marks[key] = query[key]
-      //     source.hasMarks = true;
-      //   }
-      // }
+
+      if (key === UID_PARAM) {
+        source.uid = query[key];
+      }
     }
   }
 
@@ -175,56 +224,88 @@ export default function pageSource(page) {
 
   // Direct with marks -> campaign
   // Direct with fbclid -> facebooj social
-  if (ref === '') {
-    if (has_utm || has_os || has_gclid || has_yclid) {
-      source.type = SESSION_CAMPAIGN;
-    }
-    if(has_fbclid){
-      source.type = SESSION_SOCIAL
-      source.engine = ENGINE_FACEBOOK
-    }
-    return source;
-  }
+  // if (ref === '') {
+  //   if (has_utm || has_os || has_gclid || has_yclid) {
+  //     source.type = SESSION_CAMPAIGN;
+  //     source.marksHash = simpleHash(marksCampaignString)
+  //   }
+  //   if (has_partner_ids) {
+  //     source.type = SESSION_PARTNER;
+  //     source.marksHash = simpleHash(marksPartnerString)
+  //   }
+  //   if(has_fbclid){
+  //     source.type = SESSION_SOCIAL
+  //     source.engine = ENGINE_FACEBOOK
+  //   }
+  //   if (is_webview){
+  //     source.type = SESSION_WEBVIEW;
+  //   }
+  //   return source;
+  // }
 
-  source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
-  // Internal
-  if (ref && source.refhost === removeWww(page.domain)) {
-    log('internal detect', ref, source.refhost, removeWww(page.hostname))
-    source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
-    return source;
-  }
+  /**
+   * Sessions based on ref
+   */
+  if (ref !== '') {
 
-  // Other types: campaigns, organic, social
+    source.refhost = punycode.toUnicode(removeWww(ref.hostname));
 
-  const refDomainParts = source.refhost.split('.').reverse();
+    /**
+     * ORGANIN/SOCIAL/CAMPAIGN(some) SESSION 
+     * 
+     * based on rules list
+     * 
+     */
+    if (source.type !== SESSION_INTERNAL) {
+      const refDomainParts = source.refhost.split('.').reverse();
 
-  for (let i = 0; i < RULES.length; i++) {
-    const rule = RULES[i];
-    const ruleDomainParts = rule.domain.split('.').reverse();
-    const refDomainPartsClone = refDomainParts.slice();
+      for (let i = 0; i < RULES.length; i++) {
+        const rule = RULES[i];
+        const ruleDomainParts = rule.domain.split('.').reverse();
+        const refDomainPartsClone = refDomainParts.slice();
 
-    if (ruleDomainParts[0] === '') {
-      ruleDomainParts.shift();
-      refDomainPartsClone.shift();
-    }
+        if (ruleDomainParts[0] === '') {
+          ruleDomainParts.shift();
+          refDomainPartsClone.shift();
+        }
 
-    if (refDomainPartsClone.slice(0, ruleDomainParts.length).join('.') === ruleDomainParts.join('.')) {
+        if (refDomainPartsClone.slice(0, ruleDomainParts.length).join('.') === ruleDomainParts.join('.')) {
 
-      source.type = rule.type;
-      source.engine = rule.engine;
+          source.type = rule.type;
+          source.engine = rule.engine;
 
-      if (rule.param && query[rule.param]) {
-        source.keyword = cleanQueryParam(query[rule.param]);
+          if (rule.param && query[rule.param]) {
+            source.keyword = cleanQueryParam(query[rule.param]);
+          }
+
+          break;
+        }
       }
-
-      break;
     }
-  }
 
-  // Referral
-  if (!source.engine) {
-    source.type = SESSION_REFERRAL;
+    /**
+     * REFERRAL SESSION
+     * 
+     * Any source except rules list
+     * 
+     */
+    if (!source.engine) {
+      source.type = SESSION_REFERRAL;
+    }
+
+    /**
+     * INTERNAL SESSION
+     * 
+     * Fired by current domain
+     * 
+     */
+    if (source.refhost === removeWww(page.domain)) {
+      log.info('internal detect', ref, source.refhost, removeWww(page.hostname))
+      // source.type = source.hasMarks ? SESSION_CAMPAIGN : SESSION_INTERNAL;
+      source.type = SESSION_INTERNAL;
+      // return source;
+    }
   }
 
   // // Forcing campaign type id marks present
@@ -234,10 +315,39 @@ export default function pageSource(page) {
 
   // Forcing campaign type id marks present
   // we dont use fbclid because Facebook adds that to each outgoing link
+
+  /**
+   * CAMPAIGN SESSION
+   * 
+   * forced if campaign marks present
+   * 
+   */
   if (has_utm || has_os || has_gclid || has_yclid) {
     source.type = SESSION_CAMPAIGN;
+    source.marksHash = simpleHash(marksCampaignString)
+  }
+
+  /**
+   * PARTNER SESSION
+   * 
+   * forced if partner marks present
+   * 
+   */
+  if (has_partner_ids) {
+    source.type = SESSION_PARTNER;
+    source.marksHash = simpleHash(marksPartnerString)
+  }
+
+
+  /**
+   * WEBVIEW SESSION
+   * 
+   * Forced if webview parameter present
+   * 
+   */
+  if (is_webview) {
+    source.type = SESSION_WEBVIEW;
   }
 
   return source;
-
 }
