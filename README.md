@@ -17,14 +17,14 @@ and cookies.
 
 ## Installation
 
-The snippet from `snippet/snippet.html` creates a global `rstat` function, queues calls until
+The snippet from `snippet/snippet.html` creates a global `rstat4` function, queues calls until
 `lib.js` is loaded from the tracker server, then replays them. The whole API is a single
 function: the first argument is the method name, the rest are its parameters.
 
 ```html
-<script type="text/javascript">
+<script>
   !function (w, d, st, cn, hs, lj, rst, se, he) {
-    if(w.rstat) return; rst = w.rstat = function () {
+    if(w.rstat4) return; rst = w.rstat4 = function () {
       var a = Array.prototype.slice.call(arguments);
       a.length && a[0] === cn && rst._a(Object(a[1]));
       return rst.doCall ? rst.doCall.call(rst, a) : rst._q.push(a) && 0; };
@@ -37,10 +37,10 @@ function: the first argument is the method name, the rest are its parameters.
       rst._host && rst._jsl(hs+rst._host+rst._prefix+lj); }
   }(window, document, 'script', 'configure', 'https://', '/lib.js');
 
-  rstat('configure', {
+  rstat4('configure', {
     server: 'YOUR_SUBDOMAIN.DOMAIN'
   });
-  rstat('page');
+  rstat4('page');
 </script>
 ```
 
@@ -52,7 +52,7 @@ The library only works over HTTPS unless `allowHTTP: true` is set.
 ## Configuration
 
 ```js
-rstat('configure', { /* options */ });
+rstat4('configure', { /* options */ });
 ```
 
 Can be called multiple times; options are merged. After initialization the call is ignored
@@ -119,7 +119,7 @@ Each tracker is enabled with an object of its settings or `true`; `false` disabl
 
 | Key | Default | Description |
 |---|---|---|
-| `autostart` | `false` | `true` — recording starts on initialization, otherwise only via `rstat('record')` |
+| `autostart` | `false` | `true` — recording starts on initialization, otherwise only via `rstat4('record')` |
 | `scriptUrl` | `null` | Full URL of the recording bundle if it is not hosted on the tracker server |
 | `maskAllInputs` | `true` | Input values are not captured |
 | `blockClass` | `'rst-block'` | Elements with this class are excluded from the recording entirely |
@@ -140,101 +140,101 @@ Each tracker is enabled with an object of its settings or `true`; `false` disabl
 ### Example
 
 ```js
-rstat('configure', {
+rstat4('configure', {
   server: 'stat.example.com',
   trackClicks: { allClicks: true },
   trackForms: { encryptionKey: 'MIIBIjANBgkq...' },
   trackRecord: { autostart: false, maskAllInputs: true }
 });
-rstat('page');
+rstat4('page');
 ```
 
 ## API methods
 
-All methods are called as `rstat('<method>', ...args)`. Before the library is loaded, calls
+All methods are called as `rstat4('<method>', ...args)`. Before the library is loaded, calls
 are queued and return `0`; after loading they return the method result.
 
 ### Sending data
 
-**`rstat('page', [data], [options])`**
+**`rstat4('page', [data], [options])`**
 Page view. Sends the `page` event with performance data (`perf`) attached.
 The library does not send it on its own: call it after `configure` and, in SPAs, on every
 route change. Resets tracker counters (max scroll, etc.).
 
 ```js
-rstat('page', { type: 'content', name: 'Contacts' });
+rstat4('page', { type: 'content', name: 'Contacts' });
 ```
 
-**`rstat('event', name, [data], [options])`**
+**`rstat4('event', name, [data], [options])`**
 Custom event with an arbitrary `data` object.
 
 ```js
-rstat('event', 'add_to_cart', { sku: 'A-100', qty: 2 });
+rstat4('event', 'add_to_cart', { sku: 'A-100', qty: 2 });
 ```
 
-**`rstat('identify', userId, [traits])`** / **`rstat('identify', traits)`**
+**`rstat4('identify', userId, [traits])`** / **`rstat4('identify', traits)`**
 User identification. `userId` and `traits` are saved in browser storage and added to the
 `user` block of every subsequent message (`id` plus the `traits` keys). No separate message
 is sent to the server.
 
 ```js
-rstat('identify', 42, { plan: 'pro', email_hash: '...' });
+rstat4('identify', 42, { plan: 'pro', email_hash: '...' });
 ```
 
-**`rstat('request', service, name, [data])` → `Promise<response>`**
+**`rstat4('request', service, name, [data])` → `Promise<response>`**
 Request to an arbitrary backend service with a response. Always goes through fetch; the
 response is parsed as JSON. The promise rejects on network error or timeout (10 s).
 
 ```js
-const offer = await rstat('request', 'offers', 'get', { slot: 'hero' });
+const offer = await rstat4('request', 'offers', 'get', { slot: 'hero' });
 ```
 
-**`rstat('notify', service, name, [data])`**
+**`rstat4('notify', service, name, [data])`**
 Same as `request` but without waiting for a response (fire-and-forget via beacon).
 
-**`rstat('sessionEvent')`**
+**`rstat4('sessionEvent')`**
 Force sending the `session` event.
 
 ### Session recording
 
-**`rstat('record', [options])`**
+**`rstat4('record', [options])`**
 Start session recording. The rrweb bundle (`rrweb-record.js`) is loaded from the tracker
 server only at this moment. `options` override `trackRecord` from the configuration.
 A repeated call while recording is active is ignored. A call before initialization is deferred.
 
-**`rstat('stopRecord')`** or **`rstat('record', false)`**
+**`rstat4('stopRecord')`** or **`rstat4('record', false)`**
 Stop recording and flush the remaining buffer. Recording can be started again afterwards.
 
 ### Callbacks
 
-**`rstat('onReady', cb)`**
+**`rstat4('onReady', cb)`**
 Called after the library is initialized (or immediately if it already is).
 
-**`rstat('onEvent', cb)`**
+**`rstat4('onEvent', cb)`**
 `cb(name, data, options)` for every event before it is sent.
 
-**`rstat('onMessage', cb)`**
+**`rstat4('onMessage', cb)`**
 `cb(msg)` with the complete message exactly as it is sent to the server.
 Useful for debugging and custom integrations.
 
-**`rstat('onInternalEvent', cb)`**
+**`rstat4('onInternalEvent', cb)`**
 `cb(name, data)` for internal events: `dom_loaded`, `before_unload`, `visibility_change`.
 
-**`rstat('onServerMessage', cb)`**
+**`rstat4('onServerMessage', cb)`**
 Messages from the server (reserved for the WebSocket channel).
 
 ### Utilities
 
 | Method | Description |
 |---|---|
-| `rstat('getUid')` | Current visitor uid. Before initialization — a warning and `undefined` |
-| `rstat('getSessNum')` | Current session number |
-| `rstat('getLibInfo')` | `{ id: 'web-sdk', v, sv, st }` — library version (number, `5.2.1 → 5002001`), snippet version, start time |
-| `rstat('isInitialized')` | `true` after initialization |
-| `rstat('buildProjectId', domain)` | `[domain, projectId]` — normalized domain and its hash, used as the default `projectId` |
-| `rstat('setCustomConfig', config)` | Save personal configuration overrides in browser storage. Applied on subsequent loads |
-| `rstat('enableLogger')` | Enable verbose console logging. Can also be enabled with `window._rst4_logger = true` before loading |
-| `rstat('set', name, obj)` | Put an object into the library registry |
+| `rstat4('getUid')` | Current visitor uid. Before initialization — a warning and `undefined` |
+| `rstat4('getSessNum')` | Current session number |
+| `rstat4('getLibInfo')` | `{ id: 'web-sdk', v, sv, st }` — library version (number, `5.2.1 → 5002001`), snippet version, start time |
+| `rstat4('isInitialized')` | `true` after initialization |
+| `rstat4('buildProjectId', domain)` | `[domain, projectId]` — normalized domain and its hash, used as the default `projectId` |
+| `rstat4('setCustomConfig', config)` | Save personal configuration overrides in browser storage. Applied on subsequent loads |
+| `rstat4('enableLogger')` | Enable verbose console logging. Can also be enabled with `window._rst4_logger = true` before loading |
+| `rstat4('set', name, obj)` | Put an object into the library registry |
 
 ### Event options
 
@@ -255,7 +255,7 @@ All events go to the `track` service. The `data` field depends on the event.
 | Event | Source | Data |
 |---|---|---|
 | `session` | SessionTracker | empty; the session is described in the `sess` block |
-| `page` | `rstat('page')` | `data` from the call; the page is in the `page` block, timings in `perf` |
+| `page` | `rstat4('page')` | `data` from the call; the page is in the `page` block, timings in `perf` |
 | `page_loaded` | `window.load` | empty; timings in `perf` |
 | `page_unload` | `beforeunload` | empty |
 | `page_visibility` | `visibilitychange` | `hidden` (0/1), `state` (`visible`/`hidden`), `dur` — ms the previous state lasted |
@@ -362,16 +362,16 @@ The last campaign is kept for `lastCampaignExpires` seconds (90 days by default)
 
 rrweb is not part of `lib.js`. A separate bundle `rrweb-record.js` (rrweb record + fflate
 packer) is loaded from `https://<server><pathPrefix>/public/rrweb-record.js` when
-`rstat('record')` is called or when `trackRecord.autostart: true`.
+`rstat4('record')` is called or when `trackRecord.autostart: true`.
 
 All input values are masked by default. To exclude parts of the page use CSS classes:
 `rst-block` — do not record the element, `rst-mask` — replace text with asterisks,
 `rst-ignore` — do not record input in the field.
 
 ```js
-rstat('record');                         // start
-rstat('record', { recordCanvas: true }); // start with options
-rstat('stopRecord');                     // stop
+rstat4('record');                         // start
+rstat4('record', { recordCanvas: true }); // start with options
+rstat4('stopRecord');                     // stop
 ```
 
 ## Development
