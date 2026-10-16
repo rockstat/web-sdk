@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "browserstack": {
+      "command": "sh",
+      "args": ["-c", "set -a; [ -f ./.env ] && . ./.env; set +a; exec npx -y @browserstack/mcp-server@latest"]
+    }
+  }
+}

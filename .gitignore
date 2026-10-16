@@ -5,3 +5,5 @@ dist
 .vscode
 .DS_Store
 .npmrc
+# local secrets
+.env

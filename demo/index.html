@@ -18,8 +18,9 @@
     })(window);
 
     rstat4('configure', {
-      projectId: 1,
-      server: location.host,
+      // DEMO_SERVER / DEMO_PROJECT_ID подставляются vite.config.js (по умолчанию локальный бэкенд демо)
+      projectId: __DEMO_PROJECT_ID__,
+      server: __DEMO_SERVER__,
       allowHTTP: true, // демо крутится на http://localhost (secure context для WebCrypto)
       trackPages: true,
       trackClicks: {},
