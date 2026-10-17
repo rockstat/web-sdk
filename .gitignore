@@ -7,3 +7,7 @@ dist
 .npmrc
 # local secrets
 .env
+
+# local docs sync marker
+.claude/docs-sync.state
+.claude/settings.local.json
